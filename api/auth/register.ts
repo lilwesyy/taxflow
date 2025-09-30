@@ -49,28 +49,133 @@ const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' })
 }
 
+// Email validation
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email) && email.length <= 254
+}
+
+// Password strength validation
+const validatePasswordStrength = (password: string): { valid: boolean; error?: string } => {
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters long' }
+  }
+
+  if (password.length > 128) {
+    return { valid: false, error: 'Password is too long' }
+  }
+
+  // Almeno una lettera maiuscola
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one uppercase letter' }
+  }
+
+  // Almeno una lettera minuscola
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one lowercase letter' }
+  }
+
+  // Almeno un numero
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one number' }
+  }
+
+  return { valid: true }
+}
+
+// Name validation and sanitization
+const validateName = (name: string): { valid: boolean; sanitized?: string; error?: string } => {
+  const trimmed = name.trim()
+
+  if (trimmed.length < 2) {
+    return { valid: false, error: 'Name must be at least 2 characters long' }
+  }
+
+  if (trimmed.length > 100) {
+    return { valid: false, error: 'Name is too long (max 100 characters)' }
+  }
+
+  // Permetti solo lettere, spazi, apostrofi e trattini
+  if (!/^[a-zA-ZÀ-ÿ\s'\-]+$/.test(trimmed)) {
+    return { valid: false, error: 'Name contains invalid characters' }
+  }
+
+  // Sanitizza: rimuovi spazi multipli
+  const sanitized = trimmed.replace(/\s+/g, ' ')
+
+  return { valid: true, sanitized }
+}
+
+// Role validation
+const isValidRole = (role: string): boolean => {
+  return ['business', 'admin'].includes(role)
+}
+
 export async function POST(request: Request) {
   try {
-    await connectDB()
+    // Parse body con gestione errori
+    let body: any
+    try {
+      body = await request.json()
+    } catch (e) {
+      return Response.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
 
-    const body = await request.json()
     const { email, password, name, role = 'business' } = body
 
+    // Validazione presenza campi obbligatori
     if (!email || !password || !name) {
       return Response.json({ error: 'Email, password, and name are required' }, { status: 400 })
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email })
-    if (existingUser) {
-      return Response.json({ error: 'User already exists with this email' }, { status: 400 })
+    // Validazione tipo campi
+    if (typeof email !== 'string' || typeof password !== 'string' || typeof name !== 'string') {
+      return Response.json({ error: 'Email, password, and name must be strings' }, { status: 400 })
     }
 
-    // Create new user
+    if (role && typeof role !== 'string') {
+      return Response.json({ error: 'Role must be a string' }, { status: 400 })
+    }
+
+    // Normalizzazione email
+    const normalizedEmail = email.trim().toLowerCase()
+
+    // Validazione formato email
+    if (!isValidEmail(normalizedEmail)) {
+      return Response.json({ error: 'Invalid email format' }, { status: 400 })
+    }
+
+    // Validazione forza password
+    const passwordValidation = validatePasswordStrength(password)
+    if (!passwordValidation.valid) {
+      return Response.json({ error: passwordValidation.error }, { status: 400 })
+    }
+
+    // Validazione e sanitizzazione nome
+    const nameValidation = validateName(name)
+    if (!nameValidation.valid) {
+      return Response.json({ error: nameValidation.error }, { status: 400 })
+    }
+
+    // Validazione ruolo
+    if (!isValidRole(role)) {
+      return Response.json({ error: 'Invalid role. Must be "business" or "admin"' }, { status: 400 })
+    }
+
+    // Connessione DB
+    await connectDB()
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail })
+    if (existingUser) {
+      return Response.json({ error: 'User already exists with this email' }, { status: 409 })
+    }
+
+    // Create new user con dati sanitizzati
     const user = new User({
-      email,
-      password,
-      name,
+      email: normalizedEmail,
+      password, // Sarà hashato dal pre-save hook
+      name: nameValidation.sanitized,
       role
     })
 
@@ -89,8 +194,24 @@ export async function POST(request: Request) {
         role: user.role
       }
     }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error)
+
+    // Gestione errori specifici di MongoDB
+    if (error.name === 'MongooseError' || error.name === 'MongoError') {
+      return Response.json({ error: 'Database connection error' }, { status: 503 })
+    }
+
+    // Gestione errori di duplicazione (fallback)
+    if (error.code === 11000) {
+      return Response.json({ error: 'User already exists with this email' }, { status: 409 })
+    }
+
+    // Gestione errori di validazione Mongoose
+    if (error.name === 'ValidationError') {
+      return Response.json({ error: 'Validation error: ' + error.message }, { status: 400 })
+    }
+
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
