@@ -16,8 +16,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://backend-production-3061.up.railway.app',
-    // TODO: Aggiungi qui il tuo dominio Vercel dopo il deploy
-    // 'https://your-app.vercel.app'
+    'https://taxflow-loyjstpx6-mircos-projects-0bb30613.vercel.app'
   ],
   credentials: true
 }))
