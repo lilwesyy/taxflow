@@ -1,4 +1,4 @@
-import { Settings, User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff } from 'lucide-react'
+import { Settings, User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -94,6 +94,7 @@ export default function Impostazioni() {
   useEffect(() => {
     if (activeTab === 'security' && token) {
       loadSessions()
+      loadSessionTimeout()
     }
   }, [activeTab, token])
 
@@ -116,6 +117,113 @@ export default function Impostazioni() {
     } finally {
       setLoadingSessions(false)
     }
+  }
+
+  const loadSessionTimeout = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSessionTimeout(data.sessionTimeout)
+      }
+    } catch (error) {
+      console.error('Error loading session timeout:', error)
+    }
+  }
+
+  const handleSaveSessionTimeout = async () => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ sessionTimeout })
+      })
+
+      if (response.ok) {
+        showToast('Timeout sessione aggiornato con successo', 'success')
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCleanupSessions = async () => {
+    if (!confirm('Eliminare manualmente tutte le sessioni inattive?')) return
+
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/cleanup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        showToast(data.message, 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella pulizia delle sessioni')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTerminateAllSessions = async () => {
+    if (!confirm('Sei sicuro di voler terminare tutte le altre sessioni?')) return
+
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        showToast('Tutte le altre sessioni sono state terminate', 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella terminazione delle sessioni')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getTimeoutLabel = (minutes: number) => {
+    if (minutes < 60) return `${minutes} minuti`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours} or${hours === 1 ? 'a' : 'e'}`
+    const days = Math.floor(hours / 24)
+    return `${days} giorn${days === 1 ? 'o' : 'i'}`
   }
 
   const [passwordData, setPasswordData] = useState({
@@ -179,6 +287,7 @@ export default function Impostazioni() {
 
   const [sessions, setSessions] = useState<any[]>([])
   const [loadingSessions, setLoadingSessions] = useState(false)
+  const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
 
   const tabs = [
     { id: 'profile', name: 'Profilo', icon: User },
@@ -637,7 +746,7 @@ export default function Impostazioni() {
   const renderSecurityTab = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Sicurezza Account</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">Sicurezza Account</h3>
 
         {twoFactorEnabled ? (
           <div className="group bg-green-50 border border-green-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
@@ -665,9 +774,14 @@ export default function Impostazioni() {
           </div>
         )}
 
-        <div className="space-y-6">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-4">Cambia Password</h4>
+        {/* Grid Layout per le card */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card: Cambia Password */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <Shield className="h-5 w-5 text-primary-600 mr-2" />
+              Cambia Password
+            </h4>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -749,7 +863,7 @@ export default function Impostazioni() {
                 <button
                   onClick={() => handleSave('password')}
                   disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
                 </button>
@@ -757,49 +871,124 @@ export default function Impostazioni() {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Autenticazione a Due Fattori</h4>
-            <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-              <div>
-                <p className="font-medium text-gray-900">2FA {twoFactorEnabled ? 'Attivata' : 'Disattivata'}</p>
-                <p className="text-sm text-gray-600">Proteggi il tuo account con un livello aggiuntivo di sicurezza</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className={`text-sm font-medium ${twoFactorEnabled ? 'text-green-600' : 'text-gray-500'}`}>
+          {/* Card: Autenticazione 2FA */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <Shield className="h-5 w-5 text-green-600 mr-2" />
+              Autenticazione a Due Fattori
+            </h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div>
+                  <p className="font-medium text-gray-900">Stato 2FA</p>
+                  <p className="text-sm text-gray-600">Proteggi il tuo account con un livello aggiuntivo di sicurezza</p>
+                </div>
+                <span className={`text-sm font-medium px-3 py-1 rounded-full ${twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
                   {twoFactorEnabled ? 'Attiva' : 'Non attiva'}
                 </span>
-                {!twoFactorEnabled ? (
-                  <button
-                    onClick={handle2FAEnable}
-                    disabled={loading}
-                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
-                  >
-                    Attiva
-                  </button>
-                ) : (
-                  <div>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={disable2FAPassword}
-                      onChange={(e) => setDisable2FAPassword(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mr-2 text-sm"
-                    />
-                    <button
-                      onClick={handle2FADisable}
-                      disabled={loading || !disable2FAPassword}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
-                    >
-                      Disattiva
-                    </button>
-                  </div>
-                )}
               </div>
+
+              {!twoFactorEnabled ? (
+                <button
+                  onClick={handle2FAEnable}
+                  disabled={loading}
+                  className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                >
+                  Attiva 2FA
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <input
+                    type="password"
+                    placeholder="Inserisci password per disattivare"
+                    value={disable2FAPassword}
+                    onChange={(e) => setDisable2FAPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  />
+                  <button
+                    onClick={handle2FADisable}
+                    disabled={loading || !disable2FAPassword}
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                  >
+                    Disattiva 2FA
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Sessioni Attive</h4>
+          {/* Card: Timeout Sessione */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <Clock className="h-5 w-5 text-blue-600 mr-2" />
+              Timeout Sessione
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Le sessioni inattive verranno eliminate automaticamente dopo il periodo impostato
+                </p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Durata timeout
+                </label>
+                <select
+                  value={sessionTimeout}
+                  onChange={(e) => setSessionTimeout(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                >
+                  <option value={30}>30 minuti</option>
+                  <option value={60}>1 ora</option>
+                  <option value={360}>6 ore</option>
+                  <option value={720}>12 ore</option>
+                  <option value={1440}>1 giorno</option>
+                  <option value={10080}>7 giorni</option>
+                  <option value={43200}>30 giorni</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  Timeout corrente: {getTimeoutLabel(sessionTimeout)}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveSessionTimeout}
+                  disabled={loading}
+                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  Salva Timeout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sessioni Attive - Full width */}
+        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium text-gray-900 flex items-center">
+              <Shield className="h-5 w-5 text-green-600 mr-2" />
+              Sessioni Attive
+            </h4>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCleanupSessions}
+                  disabled={loading}
+                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Pulisci Inattive
+                </button>
+                {sessions.filter(s => !s.isCurrent).length > 0 && (
+                  <button
+                    onClick={handleTerminateAllSessions}
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium disabled:opacity-50"
+                  >
+                    Termina Tutte
+                  </button>
+                )}
+              </div>
+            </div>
             {loadingSessions ? (
               <p className="text-center text-gray-500 py-4">Caricamento sessioni...</p>
             ) : sessions.length === 0 ? (
@@ -840,7 +1029,6 @@ export default function Impostazioni() {
                 })}
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>

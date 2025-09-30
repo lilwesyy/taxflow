@@ -222,4 +222,82 @@ router.delete('/sessions', authMiddleware, async (req: AuthRequest, res: Respons
   }
 })
 
+// Get session timeout settings
+router.get('/settings/session-timeout', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    res.json({
+      success: true,
+      sessionTimeout: user.securitySettings?.sessionTimeout || 43200
+    })
+  } catch (error) {
+    console.error('Get session timeout error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Update session timeout settings
+router.put('/settings/session-timeout', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { sessionTimeout } = req.body
+
+    if (!sessionTimeout || sessionTimeout < 5 || sessionTimeout > 525600) {
+      return res.status(400).json({
+        error: 'Timeout sessione deve essere tra 5 minuti e 1 anno (525600 minuti)'
+      })
+    }
+
+    const user = await User.findById(req.userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    user.securitySettings = {
+      ...user.securitySettings,
+      sessionTimeout
+    }
+    await user.save()
+
+    res.json({
+      success: true,
+      message: 'Timeout sessione aggiornato con successo',
+      sessionTimeout
+    })
+  } catch (error) {
+    console.error('Update session timeout error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Cleanup expired sessions based on user's timeout settings
+router.post('/sessions/cleanup', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    const timeoutMinutes = user.securitySettings?.sessionTimeout || 43200
+    const expiryDate = new Date(Date.now() - timeoutMinutes * 60 * 1000)
+
+    const result = await Session.deleteMany({
+      userId: req.userId,
+      lastActivity: { $lt: expiryDate }
+    })
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} sessioni inattive eliminate`,
+      deletedCount: result.deletedCount
+    })
+  } catch (error) {
+    console.error('Cleanup sessions error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
 export default router

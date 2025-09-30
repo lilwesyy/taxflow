@@ -1,9 +1,25 @@
-import { Settings, User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Receipt } from 'lucide-react'
-import { useState } from 'react'
+import { Settings, User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Receipt, Clock, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import apiService from '../../../../services/api'
+
+interface Session {
+  id: string
+  browser: string
+  os: string
+  device: string
+  location: string
+  ip: string
+  lastActivity: string
+  createdAt: string
+  isCurrent: boolean
+}
 
 export default function Impostazioni() {
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
+  const [loading, setLoading] = useState(false)
 
   const [profileData, setProfileData] = useState({
     nome: 'Mario Rossi',
@@ -65,6 +81,107 @@ export default function Impostazioni() {
     { id: 'payment', name: 'Pagamenti', icon: CreditCard },
     { id: 'system', name: 'Sistema', icon: Settings }
   ]
+
+  // Load sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadSessions()
+      loadSessionTimeout()
+    }
+  }, [activeTab])
+
+  const loadSessions = async () => {
+    try {
+      setLoading(true)
+      const response = await apiService.getSessions()
+      setSessions(response.sessions)
+    } catch (error) {
+      console.error('Failed to load sessions:', error)
+      alert('Errore nel caricamento delle sessioni')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadSessionTimeout = async () => {
+    try {
+      const response = await apiService.getSessionTimeout()
+      setSessionTimeout(response.sessionTimeout)
+    } catch (error) {
+      console.error('Failed to load session timeout:', error)
+    }
+  }
+
+  const handleTerminateSession = async (sessionId: string) => {
+    if (!confirm('Sei sicuro di voler terminare questa sessione?')) return
+
+    try {
+      await apiService.terminateSession(sessionId)
+      alert('Sessione terminata con successo')
+      loadSessions()
+    } catch (error) {
+      console.error('Failed to terminate session:', error)
+      alert('Errore nella terminazione della sessione')
+    }
+  }
+
+  const handleTerminateAllSessions = async () => {
+    if (!confirm('Sei sicuro di voler terminare tutte le altre sessioni?')) return
+
+    try {
+      await apiService.terminateAllSessions()
+      alert('Tutte le altre sessioni sono state terminate')
+      loadSessions()
+    } catch (error) {
+      console.error('Failed to terminate all sessions:', error)
+      alert('Errore nella terminazione delle sessioni')
+    }
+  }
+
+  const handleSaveSessionTimeout = async () => {
+    try {
+      await apiService.updateSessionTimeout(sessionTimeout)
+      alert('Timeout sessione aggiornato con successo')
+    } catch (error) {
+      console.error('Failed to update session timeout:', error)
+      alert('Errore nell\'aggiornamento del timeout')
+    }
+  }
+
+  const handleCleanupSessions = async () => {
+    if (!confirm('Eliminare manualmente tutte le sessioni inattive?')) return
+
+    try {
+      const response = await apiService.cleanupSessions()
+      alert(response.message)
+      loadSessions()
+    } catch (error) {
+      console.error('Failed to cleanup sessions:', error)
+      alert('Errore nella pulizia delle sessioni')
+    }
+  }
+
+  const formatLastActivity = (date: string) => {
+    const now = new Date()
+    const activityDate = new Date(date)
+    const diffMs = now.getTime() - activityDate.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMins < 1) return 'adesso'
+    if (diffMins < 60) return `${diffMins} minut${diffMins === 1 ? 'o' : 'i'} fa`
+    if (diffHours < 24) return `${diffHours} or${diffHours === 1 ? 'a' : 'e'} fa`
+    return `${diffDays} giorn${diffDays === 1 ? 'o' : 'i'} fa`
+  }
+
+  const getTimeoutLabel = (minutes: number) => {
+    if (minutes < 60) return `${minutes} minuti`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours} or${hours === 1 ? 'a' : 'e'}`
+    const days = Math.floor(hours / 24)
+    return `${days} giorn${days === 1 ? 'o' : 'i'}`
+  }
 
   const handleSave = (section: string) => {
     // Qui sarebbe implementata la logica per salvare le impostazioni
@@ -383,7 +500,7 @@ export default function Impostazioni() {
   const renderSecurityTab = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Sicurezza Account</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">Sicurezza Account</h3>
 
         <div className="group bg-green-50 border border-green-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center">
@@ -397,9 +514,14 @@ export default function Impostazioni() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-4">Cambia Password</h4>
+        {/* Grid Layout per le card */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card: Cambia Password */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <Shield className="h-5 w-5 text-primary-600 mr-2" />
+              Cambia Password
+            </h4>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -453,7 +575,7 @@ export default function Impostazioni() {
               <div className="flex justify-end">
                 <button
                   onClick={() => handleSave('password')}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200"
+                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm"
                 >
                   Aggiorna Password
                 </button>
@@ -461,54 +583,141 @@ export default function Impostazioni() {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Sessioni Attive</h4>
-            <div className="space-y-3">
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-gray-900">Browser Corrente</p>
-                  <p className="text-sm text-gray-600">Chrome su Windows • Milano, Italia</p>
-                  <p className="text-xs text-gray-500">Ultima attività: adesso</p>
-                </div>
-                <span className="text-sm text-green-600 font-medium">Attuale</span>
+          {/* Card: Timeout Sessione */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <Clock className="h-5 w-5 text-blue-600 mr-2" />
+              Timeout Sessione
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Le sessioni inattive verranno eliminate automaticamente dopo il periodo impostato
+                </p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Durata timeout
+                </label>
+                <select
+                  value={sessionTimeout}
+                  onChange={(e) => setSessionTimeout(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                >
+                  <option value={30}>30 minuti</option>
+                  <option value={60}>1 ora</option>
+                  <option value={360}>6 ore</option>
+                  <option value={720}>12 ore</option>
+                  <option value={1440}>1 giorno</option>
+                  <option value={10080}>7 giorni</option>
+                  <option value={43200}>30 giorni</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  Timeout corrente: {getTimeoutLabel(sessionTimeout)}
+                </p>
               </div>
-
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-gray-900">Safari su iPhone</p>
-                  <p className="text-sm text-gray-600">Milano, Italia</p>
-                  <p className="text-xs text-gray-500">Ultima attività: 1 ora fa</p>
-                </div>
-                <button className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
-                  Termina Sessione
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveSessionTimeout}
+                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  Salva Timeout
                 </button>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Privacy</h4>
-            <div className="space-y-3">
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-gray-900">Scarica i tuoi dati</p>
-                  <p className="text-sm text-gray-600">Esporta tutti i tuoi dati personali</p>
-                </div>
-                <button className="text-primary-600 hover:text-primary-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
-                  Scarica
+        {/* Sessioni Attive - Full width */}
+        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium text-gray-900 flex items-center">
+              <Shield className="h-5 w-5 text-green-600 mr-2" />
+              Sessioni Attive
+            </h4>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCleanupSessions}
+                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Pulisci Inattive
                 </button>
-              </div>
-
-              <div className="group flex items-center justify-between p-4 border border-red-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-red-900">Elimina Account</p>
-                  <p className="text-sm text-red-600">Elimina permanentemente il tuo account e tutti i dati</p>
-                </div>
-                <button className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
-                  Elimina
-                </button>
+                {sessions.filter(s => !s.isCurrent).length > 0 && (
+                  <button
+                    onClick={handleTerminateAllSessions}
+                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                  >
+                    Termina Tutte
+                  </button>
+                )}
               </div>
             </div>
+
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">Caricamento sessioni...</p>
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-600">Nessuna sessione attiva</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-300 ${
+                      session.isCurrent ? 'border-green-300 bg-green-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {session.browser} su {session.os}
+                        {session.isCurrent && (
+                          <span className="ml-2 text-xs text-green-600 font-medium">Corrente</span>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {session.device} • {session.ip}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Ultima attività: {formatLastActivity(session.lastActivity)}
+                      </p>
+                    </div>
+                    {!session.isCurrent && (
+                      <button
+                        onClick={() => handleTerminateSession(session.id)}
+                        className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                      >
+                        Termina Sessione
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+        </div>
+
+        {/* Privacy - Grid 2 columns */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-shadow duration-300 bg-white">
+            <div>
+              <p className="font-medium text-gray-900">Scarica i tuoi dati</p>
+              <p className="text-sm text-gray-600">Esporta tutti i tuoi dati personali</p>
+            </div>
+            <button className="text-primary-600 hover:text-primary-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
+              Scarica
+            </button>
+          </div>
+
+          <div className="group flex items-center justify-between p-4 border border-red-200 rounded-xl hover:shadow-md transition-shadow duration-300 bg-white">
+            <div>
+              <p className="font-medium text-red-900">Elimina Account</p>
+              <p className="text-sm text-red-600">Elimina permanentemente il tuo account e tutti i dati</p>
+            </div>
+            <button className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
+              Elimina
+            </button>
           </div>
         </div>
       </div>

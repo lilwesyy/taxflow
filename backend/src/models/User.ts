@@ -19,6 +19,9 @@ interface IUser extends mongoose.Document {
     pushNotifications: boolean
     weeklyReport: boolean
   }
+  securitySettings?: {
+    sessionTimeout: number // in minutes, default 30 days (43200 minutes)
+  }
   twoFactorEnabled: boolean
   twoFactorSecret?: string
   createdAt: Date
@@ -45,6 +48,12 @@ const UserSchema = new mongoose.Schema({
       emailPayment: false,
       pushNotifications: true,
       weeklyReport: true
+    }
+  },
+  securitySettings: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      sessionTimeout: 43200 // 30 giorni in minuti
     }
   },
   twoFactorEnabled: { type: Boolean, default: false },

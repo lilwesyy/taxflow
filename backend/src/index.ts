@@ -5,6 +5,7 @@ import connectDB from './config/database'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
 import securityRoutes from './routes/security'
+import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 dotenv.config()
 
@@ -44,6 +45,9 @@ connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`)
   })
+
+  // Start scheduled jobs
+  startSessionCleanupJob()
 }).catch((error) => {
   console.error('Failed to connect to MongoDB:', error)
   process.exit(1)

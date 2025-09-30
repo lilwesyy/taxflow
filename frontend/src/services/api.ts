@@ -117,6 +117,92 @@ class ApiService {
   isAuthenticated() {
     return !!this.getToken()
   }
+
+  // Security and Sessions
+  async getSessions() {
+    const response = await fetch(`${API_BASE_URL}/security/sessions`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get sessions')
+    }
+
+    return response.json()
+  }
+
+  async terminateSession(sessionId: string) {
+    const response = await fetch(`${API_BASE_URL}/security/sessions/${sessionId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to terminate session')
+    }
+
+    return response.json()
+  }
+
+  async terminateAllSessions() {
+    const response = await fetch(`${API_BASE_URL}/security/sessions`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to terminate sessions')
+    }
+
+    return response.json()
+  }
+
+  async getSessionTimeout() {
+    const response = await fetch(`${API_BASE_URL}/security/settings/session-timeout`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get session timeout')
+    }
+
+    return response.json()
+  }
+
+  async updateSessionTimeout(sessionTimeout: number) {
+    const response = await fetch(`${API_BASE_URL}/security/settings/session-timeout`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ sessionTimeout }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update session timeout')
+    }
+
+    return response.json()
+  }
+
+  async cleanupSessions() {
+    const response = await fetch(`${API_BASE_URL}/security/sessions/cleanup`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to cleanup sessions')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()
