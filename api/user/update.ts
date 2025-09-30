@@ -7,7 +7,13 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
-  role: { type: String, enum: ['business', 'admin'], default: 'business' }
+  role: { type: String, enum: ['business', 'admin'], default: 'business' },
+  phone: { type: String },
+  professionalRole: { type: String },
+  bio: { type: String },
+  address: { type: String },
+  fiscalCode: { type: String },
+  registrationNumber: { type: String }
 }, { timestamps: true })
 
 // User model type
@@ -100,7 +106,7 @@ export async function PUT(request: Request) {
       return Response.json({ error: 'Invalid JSON in request body' }, { status: 400 })
     }
 
-    const { name, email, currentPassword, newPassword } = body
+    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword } = body
 
     // Connect to database
     await connectDB()
@@ -145,6 +151,14 @@ export async function PUT(request: Request) {
 
       user.email = normalizedEmail
     }
+
+    // Update optional profile fields
+    if (phone !== undefined) user.phone = phone?.trim() || undefined
+    if (professionalRole !== undefined) user.professionalRole = professionalRole?.trim() || undefined
+    if (bio !== undefined) user.bio = bio?.trim() || undefined
+    if (address !== undefined) user.address = address?.trim() || undefined
+    if (fiscalCode !== undefined) user.fiscalCode = fiscalCode?.trim().toUpperCase() || undefined
+    if (registrationNumber !== undefined) user.registrationNumber = registrationNumber?.trim() || undefined
 
     // Update password if provided
     if (newPassword !== undefined) {
@@ -194,6 +208,12 @@ export async function PUT(request: Request) {
         email: user.email,
         name: user.name,
         role: user.role,
+        phone: user.phone,
+        professionalRole: user.professionalRole,
+        bio: user.bio,
+        address: user.address,
+        fiscalCode: user.fiscalCode,
+        registrationNumber: user.registrationNumber,
         updatedAt: user.updatedAt
       }
     })

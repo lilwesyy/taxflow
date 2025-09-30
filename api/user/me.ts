@@ -6,7 +6,13 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
-  role: { type: String, enum: ['business', 'admin'], default: 'business' }
+  role: { type: String, enum: ['business', 'admin'], default: 'business' },
+  phone: { type: String },
+  professionalRole: { type: String },
+  bio: { type: String },
+  address: { type: String },
+  fiscalCode: { type: String },
+  registrationNumber: { type: String }
 }, { timestamps: true })
 
 // User model type
@@ -81,6 +87,12 @@ export async function GET(request: Request) {
         email: user.email,
         name: user.name,
         role: user.role,
+        phone: user.phone,
+        professionalRole: user.professionalRole,
+        bio: user.bio,
+        address: user.address,
+        fiscalCode: user.fiscalCode,
+        registrationNumber: user.registrationNumber,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
