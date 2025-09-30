@@ -1,5 +1,9 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
+import dotenv from 'dotenv'
+
+// Load environment variables
+dotenv.config()
 
 // MongoDB User Schema
 const UserSchema = new mongoose.Schema({
@@ -35,7 +39,13 @@ async function addUser() {
     process.exit(1)
   }
 
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Vercel-Admin-taxflow-db:6aWf0UVqFNzkVVEQ@taxflow-db.vvbfmn6.mongodb.net/?retryWrites=true&w=majority'
+  const MONGODB_URI = process.env.MONGODB_URI
+
+  if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is not defined')
+    console.error('Please set MONGODB_URI in your .env file')
+    process.exit(1)
+  }
 
   try {
     // Connessione a MongoDB

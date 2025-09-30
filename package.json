@@ -6,29 +6,36 @@
   "scripts": {
     "build": "cd frontend && npm run build",
     "frontend": "cd frontend && npm run dev",
-    "backend": "vercel dev --listen 3000",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm run dev",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "add-user": "tsx scripts/add-user.ts",
-    "check-user": "tsx scripts/check-user.ts"
+    "check-user": "tsx scripts/check-user.ts",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "dependencies": {
     "@vercel/node": "^5.3.24",
-    "mongoose": "^8.18.2",
     "bcryptjs": "^3.0.2",
-    "jsonwebtoken": "^9.0.2"
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.10.5",
-    "typescript": "^5.3.3",
     "concurrently": "^8.2.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.3"
   },
   "workspaces": [
     "frontend"
   ],
-  "keywords": ["taxflow", "forfettario", "contabilità", "ai"],
+  "keywords": [
+    "taxflow",
+    "forfettario",
+    "contabilità",
+    "ai"
+  ],
   "author": "",
   "license": "ISC"
 }
