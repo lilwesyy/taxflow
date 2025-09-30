@@ -12,7 +12,23 @@ const UserSchema = new mongoose.Schema({
   bio: { type: String },
   address: { type: String },
   fiscalCode: { type: String },
-  registrationNumber: { type: String }
+  registrationNumber: { type: String },
+  notificationSettings: {
+    type: {
+      emailNewClient: { type: Boolean, default: true },
+      emailNewRequest: { type: Boolean, default: true },
+      emailPayment: { type: Boolean, default: false },
+      pushNotifications: { type: Boolean, default: true },
+      weeklyReport: { type: Boolean, default: true }
+    },
+    default: {
+      emailNewClient: true,
+      emailNewRequest: true,
+      emailPayment: false,
+      pushNotifications: true,
+      weeklyReport: true
+    }
+  }
 }, { timestamps: true })
 
 // User model type
