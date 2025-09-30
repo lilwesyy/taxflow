@@ -15,13 +15,16 @@ const UserSchema = new mongoose.Schema({
   fiscalCode: { type: String },
   registrationNumber: { type: String },
   notificationSettings: {
-    emailNewClient: { type: Boolean, default: true },
-    emailNewRequest: { type: Boolean, default: true },
-    emailPayment: { type: Boolean, default: false },
-    pushNotifications: { type: Boolean, default: true },
-    weeklyReport: { type: Boolean, default: true }
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      emailNewClient: true,
+      emailNewRequest: true,
+      emailPayment: false,
+      pushNotifications: true,
+      weeklyReport: true
+    }
   }
-}, { timestamps: true })
+}, { timestamps: true, strict: false })
 
 // User model type
 interface NotificationSettings {
@@ -186,7 +189,17 @@ export async function PUT(request: Request) {
 
     // Update notification settings if provided
     if (notificationSettings !== undefined) {
-      user.notificationSettings = notificationSettings
+      console.log('Updating notification settings:', notificationSettings)
+
+      // Use set() method for Mixed type and mark as modified
+      user.set('notificationSettings', {
+        emailNewClient: notificationSettings.emailNewClient,
+        emailNewRequest: notificationSettings.emailNewRequest,
+        emailPayment: notificationSettings.emailPayment,
+        pushNotifications: notificationSettings.pushNotifications,
+        weeklyReport: notificationSettings.weeklyReport
+      })
+      user.markModified('notificationSettings')
     }
 
     // Update password if provided
@@ -230,27 +243,30 @@ export async function PUT(request: Request) {
     // Save user
     await user.save()
 
+    // Reload from database to ensure we get the saved data
+    const savedUser = await User.findById(user._id).select('-password')
+
     return Response.json({
       success: true,
       user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        phone: user.phone,
-        professionalRole: user.professionalRole,
-        bio: user.bio,
-        address: user.address,
-        fiscalCode: user.fiscalCode,
-        registrationNumber: user.registrationNumber,
-        notificationSettings: user.notificationSettings || {
+        id: savedUser._id,
+        email: savedUser.email,
+        name: savedUser.name,
+        role: savedUser.role,
+        phone: savedUser.phone,
+        professionalRole: savedUser.professionalRole,
+        bio: savedUser.bio,
+        address: savedUser.address,
+        fiscalCode: savedUser.fiscalCode,
+        registrationNumber: savedUser.registrationNumber,
+        notificationSettings: savedUser.notificationSettings || {
           emailNewClient: true,
           emailNewRequest: true,
           emailPayment: false,
           pushNotifications: true,
           weeklyReport: true
         },
-        updatedAt: user.updatedAt
+        updatedAt: savedUser.updatedAt
       }
     })
   } catch (error: any) {

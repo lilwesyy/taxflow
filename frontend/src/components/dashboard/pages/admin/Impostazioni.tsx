@@ -49,7 +49,10 @@ export default function Impostazioni() {
           })
 
           if (userData.notificationSettings) {
+            console.log('Loaded notification settings:', userData.notificationSettings)
             setNotificationSettings(userData.notificationSettings)
+          } else {
+            console.log('No notification settings found in user data')
           }
         }
       } catch (error) {
@@ -165,6 +168,7 @@ export default function Impostazioni() {
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
         setMessage({ type: 'success', text: 'Password aggiornata con successo!' })
       } else if (section === 'notifications') {
+        console.log('Saving notification settings:', notificationSettings)
         const response = await fetch(`${API_URL}/user/update`, {
           method: 'PUT',
           headers: {
@@ -178,7 +182,16 @@ export default function Impostazioni() {
 
         if (!response.ok) {
           const error = await response.json()
+          console.error('Error response:', error)
           throw new Error(error.error || 'Failed to update notifications')
+        }
+
+        const data = await response.json()
+        console.log('Save response:', data)
+
+        // Aggiorna lo stato locale con i dati salvati
+        if (data.user?.notificationSettings) {
+          setNotificationSettings(data.user.notificationSettings)
         }
 
         setMessage({ type: 'success', text: 'Preferenze notifiche aggiornate con successo!' })

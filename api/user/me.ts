@@ -14,13 +14,16 @@ const UserSchema = new mongoose.Schema({
   fiscalCode: { type: String },
   registrationNumber: { type: String },
   notificationSettings: {
-    emailNewClient: { type: Boolean, default: true },
-    emailNewRequest: { type: Boolean, default: true },
-    emailPayment: { type: Boolean, default: false },
-    pushNotifications: { type: Boolean, default: true },
-    weeklyReport: { type: Boolean, default: true }
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      emailNewClient: true,
+      emailNewRequest: true,
+      emailPayment: false,
+      pushNotifications: true,
+      weeklyReport: true
+    }
   }
-}, { timestamps: true })
+}, { timestamps: true, strict: false })
 
 // User model type
 interface NotificationSettings {
@@ -103,6 +106,8 @@ export async function GET(request: Request) {
     if (!user) {
       return Response.json({ error: 'User not found' }, { status: 404 })
     }
+
+    console.log('User found, notificationSettings:', user.notificationSettings)
 
     return Response.json({
       success: true,
