@@ -1,0 +1,570 @@
+import { Building2, CheckCircle, Clock, AlertTriangle, Eye, MessageSquare, Download, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import Modal from '../../../common/Modal'
+
+export default function RichiestePiva() {
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterPriority, setFilterPriority] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedRequest, setSelectedRequest] = useState<any>(null)
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  const closeModal = () => {
+    setSelectedRequest(null)
+  }
+
+  const richieste = [
+    {
+      id: 'REQ-2024-001',
+      cliente: {
+        nome: 'Mario Rossi',
+        email: 'mario.rossi@email.com',
+        telefono: '+39 123 456 7890',
+        codiceFiscale: 'RSSMRA80A01H501Z'
+      },
+      azienda: {
+        ragioneSociale: 'Rossi Consulting',
+        attivita: 'Consulenza informatica',
+        codiceAteco: '62.02.00',
+        fatturatoPrevisto: 35000
+      },
+      status: 'in_review',
+      priority: 'high',
+      dataRichiesta: '15/01/2024',
+      dataUltimaModifica: '20/01/2024',
+      consulente: 'Dr. Marco Bianchi',
+      documentazione: ['Documento identità', 'Codice fiscale', 'Visura camerale'],
+      note: 'Cliente ha esperienza pregressa nel settore. Richiesta urgente per avvio attività.',
+      step: 3,
+      totalSteps: 5
+    },
+    {
+      id: 'REQ-2024-002',
+      cliente: {
+        nome: 'Laura Bianchi',
+        email: 'laura.bianchi@email.com',
+        telefono: '+39 234 567 8901',
+        codiceFiscale: 'BNCLRA85B02F205X'
+      },
+      azienda: {
+        ragioneSociale: 'Bianchi Design',
+        attivita: 'Attività di design',
+        codiceAteco: '74.10.10',
+        fatturatoPrevisto: 28000
+      },
+      status: 'approved',
+      priority: 'medium',
+      dataRichiesta: '10/01/2024',
+      dataUltimaModifica: '18/01/2024',
+      consulente: 'Dr. Laura Verdi',
+      documentazione: ['Documento identità', 'Codice fiscale', 'Autocertificazione'],
+      note: 'Pratica completata con successo. P.IVA attivata.',
+      step: 5,
+      totalSteps: 5
+    },
+    {
+      id: 'REQ-2024-003',
+      cliente: {
+        nome: 'Giuseppe Verdi',
+        email: 'giuseppe.verdi@email.com',
+        telefono: '+39 345 678 9012',
+        codiceFiscale: 'VRDGPP75C03H501W'
+      },
+      azienda: {
+        ragioneSociale: 'Verdi Solutions',
+        attivita: 'Consulenza marketing',
+        codiceAteco: '73.11.00',
+        fatturatoPrevisto: 45000
+      },
+      status: 'pending',
+      priority: 'medium',
+      dataRichiesta: '22/01/2024',
+      dataUltimaModifica: '22/01/2024',
+      consulente: 'Dr. Marco Bianchi',
+      documentazione: ['Documento identità'],
+      note: 'In attesa documentazione aggiuntiva dal cliente.',
+      step: 2,
+      totalSteps: 5
+    },
+    {
+      id: 'REQ-2024-004',
+      cliente: {
+        nome: 'Anna Neri',
+        email: 'anna.neri@email.com',
+        telefono: '+39 456 789 0123',
+        codiceFiscale: 'NRANNA90D04H501Y'
+      },
+      azienda: {
+        ragioneSociale: 'Neri Marketing',
+        attivita: 'Servizi di marketing',
+        codiceAteco: '73.11.00',
+        fatturatoPrevisto: 32000
+      },
+      status: 'rejected',
+      priority: 'low',
+      dataRichiesta: '18/01/2024',
+      dataUltimaModifica: '25/01/2024',
+      consulente: 'Dr. Laura Verdi',
+      documentazione: ['Documento identità', 'Codice fiscale'],
+      note: 'Richiesta respinta: fatturato previsto supera i limiti per forfettario.',
+      step: 2,
+      totalSteps: 5
+    }
+  ]
+
+  const filteredRichieste = richieste.filter(richiesta => {
+    const matchesSearch = richiesta.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         richiesta.azienda.ragioneSociale.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         richiesta.id.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus = filterStatus === 'all' || richiesta.status === filterStatus
+    const matchesPriority = filterPriority === 'all' || richiesta.priority === filterPriority
+
+    return matchesSearch && matchesStatus && matchesPriority
+  })
+
+  // Pagination calculations
+  const totalItems = filteredRichieste.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentRichieste = filteredRichieste.slice(startIndex, endIndex)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterStatus, filterPriority])
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-600'
+      case 'in_review': return 'bg-yellow-100 text-yellow-600'
+      case 'pending': return 'bg-blue-100 text-blue-600'
+      case 'rejected': return 'bg-red-100 text-red-600'
+      default: return 'bg-gray-100 text-gray-600'
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'approved': return 'Approvata'
+      case 'in_review': return 'In revisione'
+      case 'pending': return 'In attesa'
+      case 'rejected': return 'Respinta'
+      default: return 'Sconosciuto'
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved': return <CheckCircle className="h-4 w-4" />
+      case 'in_review': return <Clock className="h-4 w-4" />
+      case 'pending': return <AlertTriangle className="h-4 w-4" />
+      case 'rejected': return <AlertTriangle className="h-4 w-4" />
+      default: return <Clock className="h-4 w-4" />
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-600'
+      case 'medium': return 'text-yellow-600'
+      case 'low': return 'text-green-600'
+      default: return 'text-gray-600'
+    }
+  }
+
+  const stats = [
+    { title: 'Richieste Totali', value: richieste.length.toString(), icon: Building2, color: 'text-blue-600' },
+    { title: 'In Revisione', value: richieste.filter(r => r.status === 'in_review').length.toString(), icon: Clock, color: 'text-yellow-600' },
+    { title: 'Approvate', value: richieste.filter(r => r.status === 'approved').length.toString(), icon: CheckCircle, color: 'text-green-600' },
+    { title: 'In Attesa', value: richieste.filter(r => r.status === 'pending').length.toString(), icon: AlertTriangle, color: 'text-blue-600' }
+  ]
+
+  return (
+    <div className="space-y-6">
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+            <div className="flex items-center">
+              <div className={`p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-yellow-600' ? 'bg-yellow-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-blue-50'} group-hover:scale-110 transition-transform`}>
+                <stat.icon className={`h-8 w-8 ${stat.color}`} />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">{stat.title}</p>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters and Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cerca per nome, azienda o ID richiesta..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="all">Tutti gli stati</option>
+                <option value="pending">In attesa</option>
+                <option value="in_review">In revisione</option>
+                <option value="approved">Approvata</option>
+                <option value="rejected">Respinta</option>
+              </select>
+            </div>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="all">Tutte le priorità</option>
+              <option value="high">Alta</option>
+              <option value="medium">Media</option>
+              <option value="low">Bassa</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Requests Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative z-10">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Richiesta</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azienda</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Progresso</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Consulente</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {currentRichieste.map((richiesta) => (
+                <tr key={richiesta.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center">
+                      <Building2 className="h-4 w-4 text-gray-400 mr-2" />
+                      <div>
+                        <p className="font-medium text-gray-900">{richiesta.id}</p>
+                        <p className="text-sm text-gray-500">{richiesta.dataRichiesta}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div>
+                      <p className="font-medium text-gray-900">{richiesta.cliente.nome}</p>
+                      <p className="text-sm text-gray-500">{richiesta.cliente.email}</p>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div>
+                      <p className="font-medium text-gray-900">{richiesta.azienda.ragioneSociale}</p>
+                      <p className="text-sm text-gray-500">{richiesta.azienda.codiceAteco}</p>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex flex-col space-y-1">
+                      <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(richiesta.status)}`}>
+                        {getStatusIcon(richiesta.status)}
+                        <span className="ml-1">{getStatusText(richiesta.status)}</span>
+                      </span>
+                      <span className={`text-xs font-medium ${getPriorityColor(richiesta.priority)}`}>
+                        Priorità {richiesta.priority}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-primary-600 h-2 rounded-full"
+                          style={{ width: `${(richiesta.step / richiesta.totalSteps) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600">{richiesta.step}/{richiesta.totalSteps}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <p className="text-sm text-gray-900">{richiesta.consulente}</p>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setSelectedRequest(richiesta)}
+                        className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 hover:scale-110 transition-all duration-200"
+                        title="Visualizza dettagli"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 hover:scale-110 transition-all duration-200" title="Chat cliente">
+                        <MessageSquare className="h-4 w-4" />
+                      </button>
+                      <button className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 hover:scale-110 transition-all duration-200" title="Scarica documenti">
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-700">
+              Mostra
+            </span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+              className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm text-gray-700">
+              elementi per pagina
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-700">
+              {startIndex + 1}-{Math.min(endIndex, totalItems)} di {totalItems} elementi
+            </span>
+
+            <div className="flex items-center space-x-1 ml-4">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  return page === 1 ||
+                         page === totalPages ||
+                         (page >= currentPage - 1 && page <= currentPage + 1)
+                })
+                .map((page, index, array) => (
+                  <div key={page} className="flex items-center">
+                    {index > 0 && array[index - 1] !== page - 1 && (
+                      <span className="px-2 text-gray-400">...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </div>
+                ))
+              }
+
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Request Detail Modal */}
+      <Modal
+        isOpen={!!selectedRequest}
+        onClose={closeModal}
+        title={selectedRequest ? `${selectedRequest.id} - Richiesta apertura P.IVA forfettaria` : ""}
+        maxWidth="4xl"
+      >
+        {selectedRequest && (
+          <div className="space-y-6">
+              {/* Status e Progress */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Stato Richiesta</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center px-3 py-1 text-sm rounded-full ${getStatusColor(selectedRequest.status)}`}>
+                        {getStatusIcon(selectedRequest.status)}
+                        <span className="ml-2">{getStatusText(selectedRequest.status)}</span>
+                      </span>
+                      <span className={`text-sm font-medium ${getPriorityColor(selectedRequest.priority)}`}>
+                        Priorità {selectedRequest.priority}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Progresso</span>
+                        <span>{selectedRequest.step}/{selectedRequest.totalSteps}</span>
+                      </div>
+                      <div className="bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-primary-600 h-2 rounded-full"
+                          style={{ width: `${(selectedRequest.step / selectedRequest.totalSteps) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Informazioni Generali</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Data richiesta:</span>
+                      <span className="text-gray-900">{selectedRequest.dataRichiesta}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Ultima modifica:</span>
+                      <span className="text-gray-900">{selectedRequest.dataUltimaModifica}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Consulente assegnato:</span>
+                      <span className="text-gray-900">{selectedRequest.consulente}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dati Cliente e Azienda */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-4">Dati Cliente</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm text-gray-600">Nome completo</label>
+                      <p className="font-medium">{selectedRequest.cliente.nome}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Email</label>
+                      <p className="font-medium">{selectedRequest.cliente.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Telefono</label>
+                      <p className="font-medium">{selectedRequest.cliente.telefono}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Codice fiscale</label>
+                      <p className="font-medium">{selectedRequest.cliente.codiceFiscale}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-4">Dati Azienda</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm text-gray-600">Ragione sociale</label>
+                      <p className="font-medium">{selectedRequest.azienda.ragioneSociale}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Attività</label>
+                      <p className="font-medium">{selectedRequest.azienda.attivita}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Codice ATECO</label>
+                      <p className="font-medium">{selectedRequest.azienda.codiceAteco}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Fatturato previsto</label>
+                      <p className="font-medium">€ {selectedRequest.azienda.fatturatoPrevisto.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Documentazione */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Documentazione</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {selectedRequest.documentazione.map((doc: string, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-900">{doc}</span>
+                      </div>
+                      <button className="text-green-600 hover:text-green-700 hover:scale-110 transition-all duration-200">
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Note */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Note</h4>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-gray-700">{selectedRequest.note}</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                <div className="flex space-x-3">
+                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    Approva
+                  </button>
+                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    Respingi
+                  </button>
+                  <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    Richiedi Documenti
+                  </button>
+                </div>
+                <div className="flex space-x-3">
+                  <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:scale-105 hover:shadow-sm">
+                    Chat Cliente
+                  </button>
+                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    Salva Note
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+      </Modal>
+    </div>
+  )
+}

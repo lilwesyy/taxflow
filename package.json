@@ -1,0 +1,29 @@
+{
+  "name": "taxflow",
+  "version": "1.0.0",
+  "description": "TaxFlow - Web application per regime forfettario",
+  "private": true,
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "start:frontend": "cd frontend && npm run preview",
+    "start:backend": "cd backend && npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "keywords": ["taxflow", "forfettario", "contabilità", "ai"],
+  "author": "",
+  "license": "ISC"
+}
