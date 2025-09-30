@@ -89,6 +89,12 @@ const checkRateLimit = (identifier: string): { allowed: boolean; remainingTime?:
   return { allowed: true }
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 export async function POST(request: Request) {
   try {
     // Parse body con gestione errori
@@ -96,19 +102,19 @@ export async function POST(request: Request) {
     try {
       body = await request.json()
     } catch (e) {
-      return Response.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+      return Response.json({ error: 'Invalid JSON in request body' }, { status: 400, headers: corsHeaders })
     }
 
     const { email, password } = body
 
     // Validazione presenza campi
     if (!email || !password) {
-      return Response.json({ error: 'Email and password are required' }, { status: 400 })
+      return Response.json({ error: 'Email and password are required' }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione tipo campi
     if (typeof email !== 'string' || typeof password !== 'string') {
-      return Response.json({ error: 'Email and password must be strings' }, { status: 400 })
+      return Response.json({ error: 'Email and password must be strings' }, { status: 400, headers: corsHeaders })
     }
 
     // Trim e normalizzazione email
@@ -117,16 +123,16 @@ export async function POST(request: Request) {
 
     // Validazione formato email
     if (!isValidEmail(normalizedEmail)) {
-      return Response.json({ error: 'Invalid email format' }, { status: 400 })
+      return Response.json({ error: 'Invalid email format' }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione lunghezza password
     if (trimmedPassword.length < 6) {
-      return Response.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+      return Response.json({ error: 'Password must be at least 6 characters' }, { status: 400, headers: corsHeaders })
     }
 
     if (trimmedPassword.length > 128) {
-      return Response.json({ error: 'Password is too long' }, { status: 400 })
+      return Response.json({ error: 'Password is too long' }, { status: 400, headers: corsHeaders })
     }
 
     // Rate limiting
@@ -134,7 +140,7 @@ export async function POST(request: Request) {
     if (!rateLimitCheck.allowed) {
       return Response.json({
         error: `Too many login attempts. Please try again in ${rateLimitCheck.remainingTime} seconds`
-      }, { status: 429 })
+      }, { status: 429, headers: corsHeaders })
     }
 
     // Connessione DB
@@ -143,13 +149,13 @@ export async function POST(request: Request) {
     // Find user by email
     const user = await User.findOne({ email: normalizedEmail })
     if (!user) {
-      return Response.json({ error: 'Invalid credentials' }, { status: 401 })
+      return Response.json({ error: 'Invalid credentials' }, { status: 401, headers: corsHeaders })
     }
 
     // Check password
     const isPasswordValid = await user.comparePassword(trimmedPassword)
     if (!isPasswordValid) {
-      return Response.json({ error: 'Invalid credentials' }, { status: 401 })
+      return Response.json({ error: 'Invalid credentials' }, { status: 401, headers: corsHeaders })
     }
 
     // Reset rate limit on successful login
@@ -167,16 +173,16 @@ export async function POST(request: Request) {
         name: user.name,
         role: user.role
       }
-    })
+    }, { headers: corsHeaders })
   } catch (error: any) {
     console.error('Login error:', error)
 
     // Gestione errori specifici di MongoDB
     if (error.name === 'MongooseError' || error.name === 'MongoError') {
-      return Response.json({ error: 'Database connection error' }, { status: 503 })
+      return Response.json({ error: 'Database connection error' }, { status: 503, headers: corsHeaders })
     }
 
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders })
   }
 }
 

@@ -119,6 +119,12 @@ const isValidRole = (role: string): boolean => {
   return ['business', 'admin'].includes(role)
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 export async function POST(request: Request) {
   try {
     // Parse body con gestione errori
@@ -126,23 +132,23 @@ export async function POST(request: Request) {
     try {
       body = await request.json()
     } catch (e) {
-      return Response.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+      return Response.json({ error: 'Invalid JSON in request body' }, { status: 400, headers: corsHeaders })
     }
 
     const { email, password, name, role = 'business' } = body
 
     // Validazione presenza campi obbligatori
     if (!email || !password || !name) {
-      return Response.json({ error: 'Email, password, and name are required' }, { status: 400 })
+      return Response.json({ error: 'Email, password, and name are required' }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione tipo campi
     if (typeof email !== 'string' || typeof password !== 'string' || typeof name !== 'string') {
-      return Response.json({ error: 'Email, password, and name must be strings' }, { status: 400 })
+      return Response.json({ error: 'Email, password, and name must be strings' }, { status: 400, headers: corsHeaders })
     }
 
     if (role && typeof role !== 'string') {
-      return Response.json({ error: 'Role must be a string' }, { status: 400 })
+      return Response.json({ error: 'Role must be a string' }, { status: 400, headers: corsHeaders })
     }
 
     // Normalizzazione email
@@ -150,24 +156,24 @@ export async function POST(request: Request) {
 
     // Validazione formato email
     if (!isValidEmail(normalizedEmail)) {
-      return Response.json({ error: 'Invalid email format' }, { status: 400 })
+      return Response.json({ error: 'Invalid email format' }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione forza password
     const passwordValidation = validatePasswordStrength(password)
     if (!passwordValidation.valid) {
-      return Response.json({ error: passwordValidation.error }, { status: 400 })
+      return Response.json({ error: passwordValidation.error }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione e sanitizzazione nome
     const nameValidation = validateName(name)
     if (!nameValidation.valid) {
-      return Response.json({ error: nameValidation.error }, { status: 400 })
+      return Response.json({ error: nameValidation.error }, { status: 400, headers: corsHeaders })
     }
 
     // Validazione ruolo
     if (!isValidRole(role)) {
-      return Response.json({ error: 'Invalid role. Must be "business" or "admin"' }, { status: 400 })
+      return Response.json({ error: 'Invalid role. Must be "business" or "admin"' }, { status: 400, headers: corsHeaders })
     }
 
     // Connessione DB
@@ -176,7 +182,7 @@ export async function POST(request: Request) {
     // Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail })
     if (existingUser) {
-      return Response.json({ error: 'User already exists with this email' }, { status: 409 })
+      return Response.json({ error: 'User already exists with this email' }, { status: 409, headers: corsHeaders })
     }
 
     // Create new user con dati sanitizzati
@@ -201,26 +207,26 @@ export async function POST(request: Request) {
         name: user.name,
         role: user.role
       }
-    }, { status: 201 })
+    }, { status: 201, headers: corsHeaders })
   } catch (error: any) {
     console.error('Registration error:', error)
 
     // Gestione errori specifici di MongoDB
     if (error.name === 'MongooseError' || error.name === 'MongoError') {
-      return Response.json({ error: 'Database connection error' }, { status: 503 })
+      return Response.json({ error: 'Database connection error' }, { status: 503, headers: corsHeaders })
     }
 
     // Gestione errori di duplicazione (fallback)
     if (error.code === 11000) {
-      return Response.json({ error: 'User already exists with this email' }, { status: 409 })
+      return Response.json({ error: 'User already exists with this email' }, { status: 409, headers: corsHeaders })
     }
 
     // Gestione errori di validazione Mongoose
     if (error.name === 'ValidationError') {
-      return Response.json({ error: 'Validation error: ' + error.message }, { status: 400 })
+      return Response.json({ error: 'Validation error: ' + error.message }, { status: 400, headers: corsHeaders })
     }
 
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders })
   }
 }
 
