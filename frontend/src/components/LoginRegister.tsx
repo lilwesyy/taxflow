@@ -3,14 +3,6 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Logo from './common/Logo'
 import { useAuth } from '../context/AuthContext'
 
-type UserRole = 'business' | 'admin'
-
-interface User {
-  email: string
-  name: string
-  role: UserRole
-}
-
 interface LoginRegisterProps {
   onBack: () => void
   onLogin: () => void
@@ -74,8 +66,6 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
           const error = await response.json()
           throw new Error(error.error || 'Registration failed')
         }
-
-        const data = await response.json()
 
         // Dopo la registrazione, fai il login
         await login(formData.email, formData.password)

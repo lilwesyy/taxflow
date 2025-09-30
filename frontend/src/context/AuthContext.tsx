@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 
 interface User {
   id: string
@@ -14,7 +14,6 @@ interface AuthContextType {
   logout: () => void
   isLoading: boolean
   updateUser: (userData: Partial<User>) => void
-  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)

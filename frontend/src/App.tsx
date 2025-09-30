@@ -4,14 +4,6 @@ import LoginRegister from './components/LoginRegister'
 import Dashboard from './components/Dashboard'
 import { useAuth } from './context/AuthContext'
 
-type UserRole = 'business' | 'admin'
-
-interface User {
-  email: string
-  name: string
-  role: UserRole
-}
-
 function App() {
   const { user, isLoading } = useAuth()
   const [currentPage, setCurrentPage] = useState('landing')
