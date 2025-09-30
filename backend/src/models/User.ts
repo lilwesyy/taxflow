@@ -77,20 +77,11 @@ const UserSchema = new Schema({
     trim: true
   },
   notificationSettings: {
-    type: {
-      emailNewClient: { type: Boolean, default: true },
-      emailNewRequest: { type: Boolean, default: true },
-      emailPayment: { type: Boolean, default: false },
-      pushNotifications: { type: Boolean, default: true },
-      weeklyReport: { type: Boolean, default: true }
-    },
-    default: {
-      emailNewClient: true,
-      emailNewRequest: true,
-      emailPayment: false,
-      pushNotifications: true,
-      weeklyReport: true
-    }
+    emailNewClient: { type: Boolean, default: true },
+    emailNewRequest: { type: Boolean, default: true },
+    emailPayment: { type: Boolean, default: false },
+    pushNotifications: { type: Boolean, default: true },
+    weeklyReport: { type: Boolean, default: true }
   }
 }, {
   timestamps: true

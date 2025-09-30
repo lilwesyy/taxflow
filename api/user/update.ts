@@ -15,20 +15,11 @@ const UserSchema = new mongoose.Schema({
   fiscalCode: { type: String },
   registrationNumber: { type: String },
   notificationSettings: {
-    type: {
-      emailNewClient: { type: Boolean, default: true },
-      emailNewRequest: { type: Boolean, default: true },
-      emailPayment: { type: Boolean, default: false },
-      pushNotifications: { type: Boolean, default: true },
-      weeklyReport: { type: Boolean, default: true }
-    },
-    default: {
-      emailNewClient: true,
-      emailNewRequest: true,
-      emailPayment: false,
-      pushNotifications: true,
-      weeklyReport: true
-    }
+    emailNewClient: { type: Boolean, default: true },
+    emailNewRequest: { type: Boolean, default: true },
+    emailPayment: { type: Boolean, default: false },
+    pushNotifications: { type: Boolean, default: true },
+    weeklyReport: { type: Boolean, default: true }
   }
 }, { timestamps: true })
 
@@ -252,6 +243,13 @@ export async function PUT(request: Request) {
         address: user.address,
         fiscalCode: user.fiscalCode,
         registrationNumber: user.registrationNumber,
+        notificationSettings: user.notificationSettings || {
+          emailNewClient: true,
+          emailNewRequest: true,
+          emailPayment: false,
+          pushNotifications: true,
+          weeklyReport: true
+        },
         updatedAt: user.updatedAt
       }
     })
