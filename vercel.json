@@ -9,27 +9,18 @@
       }
     },
     {
-      "src": "backend/src/**/*.ts",
+      "src": "api/**/*.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/src/$1"
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret"
-  },
-  "functions": {
-    "backend/src/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }

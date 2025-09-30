@@ -16,7 +16,17 @@
     "start:backend": "cd backend && npm start",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\""
   },
+  "dependencies": {
+    "@vercel/node": "^3.0.21",
+    "mongoose": "^8.18.2",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2"
+  },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3",
     "concurrently": "^8.2.2"
   },
   "workspaces": [
