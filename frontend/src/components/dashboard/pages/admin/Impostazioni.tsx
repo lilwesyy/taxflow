@@ -26,7 +26,7 @@ export default function Impostazioni() {
       if (!user || !token) return
 
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'https://taxflow.vercel.app/api'
+        const API_URL = import.meta.env.VITE_API_URL || '/api'
         const response = await fetch(`${API_URL}/user/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -99,7 +99,7 @@ export default function Impostazioni() {
     setMessage(null)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://taxflow.vercel.app/api'
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
 
       if (section === 'profile') {
         const response = await fetch(`${API_URL}/user/update`, {
