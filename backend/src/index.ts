@@ -16,7 +16,9 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://backend-production-3061.up.railway.app',
-    'https://taxflow-loyjstpx6-mircos-projects-0bb30613.vercel.app'
+    'https://taxflow-loyjstpx6-mircos-projects-0bb30613.vercel.app',
+    'https://taxflow.it',
+    'https://www.taxflow.it'
   ],
   credentials: true
 }))
