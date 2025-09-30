@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "TaxFlow Backend API",
   "main": "src/index.ts",
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
