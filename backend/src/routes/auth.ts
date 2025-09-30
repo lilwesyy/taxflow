@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import speakeasy from 'speakeasy'
 import User from '../models/User'
 import Session from '../models/Session'
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 
 const router = Router()
 
