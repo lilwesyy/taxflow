@@ -47,6 +47,10 @@ export default function Impostazioni() {
             codiceFiscale: userData.fiscalCode || '',
             ordineIscrizione: userData.registrationNumber || ''
           })
+
+          if (userData.notificationSettings) {
+            setNotificationSettings(userData.notificationSettings)
+          }
         }
       } catch (error) {
         console.error('Error loading profile:', error)
@@ -67,8 +71,7 @@ export default function Impostazioni() {
     emailNewRequest: true,
     emailPayment: false,
     pushNotifications: true,
-    weeklyReport: true,
-    marketingEmails: false
+    weeklyReport: true
   })
 
   const [systemSettings, setSystemSettings] = useState({
@@ -161,6 +164,24 @@ export default function Impostazioni() {
 
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
         setMessage({ type: 'success', text: 'Password aggiornata con successo!' })
+      } else if (section === 'notifications') {
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            notificationSettings
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update notifications')
+        }
+
+        setMessage({ type: 'success', text: 'Preferenze notifiche aggiornate con successo!' })
       } else {
         // Per ora le altre sezioni non sono implementate
         setMessage({ type: 'success', text: `Impostazioni ${section} salvate!` })
@@ -369,35 +390,16 @@ export default function Impostazioni() {
               />
             </label>
           </div>
-
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-purple-50 group-hover:scale-110 transition-transform mr-3">
-                <Mail className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Email Marketing</p>
-                <p className="text-sm text-gray-600">Ricevi aggiornamenti su nuove funzionalità e promozioni</p>
-              </div>
-            </div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.marketingEmails}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, marketingEmails: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-            </label>
-          </div>
         </div>
 
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => handleSave('notifications')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
+            disabled={loading}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
-            Salva Preferenze
+            {loading ? 'Salvataggio...' : 'Salva Preferenze'}
           </button>
         </div>
       </div>

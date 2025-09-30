@@ -17,6 +17,14 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 // User model type
+interface NotificationSettings {
+  emailNewClient: boolean
+  emailNewRequest: boolean
+  emailPayment: boolean
+  pushNotifications: boolean
+  weeklyReport: boolean
+}
+
 interface IUser extends mongoose.Document {
   email: string
   password: string
@@ -28,6 +36,7 @@ interface IUser extends mongoose.Document {
   address?: string
   fiscalCode?: string
   registrationNumber?: string
+  notificationSettings?: NotificationSettings
   createdAt: Date
   updatedAt: Date
 }
@@ -114,7 +123,7 @@ export async function PUT(request: Request) {
       return Response.json({ error: 'Invalid JSON in request body' }, { status: 400 })
     }
 
-    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword } = body
+    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings } = body
 
     // Connect to database
     await connectDB()
@@ -167,6 +176,11 @@ export async function PUT(request: Request) {
     if (address !== undefined) user.address = address?.trim() || undefined
     if (fiscalCode !== undefined) user.fiscalCode = fiscalCode?.trim().toUpperCase() || undefined
     if (registrationNumber !== undefined) user.registrationNumber = registrationNumber?.trim() || undefined
+
+    // Update notification settings if provided
+    if (notificationSettings !== undefined) {
+      user.notificationSettings = notificationSettings
+    }
 
     // Update password if provided
     if (newPassword !== undefined) {

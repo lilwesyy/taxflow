@@ -3,6 +3,14 @@ import bcrypt from 'bcryptjs';
 
 export type UserRole = 'business' | 'admin';
 
+export interface NotificationSettings {
+  emailNewClient: boolean;
+  emailNewRequest: boolean;
+  emailPayment: boolean;
+  pushNotifications: boolean;
+  weeklyReport: boolean;
+}
+
 export interface IUser extends Document {
   email: string;
   password: string;
@@ -14,6 +22,7 @@ export interface IUser extends Document {
   address?: string;
   fiscalCode?: string;
   registrationNumber?: string;
+  notificationSettings?: NotificationSettings;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -66,6 +75,22 @@ const UserSchema = new Schema({
   registrationNumber: {
     type: String,
     trim: true
+  },
+  notificationSettings: {
+    type: {
+      emailNewClient: { type: Boolean, default: true },
+      emailNewRequest: { type: Boolean, default: true },
+      emailPayment: { type: Boolean, default: false },
+      pushNotifications: { type: Boolean, default: true },
+      weeklyReport: { type: Boolean, default: true }
+    },
+    default: {
+      emailNewClient: true,
+      emailNewRequest: true,
+      emailPayment: false,
+      pushNotifications: true,
+      weeklyReport: true
+    }
   }
 }, {
   timestamps: true

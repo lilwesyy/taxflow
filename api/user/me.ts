@@ -16,6 +16,14 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 // User model type
+interface NotificationSettings {
+  emailNewClient: boolean
+  emailNewRequest: boolean
+  emailPayment: boolean
+  pushNotifications: boolean
+  weeklyReport: boolean
+}
+
 interface IUser extends mongoose.Document {
   email: string
   password: string
@@ -27,6 +35,7 @@ interface IUser extends mongoose.Document {
   address?: string
   fiscalCode?: string
   registrationNumber?: string
+  notificationSettings?: NotificationSettings
   createdAt: Date
   updatedAt: Date
 }
@@ -101,6 +110,13 @@ export async function GET(request: Request) {
         address: user.address,
         fiscalCode: user.fiscalCode,
         registrationNumber: user.registrationNumber,
+        notificationSettings: user.notificationSettings || {
+          emailNewClient: true,
+          emailNewRequest: true,
+          emailPayment: false,
+          pushNotifications: true,
+          weeklyReport: true
+        },
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
