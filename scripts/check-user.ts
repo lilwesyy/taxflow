@@ -18,7 +18,13 @@ async function checkUser() {
     process.exit(1)
   }
 
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Vercel-Admin-taxflow-db:6aWf0UVqFNzkVVEQ@taxflow-db.vvbfmn6.mongodb.net/?retryWrites=true&w=majority'
+  const MONGODB_URI = process.env.MONGODB_URI
+
+  if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is not defined')
+    console.error('Please set MONGODB_URI in your .env file')
+    process.exit(1)
+  }
 
   try {
     await mongoose.connect(MONGODB_URI)

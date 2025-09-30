@@ -52,14 +52,14 @@ npm run install:all
 
 ### Avvio dalla root
 ```bash
-# Backend (porta 5000)
+# Backend (porta 3000)
 npm run backend
 
 # Frontend (porta 5173)
 npm run frontend
 
 # Entrambi insieme
-npm run dev
+npm start
 ```
 
 ### Setup Environment
@@ -70,11 +70,12 @@ cp .env.example .env
 ```
 
 ### Comandi disponibili
-- `npm run backend` - Avvia il server API
+- `npm run backend` - Avvia il server API (Vercel dev)
 - `npm run frontend` - Avvia React dev server
-- `npm run dev` - Avvia backend e frontend insieme
-- `npm run build:all` - Build di produzione
-- `npm run install:all` - Installa tutte le dipendenze
+- `npm start` - Avvia backend e frontend insieme
+- `npm run build` - Build di produzione
+- `npm run add-user` - Crea nuovo utente admin
+- `npm run check-user` - Verifica esistenza utente
 
 ## 🔧 Environment Variables
 
