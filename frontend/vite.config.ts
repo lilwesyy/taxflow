@@ -8,9 +8,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'recharts-vendor': ['recharts'],
-          'ui-vendor': ['lucide-react', '@headlessui/react']
+          'react-vendor': ['react', 'react-dom'],
+          'icons-vendor': ['lucide-react']
         }
       }
     },
