@@ -22,8 +22,16 @@ UserSchema.pre('save', async function(next) {
   }
 })
 
+// User model type
+interface IUser extends mongoose.Document {
+  email: string
+  password: string
+  name: string
+  role: 'business' | 'admin'
+}
+
 // User model
-const User = mongoose.models.User || mongoose.model('User', UserSchema)
+const User = (mongoose.models.User || mongoose.model('User', UserSchema)) as mongoose.Model<IUser>
 
 // Database connection
 const connectDB = async () => {
