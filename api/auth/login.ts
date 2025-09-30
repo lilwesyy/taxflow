@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -43,47 +42,33 @@ const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' })
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization')
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
+export async function POST(request: Request) {
   try {
     await connectDB()
 
-    const { email, password } = req.body
+    const body = await request.json()
+    const { email, password } = body
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' })
+      return Response.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
     // Find user by email
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return Response.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     // Check password
     const isPasswordValid = await user.comparePassword(password)
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return Response.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     // Generate token
     const token = generateToken(user._id.toString())
 
-    res.json({
+    return Response.json({
       success: true,
       token,
       user: {
@@ -95,6 +80,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   } catch (error) {
     console.error('Login error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }
