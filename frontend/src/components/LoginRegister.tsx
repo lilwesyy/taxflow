@@ -104,17 +104,6 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-          {/* Test users info */}
-          {isLogin && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">Utenti di test disponibili:</h3>
-              <div className="text-xs text-blue-700 space-y-1">
-                <div><strong>Business:</strong> marco.bianchi@email.com / cliente123</div>
-                <div><strong>Admin:</strong> francesco.alberti@taxflow.it / admin123</div>
-              </div>
-            </div>
-          )}
-
           {/* Toggle buttons */}
           <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
             <button
