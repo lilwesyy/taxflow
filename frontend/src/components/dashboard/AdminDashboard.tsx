@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import AdminOverview from './pages/admin/AdminOverview'
 import GestioneClienti from './pages/admin/GestioneClienti'
 import RichiestePiva from './pages/admin/RichiestePiva'
@@ -27,6 +28,7 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ onLogout, userRole, userName, userEmail }: AdminDashboardProps) {
   const { logout } = useAuth()
+  const { showToast } = useToast()
   const [activeSection, setActiveSection] = useState(() => {
     // Carica la sezione salvata o usa 'dashboard' come default
     return localStorage.getItem('admin_active_section') || 'dashboard'
@@ -35,7 +37,8 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
   const handleLogout = () => {
     logout()
     localStorage.removeItem('admin_active_section')
-    onLogout()
+    showToast('Logout effettuato con successo', 'success')
+    setTimeout(() => onLogout(), 500)
   }
 
   const handleSectionChange = (section: string) => {

@@ -19,6 +19,8 @@ interface IUser extends mongoose.Document {
     pushNotifications: boolean
     weeklyReport: boolean
   }
+  twoFactorEnabled: boolean
+  twoFactorSecret?: string
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
@@ -44,7 +46,9 @@ const UserSchema = new mongoose.Schema({
       pushNotifications: true,
       weeklyReport: true
     }
-  }
+  },
+  twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorSecret: { type: String }
 }, { timestamps: true, strict: false })
 
 // Hash password before saving

@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import connectDB from './config/database'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
+import securityRoutes from './routes/security'
 
 dotenv.config()
 
@@ -11,12 +12,21 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://backend-production-3061.up.railway.app',
+    // TODO: Aggiungi qui il tuo dominio Vercel dopo il deploy
+    // 'https://your-app.vercel.app'
+  ],
+  credentials: true
+}))
 app.use(express.json())
 
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
+app.use('/api/security', securityRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

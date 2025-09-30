@@ -1,141 +1,189 @@
-# Deploy su Railway - Guida Completa
+# Quick Deploy Guide - TaxFlow
+
+## Backend Railway
+**URL Attuale**: https://backend-production-3061.up.railway.app
 
 ## Architettura
-Il progetto sarà deployato su Railway con 3 servizi:
-- **Backend** (Express API)
-- **Frontend** (React SPA)
-- **Database** (MongoDB)
+- **Backend** su Railway (già deployato)
+- **Frontend** su Vercel
+- **Database** MongoDB su Railway
 
-## Step 1: Login a Railway
+## Configurazione Attuale
 
-```bash
-railway login
-```
+### Backend (Railway) ✅
+- **URL**: https://backend-production-3061.up.railway.app
+- **Status**: Deployato
 
-Questo aprirà il browser per autenticarti.
+### Database (Railway) ✅
+- **Connection**: `mongodb://mongo:buznzsXyvqWmTROlTZpnQMKQZnhyuOJX@turntable.proxy.rlwy.net:43605`
+- **Status**: Attivo
 
-## Step 2: Crea Progetto Railway
+### Variabili d'Ambiente Backend Railway
 
-Dal dashboard Railway (https://railway.app):
-1. Clicca "New Project"
-2. Seleziona "Empty Project"
-3. Rinomina il progetto in "TaxFlow"
-
-## Step 3: Aggiungi MongoDB
-
-1. Nel progetto, clicca "+ New"
-2. Seleziona "Database" → "Add MongoDB"
-3. Railway creerà automaticamente un database MongoDB
-4. Copia la variabile `MONGO_URL` che verrà generata
-
-## Step 4: Deploy Backend
+Assicurati di avere queste variabili configurate su Railway:
 
 ```bash
-cd backend
-railway link
-# Seleziona il progetto TaxFlow
-railway up
+MONGODB_URI=mongodb://mongo:buznzsXyvqWmTROlTZpnQMKQZnhyuOJX@turntable.proxy.rlwy.net:43605
+JWT_SECRET=<your-secure-secret>
+NODE_ENV=production
 ```
 
-Dopo il deploy:
-1. Vai su Railway dashboard → Backend service
-2. Vai su "Variables" tab
-3. Aggiungi le variabili:
-   - `MONGODB_URI` = (copia da MongoDB service → Connect → MONGO_URL)
-   - `JWT_SECRET` = `taxflow_jwt_secret_key_2024`
-   - `PORT` = `3000` (opzionale, Railway lo gestisce automaticamente)
+## Deploy Frontend su Vercel
 
-4. Vai su "Settings" → "Networking"
-5. Clicca "Generate Domain" per ottenere un URL pubblico
-6. Copia l'URL (es: `https://taxflow-backend-production.up.railway.app`)
+### Step 1: Crea Progetto su Vercel
 
-## Step 5: Deploy Frontend
+1. Vai su https://vercel.com
+2. Click "New Project"
+3. Importa il repository GitHub `taxflow`
+4. Configura:
+   - **Root Directory**: `frontend`
+   - **Framework Preset**: Vite
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+### Step 2: Configura Variabile d'Ambiente
+
+Nel dashboard Vercel, Settings → Environment Variables:
 
 ```bash
-cd ../frontend
-railway link
-# Seleziona lo STESSO progetto TaxFlow
-railway up
+VITE_API_URL=https://backend-production-3061.up.railway.app
 ```
 
-Dopo il deploy:
-1. Vai su Railway dashboard → Frontend service
-2. Vai su "Variables" tab
-3. Aggiungi:
-   - `VITE_API_URL` = `https://taxflow-backend-production.up.railway.app/api`
-   (usa l'URL del backend che hai copiato al Step 4)
+### Step 3: Deploy
 
-4. Vai su "Settings" → "Networking"
-5. Clicca "Generate Domain" per ottenere un URL pubblico
-6. Questo sarà il tuo URL frontend: `https://taxflow-frontend-production.up.railway.app`
+Vercel farà automaticamente il deploy. Una volta completato, avrai un URL tipo:
+`https://taxflow.vercel.app`
 
-## Step 6: Redeploy Frontend
+### Step 4: Aggiorna CORS nel Backend
 
-Dopo aver aggiunto `VITE_API_URL`, devi rifare il deploy:
+Modifica `backend/src/index.ts` e aggiungi il dominio Vercel:
+
+```typescript
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://taxflow.vercel.app',  // Sostituisci con il tuo URL Vercel
+    'https://backend-production-3061.up.railway.app'
+  ],
+  credentials: true
+}))
+```
+
+Committa e pusha su GitHub - Railway farà il redeploy automaticamente.
+
+## Test Deployment
+
+### 1. Test Backend Railway
 
 ```bash
-cd frontend
-railway up --detach
+# Health check
+curl https://backend-production-3061.up.railway.app/health
+
+# Dovrebbe restituire: {"status":"ok","message":"Server is running"}
 ```
 
-Oppure dal dashboard Railway, clicca sui 3 puntini del servizio Frontend → "Redeploy"
+### 2. Test Database Connection
 
-## Struttura Finale
+Il backend dovrebbe connettersi automaticamente al database. Verifica nei logs Railway:
 
-```
-Railway Project: TaxFlow
-├── MongoDB Service
-│   └── MONGO_URL: mongodb://...
-├── Backend Service
-│   ├── URL: https://taxflow-backend-production.up.railway.app
-│   └── Variables:
-│       ├── MONGODB_URI (from MongoDB service)
-│       ├── JWT_SECRET
-│       └── PORT
-└── Frontend Service
-    ├── URL: https://taxflow-frontend-production.up.railway.app
-    └── Variables:
-        └── VITE_API_URL (backend URL + /api)
+```bash
+railway logs
+# Cerca: "MongoDB connected successfully"
 ```
 
-## Test
+### 3. Test Frontend Vercel
 
-Dopo il deploy, testa:
+1. Apri il tuo URL Vercel nel browser
+2. Prova a registrare un nuovo utente
+3. Fai login
+4. Verifica che il dashboard si carichi correttamente
 
-1. **Health Check Backend**:
+### 4. Test Completo
+
+- [ ] Registrazione nuovo utente
+- [ ] Login con email/password
+- [ ] Attivazione 2FA
+- [ ] Login con 2FA
+- [ ] Visualizzazione sessioni attive
+- [ ] Terminazione sessione
+- [ ] Cambio password
+- [ ] Logout
+
+## Creare Primo Utente Admin
+
+### Opzione 1: Script Locale
+
+1. Crea un file `.env` nella root del progetto:
    ```bash
-   curl https://taxflow-backend-production.up.railway.app/api/health
+   MONGODB_URI=mongodb://mongo:buznzsXyvqWmTROlTZpnQMKQZnhyuOJX@turntable.proxy.rlwy.net:43605
    ```
 
-2. **Frontend**:
-   Apri `https://taxflow-frontend-production.up.railway.app` nel browser
+2. Esegui lo script:
+   ```bash
+   npm run add-user admin@taxflow.com SecurePassword123 "Admin TaxFlow"
+   ```
 
-3. **Login/Register**:
-   Crea un utente admin e fai login
+### Opzione 2: Registrazione Web
 
-## Comandi Utili
+1. Vai su Vercel URL
+2. Clicca su "Registrati"
+3. Compila il form
+4. Il primo utente sarà automaticamente role "business"
+5. Cambia manualmente il role in "admin" nel database se necessario
 
+## Troubleshooting
+
+### Backend non risponde
 ```bash
-# Vedere logs del backend
-cd backend && railway logs
+# Verifica logs Railway
+railway logs
 
-# Vedere logs del frontend
-cd frontend && railway logs
-
-# Aggiornare backend
-cd backend && railway up
-
-# Aggiornare frontend
-cd frontend && railway up
-
-# Aprire dashboard Railway
-railway open
+# Verifica che il servizio sia online
+curl https://backend-production-3061.up.railway.app/health
 ```
 
-## Note
+### Database connection error
+- Verifica che `MONGODB_URI` sia configurato correttamente su Railway
+- Controlla che il servizio MongoDB sia attivo nel dashboard Railway
 
-- Railway ha un piano gratuito con $5 di credito/mese
-- Ogni servizio può avere il suo dominio personalizzato
-- Le variabili d'ambiente sono isolate per servizio
-- MongoDB su Railway è un container gestito da loro
-- I servizi comunicano via URL pubblici (Railway gestisce SSL automaticamente)
+### Frontend non carica dati
+- Verifica che `VITE_API_URL` sia configurato su Vercel
+- Controlla la console del browser per errori CORS
+- Verifica che il CORS nel backend includa il dominio Vercel
+
+### CORS errors
+Aggiorna `backend/src/index.ts` con il dominio Vercel corretto e committa:
+```bash
+git add backend/src/index.ts
+git commit -m "Update CORS for Vercel domain"
+git push
+```
+
+Railway farà automaticamente il redeploy.
+
+## Checklist Finale
+
+- [ ] Backend deployato su Railway ✅
+- [ ] MongoDB attivo su Railway ✅
+- [ ] Variabili d'ambiente configurate su Railway
+- [ ] Frontend deployato su Vercel
+- [ ] `VITE_API_URL` configurato su Vercel
+- [ ] CORS aggiornato con dominio Vercel
+- [ ] Test health check backend OK
+- [ ] Test registrazione frontend OK
+- [ ] Test login OK
+- [ ] Test 2FA OK
+- [ ] Utente admin creato
+
+## Link Utili
+
+- **Backend URL**: https://backend-production-3061.up.railway.app
+- **Railway Dashboard**: https://railway.app/project/[your-project-id]
+- **Vercel Dashboard**: https://vercel.com/[your-username]/taxflow
+- **MongoDB Connection**: `mongodb://mongo:***@turntable.proxy.rlwy.net:43605`
+
+## Costi
+
+- **Railway**: ~$5/mese (include backend + MongoDB)
+- **Vercel**: Gratis (piano hobby)
+- **Totale**: ~$5/mese

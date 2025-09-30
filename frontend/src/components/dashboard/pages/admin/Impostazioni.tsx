@@ -1,14 +1,16 @@
 import { Settings, User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
+import { useToast } from '../../../../context/ToastContext'
+import Modal from '../../../common/Modal'
 
 export default function Impostazioni() {
   const { user, token, updateUser } = useAuth()
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const [profileData, setProfileData] = useState({
     nome: '',
@@ -63,11 +65,86 @@ export default function Impostazioni() {
     loadUserProfile()
   }, [user, token])
 
+  // Load 2FA status
+  useEffect(() => {
+    const load2FAStatus = async () => {
+      if (!token) return
+
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api'
+        const response = await fetch(`${API_URL}/security/2fa/status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setTwoFactorEnabled(data.enabled)
+        }
+      } catch (error) {
+        console.error('Error loading 2FA status:', error)
+      }
+    }
+
+    load2FAStatus()
+  }, [token])
+
+  // Load sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security' && token) {
+      loadSessions()
+    }
+  }, [activeTab, token])
+
+  const loadSessions = async () => {
+    setLoadingSessions(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSessions(data.sessions)
+      }
+    } catch (error) {
+      console.error('Error loading sessions:', error)
+    } finally {
+      setLoadingSessions(false)
+    }
+  }
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   })
+
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false
+  })
+
+  // Validate password strength
+  const validatePassword = (password: string) => {
+    setPasswordStrength({
+      hasMinLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password)
+    })
+  }
+
+  const isPasswordValid = passwordStrength.hasMinLength &&
+    passwordStrength.hasUpperCase &&
+    passwordStrength.hasLowerCase &&
+    passwordStrength.hasNumber
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailNewClient: true,
@@ -92,6 +169,17 @@ export default function Impostazioni() {
     backupFrequency: 'daily'
   })
 
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [show2FAModal, setShow2FAModal] = useState(false)
+  const [showTerminateSessionModal, setShowTerminateSessionModal] = useState(false)
+  const [sessionToTerminate, setSessionToTerminate] = useState<string | null>(null)
+  const [qrCode, setQrCode] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [disable2FAPassword, setDisable2FAPassword] = useState('')
+
+  const [sessions, setSessions] = useState<any[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
+
   const tabs = [
     { id: 'profile', name: 'Profilo', icon: User },
     { id: 'notifications', name: 'Notifiche', icon: Bell },
@@ -100,9 +188,136 @@ export default function Impostazioni() {
     { id: 'integrations', name: 'Integrazioni', icon: Database }
   ]
 
+  const handle2FAEnable = async () => {
+    setLoading(true)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/2fa/enable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante l\'attivazione 2FA')
+      }
+
+      const data = await response.json()
+      setQrCode(data.qrCode)
+      setShow2FAModal(true)
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handle2FAVerify = async () => {
+    if (!verificationCode) {
+      showToast('Inserisci il codice di verifica', 'warning')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/2fa/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ token: verificationCode })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Codice di verifica non valido')
+      }
+
+      setTwoFactorEnabled(true)
+      setShow2FAModal(false)
+      setVerificationCode('')
+      setQrCode('')
+      showToast('2FA attivato con successo!', 'success')
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handle2FADisable = async () => {
+    if (!disable2FAPassword) {
+      showToast('Inserisci la password per disattivare 2FA', 'warning')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/2fa/disable`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ password: disable2FAPassword })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la disattivazione 2FA')
+      }
+
+      setTwoFactorEnabled(false)
+      setDisable2FAPassword('')
+      showToast('2FA disattivato con successo!', 'success')
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTerminateSession = (sessionId: string) => {
+    setSessionToTerminate(sessionId)
+    setShowTerminateSessionModal(true)
+  }
+
+  const confirmTerminateSession = async () => {
+    if (!sessionToTerminate) return
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/${sessionToTerminate}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la terminazione della sessione')
+      }
+
+      showToast('Sessione terminata con successo', 'success')
+      setShowTerminateSessionModal(false)
+      setSessionToTerminate(null)
+      loadSessions()
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    }
+  }
+
   const handleSave = async (section: string) => {
     setLoading(true)
-    setMessage(null)
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || '/api'
@@ -146,7 +361,7 @@ export default function Impostazioni() {
           ordineIscrizione: data.user.registrationNumber || ''
         })
 
-        setMessage({ type: 'success', text: 'Profilo aggiornato con successo!' })
+        showToast('Profilo aggiornato con successo!', 'success')
       } else if (section === 'password') {
         const response = await fetch(`${API_URL}/user/update`, {
           method: 'PUT',
@@ -166,7 +381,7 @@ export default function Impostazioni() {
         }
 
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-        setMessage({ type: 'success', text: 'Password aggiornata con successo!' })
+        showToast('Password aggiornata con successo!', 'success')
       } else if (section === 'notifications') {
         console.log('Saving notification settings:', notificationSettings)
         const response = await fetch(`${API_URL}/user/update`, {
@@ -194,14 +409,14 @@ export default function Impostazioni() {
           setNotificationSettings(data.user.notificationSettings)
         }
 
-        setMessage({ type: 'success', text: 'Preferenze notifiche aggiornate con successo!' })
+        showToast('Preferenze notifiche aggiornate con successo!', 'success')
       } else {
         // Per ora le altre sezioni non sono implementate
-        setMessage({ type: 'success', text: `Impostazioni ${section} salvate!` })
+        showToast(`Impostazioni ${section} salvate!`, 'success')
       }
     } catch (error: any) {
       console.error(`Error saving ${section}:`, error)
-      setMessage({ type: 'error', text: error.message || 'Errore durante il salvataggio' })
+      showToast(error.message || 'Errore durante il salvataggio', 'error')
     } finally {
       setLoading(false)
     }
@@ -424,17 +639,31 @@ export default function Impostazioni() {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Sicurezza Account</h3>
 
-        <div className="group bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
-          <div className="flex items-center">
-            <div className="p-1 rounded-lg bg-blue-100 group-hover:scale-110 transition-transform mr-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-medium text-blue-900">Account Sicuro</p>
-              <p className="text-sm text-blue-700">Il tuo account è protetto con autenticazione a due fattori</p>
+        {twoFactorEnabled ? (
+          <div className="group bg-green-50 border border-green-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center">
+              <div className="p-1 rounded-lg bg-green-100 group-hover:scale-110 transition-transform mr-2">
+                <Shield className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-green-900">Account Sicuro</p>
+                <p className="text-sm text-green-700">Il tuo account è protetto con autenticazione a due fattori</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="group bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center">
+              <div className="p-1 rounded-lg bg-yellow-100 group-hover:scale-110 transition-transform mr-2">
+                <Shield className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="font-medium text-yellow-900">Sicurezza Base</p>
+                <p className="text-sm text-yellow-700">Ti consigliamo di attivare l'autenticazione a due fattori per maggiore sicurezza</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           <div>
@@ -472,9 +701,32 @@ export default function Impostazioni() {
                 <input
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) => {
+                    setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))
+                    validatePassword(e.target.value)
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
+                {passwordData.newPassword && (
+                  <div className="mt-2 space-y-1 text-sm">
+                    <div className={`flex items-center ${passwordStrength.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasMinLength ? '✓' : '○'}</span>
+                      Almeno 8 caratteri
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasUpperCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasUpperCase ? '✓' : '○'}</span>
+                      Una lettera maiuscola
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasLowerCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasLowerCase ? '✓' : '○'}</span>
+                      Una lettera minuscola
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasNumber ? '✓' : '○'}</span>
+                      Un numero
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -489,10 +741,14 @@ export default function Impostazioni() {
                 />
               </div>
 
+              {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-sm text-red-600 mt-2">Le password non corrispondono</p>
+              )}
+
               <div className="flex justify-end">
                 <button
                   onClick={() => handleSave('password')}
-                  disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword}
+                  disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
                   className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
@@ -505,41 +761,85 @@ export default function Impostazioni() {
             <h4 className="font-medium text-gray-900 mb-4">Autenticazione a Due Fattori</h4>
             <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
               <div>
-                <p className="font-medium text-gray-900">2FA Attivata</p>
+                <p className="font-medium text-gray-900">2FA {twoFactorEnabled ? 'Attivata' : 'Disattivata'}</p>
                 <p className="text-sm text-gray-600">Proteggi il tuo account con un livello aggiuntivo di sicurezza</p>
               </div>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-green-600 font-medium">Attiva</span>
-                <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm">
-                  Disattiva
-                </button>
+                <span className={`text-sm font-medium ${twoFactorEnabled ? 'text-green-600' : 'text-gray-500'}`}>
+                  {twoFactorEnabled ? 'Attiva' : 'Non attiva'}
+                </span>
+                {!twoFactorEnabled ? (
+                  <button
+                    onClick={handle2FAEnable}
+                    disabled={loading}
+                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                  >
+                    Attiva
+                  </button>
+                ) : (
+                  <div>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={disable2FAPassword}
+                      onChange={(e) => setDisable2FAPassword(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mr-2 text-sm"
+                    />
+                    <button
+                      onClick={handle2FADisable}
+                      disabled={loading || !disable2FAPassword}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                    >
+                      Disattiva
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           <div className="border-t border-gray-200 pt-6">
             <h4 className="font-medium text-gray-900 mb-4">Sessioni Attive</h4>
-            <div className="space-y-3">
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-gray-900">Browser Corrente</p>
-                  <p className="text-sm text-gray-600">Chrome su Windows • Milano, Italia</p>
-                  <p className="text-xs text-gray-500">Ultima attività: adesso</p>
-                </div>
-                <span className="text-sm text-green-600 font-medium">Attuale</span>
-              </div>
+            {loadingSessions ? (
+              <p className="text-center text-gray-500 py-4">Caricamento sessioni...</p>
+            ) : sessions.length === 0 ? (
+              <p className="text-center text-gray-500 py-4">Nessuna sessione attiva</p>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((session) => {
+                  const lastActivity = new Date(session.lastActivity)
+                  const now = new Date()
+                  const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / 60000)
+                  const timeAgo = diffMinutes < 1 ? 'adesso' :
+                                  diffMinutes < 60 ? `${diffMinutes} minuti fa` :
+                                  diffMinutes < 1440 ? `${Math.floor(diffMinutes / 60)} ore fa` :
+                                  `${Math.floor(diffMinutes / 1440)} giorni fa`
 
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                <div>
-                  <p className="font-medium text-gray-900">Safari su iPhone</p>
-                  <p className="text-sm text-gray-600">Milano, Italia</p>
-                  <p className="text-xs text-gray-500">Ultima attività: 2 ore fa</p>
-                </div>
-                <button className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
-                  Termina Sessione
-                </button>
+                  return (
+                    <div key={session.id} className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {session.browser} su {session.os}
+                          {session.isCurrent && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Corrente</span>}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {session.location} • {session.ip}
+                        </p>
+                        <p className="text-xs text-gray-500">Ultima attività: {timeAgo}</p>
+                      </div>
+                      {!session.isCurrent && (
+                        <button
+                          onClick={() => handleTerminateSession(session.id)}
+                          className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                        >
+                          Termina Sessione
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -817,14 +1117,102 @@ export default function Impostazioni() {
 
   return (
     <div className="space-y-6">
-      {/* Message feedback */}
-      {message && (
-        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-            {message.text}
-          </p>
+      {/* 2FA Modal */}
+      <Modal
+        isOpen={show2FAModal}
+        onClose={() => {
+          setShow2FAModal(false)
+          setVerificationCode('')
+          setQrCode('')
+        }}
+        title="Attiva Autenticazione a Due Fattori"
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-gray-600 mb-2">
+              Scansiona questo codice QR con un'app di autenticazione (Google Authenticator, Authy, ecc.):
+            </p>
+            {qrCode && (
+              <div className="flex justify-center my-4">
+                <img src={qrCode} alt="QR Code" className="border border-gray-200 rounded-lg p-2" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Inserisci il codice di verifica a 6 cifre
+            </label>
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+              maxLength={6}
+              placeholder="123456"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-center text-2xl tracking-widest"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => {
+                setShow2FAModal(false)
+                setVerificationCode('')
+                setQrCode('')
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              disabled={loading}
+            >
+              Annulla
+            </button>
+            <button
+              onClick={handle2FAVerify}
+              disabled={loading || verificationCode.length !== 6}
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Verifica...' : 'Verifica e Attiva'}
+            </button>
+          </div>
         </div>
-      )}
+      </Modal>
+
+      {/* Terminate Session Confirmation Modal */}
+      <Modal
+        isOpen={showTerminateSessionModal}
+        onClose={() => {
+          setShowTerminateSessionModal(false)
+          setSessionToTerminate(null)
+        }}
+        title="Conferma Terminazione Sessione"
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Sei sicuro di voler terminare questa sessione? L'utente verrà disconnesso immediatamente.
+          </p>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => {
+                setShowTerminateSessionModal(false)
+                setSessionToTerminate(null)
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Annulla
+            </button>
+            <button
+              onClick={confirmTerminateSession}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+            >
+              Termina Sessione
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Message feedback */}
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">

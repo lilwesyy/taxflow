@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Home, FileText, Settings, HelpCircle, Brain, Calculator, Building, MessageSquare, Receipt, Target, Star } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import DashboardOverview from './pages/business/DashboardOverview'
 import AperturaPiva from './pages/business/AperturaPiva'
 import SimulazioneImposte from './pages/business/SimulazioneImposte'
@@ -25,6 +26,7 @@ interface BusinessDashboardProps {
 
 export default function BusinessDashboard({ onLogout, userRole, userName, userEmail }: BusinessDashboardProps) {
   const { logout } = useAuth()
+  const { showToast } = useToast()
   const [activeSection, setActiveSection] = useState(() => {
     // Carica la sezione salvata o usa 'dashboard' come default
     return localStorage.getItem('business_active_section') || 'dashboard'
@@ -33,7 +35,8 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
   const handleLogout = () => {
     logout()
     localStorage.removeItem('business_active_section')
-    onLogout()
+    showToast('Logout effettuato con successo', 'success')
+    setTimeout(() => onLogout(), 500)
   }
 
   const handleSectionChange = (section: string) => {

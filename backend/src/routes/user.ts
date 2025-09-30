@@ -10,7 +10,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.userId).select('-password')
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).json({ error: 'Utente non trovato' })
     }
 
     res.json({
@@ -39,7 +39,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
     })
   } catch (error) {
     console.error('Get user error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Errore interno del server' })
   }
 })
 
@@ -48,7 +48,7 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
   try {
     const user = await User.findById(req.userId)
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).json({ error: 'Utente non trovato' })
     }
 
     const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings } = req.body
@@ -72,16 +72,16 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     // Update password
     if (newPassword !== undefined) {
       if (!currentPassword) {
-        return res.status(400).json({ error: 'Current password is required to change password' })
+        return res.status(400).json({ error: 'La password attuale è richiesta per cambiarla' })
       }
 
       const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
       if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Current password is incorrect' })
+        return res.status(401).json({ error: 'La password attuale non è corretta' })
       }
 
       if (newPassword.length < 8) {
-        return res.status(400).json({ error: 'New password must be at least 8 characters long' })
+        return res.status(400).json({ error: 'La nuova password deve essere di almeno 8 caratteri' })
       }
 
       const salt = await bcrypt.genSalt(10)
@@ -93,7 +93,7 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     const savedUser = await User.findById(user._id).select('-password')
 
     if (!savedUser) {
-      return res.status(404).json({ error: 'User not found after save' })
+      return res.status(404).json({ error: 'Utente non trovato dopo il salvataggio' })
     }
 
     res.json({
@@ -115,7 +115,7 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     })
   } catch (error) {
     console.error('Update user error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Errore interno del server' })
   }
 })
 

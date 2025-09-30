@@ -7,10 +7,16 @@ interface User {
   role: 'business' | 'admin'
 }
 
+interface LoginResponse {
+  requires2FA?: boolean
+  userId?: string
+  message?: string
+}
+
 interface AuthContextType {
   user: User | null
   token: string | null
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<LoginResponse | void>
   logout: () => void
   isLoading: boolean
   updateUser: (userData: Partial<User>) => void
@@ -42,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUserData()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResponse | void> => {
     const API_URL = import.meta.env.VITE_API_URL || '/api'
 
     const response = await fetch(`${API_URL}/auth/login`, {
@@ -60,6 +66,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json()
 
+    // Check if 2FA is required
+    if (data.requires2FA) {
+      return {
+        requires2FA: true,
+        userId: data.userId,
+        message: data.message
+      }
+    }
+
+    // Normal login flow
     setToken(data.token)
     setUser(data.user)
 

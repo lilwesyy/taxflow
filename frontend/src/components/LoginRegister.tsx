@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Logo from './common/Logo'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 interface LoginRegisterProps {
   onBack: () => void
@@ -11,10 +12,13 @@ interface LoginRegisterProps {
 
 export default function LoginRegister({ onBack, onLogin, initialMode = true }: LoginRegisterProps) {
   const { login } = useAuth()
+  const { showToast } = useToast()
   const [isLogin, setIsLogin] = useState(initialMode)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [error, setError] = useState('')
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [twoFACode, setTwoFACode] = useState('')
+  const [tempUserId, setTempUserId] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -31,20 +35,68 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
     })
   }
 
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (twoFACode.length !== 6) {
+      showToast('Inserisci un codice di 6 cifre', 'warning')
+      return
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/auth/login/verify-2fa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: tempUserId,
+          token: twoFACode
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Codice non valido')
+      }
+
+      const data = await response.json()
+
+      // Salva il token e l'utente
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      showToast('Accesso eseguito con successo', 'success')
+
+      // Ricarica l'app per aggiornare il contesto
+      setTimeout(() => window.location.reload(), 500)
+    } catch (error: any) {
+      showToast(error.message || 'Errore durante la verifica', 'error')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     try {
       if (isLogin) {
-        // Login usando AuthContext
-        await login(formData.email, formData.password)
+        // Login usando AuthContext - modificato per gestire 2FA
+        const result = await login(formData.email, formData.password)
+
+        // Se richiede 2FA, mostra il form per il codice
+        if (result && result.requires2FA) {
+          setRequires2FA(true)
+          setTempUserId(result.userId || '')
+          return
+        }
+
+        showToast('Accesso eseguito con successo', 'success')
         onLogin()
       } else {
         // Registration
         if (formData.password !== formData.confirmPassword) {
-          setError('Le password non coincidono')
+          showToast('Le password non coincidono', 'error')
           return
         }
 
@@ -69,10 +121,11 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
 
         // Dopo la registrazione, fai il login
         await login(formData.email, formData.password)
+        showToast('Registrazione completata con successo', 'success')
         onLogin()
       }
     } catch (error: any) {
-      setError(error.message || 'Si è verificato un errore')
+      showToast(error.message || 'Si è verificato un errore', 'error')
     }
   }
 
@@ -93,10 +146,12 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
             <Logo className="h-10" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {isLogin ? 'Accedi al tuo account' : 'Crea il tuo account'}
+            {requires2FA ? 'Autenticazione a Due Fattori' : isLogin ? 'Accedi al tuo account' : 'Crea il tuo account'}
           </h2>
           <p className="text-gray-600 text-sm">
-            {isLogin
+            {requires2FA
+              ? 'Inserisci il codice dalla tua app di autenticazione'
+              : isLogin
               ? 'Gestisci la tua partita IVA forfettaria'
               : 'Inizia a gestire la tua partita IVA forfettaria'
             }
@@ -104,42 +159,72 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-          {/* Toggle buttons */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
-                isLogin
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Accedi
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
-                !isLogin
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Registrati
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Error message */}
-            {error && (
-              <div className={`p-3 rounded-md text-sm ${
-                error.includes('completata')
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-                {error}
+          {requires2FA ? (
+            // 2FA Form
+            <form onSubmit={handleVerify2FA} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Codice di Verifica
+                </label>
+                <input
+                  type="text"
+                  value={twoFACode}
+                  onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                  maxLength={6}
+                  placeholder="123456"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 text-center text-2xl tracking-widest"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 mt-1 text-center">Inserisci il codice a 6 cifre dalla tua app</p>
               </div>
-            )}
 
+              <button
+                type="submit"
+                disabled={twoFACode.length !== 6}
+                className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-xl transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                Verifica e Accedi
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRequires2FA(false)
+                  setTwoFACode('')
+                  setTempUserId('')
+                }}
+                className="w-full text-gray-600 py-2 text-sm hover:text-gray-900 transition-colors"
+              >
+                ← Torna al login
+              </button>
+            </form>
+          ) : (
+            <>
+              {/* Toggle buttons */}
+              <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+                <button
+                  onClick={() => setIsLogin(true)}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
+                    isLogin
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Accedi
+                </button>
+                <button
+                  onClick={() => setIsLogin(false)}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
+                    !isLogin
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Registrati
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
             {/* Registration fields */}
             {!isLogin && (
               <div className="grid grid-cols-2 gap-3 animate-fade-in-up" style={{animationDelay: '0s'}}>
@@ -304,6 +389,8 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
               </p>
             )}
           </form>
+            </>
+          )}
         </div>
 
       </div>
