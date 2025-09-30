@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
+import { useAuth } from '../../context/AuthContext'
 import AdminOverview from './pages/admin/AdminOverview'
 import GestioneClienti from './pages/admin/GestioneClienti'
 import RichiestePiva from './pages/admin/RichiestePiva'
@@ -25,7 +26,22 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout, userRole, userName, userEmail }: AdminDashboardProps) {
-  const [activeSection, setActiveSection] = useState('dashboard')
+  const { logout } = useAuth()
+  const [activeSection, setActiveSection] = useState(() => {
+    // Carica la sezione salvata o usa 'dashboard' come default
+    return localStorage.getItem('admin_active_section') || 'dashboard'
+  })
+
+  const handleLogout = () => {
+    logout()
+    localStorage.removeItem('admin_active_section')
+    onLogout()
+  }
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section)
+    localStorage.setItem('admin_active_section', section)
+  }
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
@@ -134,13 +150,13 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
 
   return (
     <DashboardLayout
-      onLogout={onLogout}
+      onLogout={handleLogout}
       userRole={userRole}
       userName={userName}
       userEmail={userEmail}
       sidebarItems={sidebarItems}
       activeSection={activeSection}
-      onSectionChange={setActiveSection}
+      onSectionChange={handleSectionChange}
       headerTitle={headerInfo.title}
       headerDescription={headerInfo.description}
     >

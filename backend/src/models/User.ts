@@ -8,6 +8,12 @@ export interface IUser extends Document {
   password: string;
   name: string;
   role: UserRole;
+  phone?: string;
+  professionalRole?: string;
+  bio?: string;
+  address?: string;
+  fiscalCode?: string;
+  registrationNumber?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -35,6 +41,31 @@ const UserSchema = new Schema({
     type: String,
     enum: ['business', 'admin'],
     default: 'business'
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  professionalRole: {
+    type: String,
+    trim: true
+  },
+  bio: {
+    type: String,
+    trim: true
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  fiscalCode: {
+    type: String,
+    trim: true,
+    uppercase: true
+  },
+  registrationNumber: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

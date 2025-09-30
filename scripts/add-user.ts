@@ -1,0 +1,75 @@
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
+
+// MongoDB User Schema
+const UserSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  role: { type: String, enum: ['business', 'admin'], default: 'business' }
+}, { timestamps: true })
+
+// Hash password before saving
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next()
+  try {
+    const salt = await bcrypt.genSalt(10)
+    this.password = await bcrypt.hash(this.password, salt)
+    next()
+  } catch (error: any) {
+    next(error)
+  }
+})
+
+const User = mongoose.models.User || mongoose.model('User', UserSchema)
+
+async function addUser() {
+  // Prendi i parametri da linea di comando
+  const email = process.argv[2]
+  const password = process.argv[3]
+  const name = process.argv[4] || 'Admin User'
+
+  if (!email || !password) {
+    console.error('❌ Usage: npm run add-user <email> <password> [name]')
+    console.error('Example: npm run add-user admin@taxflow.com Password123 "Admin User"')
+    process.exit(1)
+  }
+
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Vercel-Admin-taxflow-db:6aWf0UVqFNzkVVEQ@taxflow-db.vvbfmn6.mongodb.net/?retryWrites=true&w=majority'
+
+  try {
+    // Connessione a MongoDB
+    await mongoose.connect(MONGODB_URI)
+    console.log('✅ Connected to MongoDB')
+
+    // Verifica se l'utente esiste già
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      console.error(`❌ User with email ${email} already exists`)
+      process.exit(1)
+    }
+
+    // Crea nuovo utente admin
+    const user = new User({
+      email,
+      password,
+      name,
+      role: 'admin'
+    })
+
+    await user.save()
+
+    console.log('✅ Admin user created successfully!')
+    console.log('📧 Email:', user.email)
+    console.log('👤 Name:', user.name)
+    console.log('🔑 Role:', user.role)
+    console.log('🆔 ID:', user._id)
+
+    process.exit(0)
+  } catch (error) {
+    console.error('❌ Error creating user:', error)
+    process.exit(1)
+  }
+}
+
+addUser()

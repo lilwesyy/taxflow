@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Logo from './common/Logo'
-import apiService from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 type UserRole = 'business' | 'admin'
 
@@ -13,11 +13,12 @@ interface User {
 
 interface LoginRegisterProps {
   onBack: () => void
-  onLogin: (user: User) => void
+  onLogin: () => void
   initialMode?: boolean
 }
 
 export default function LoginRegister({ onBack, onLogin, initialMode = true }: LoginRegisterProps) {
+  const { login } = useAuth()
   const [isLogin, setIsLogin] = useState(initialMode)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -45,36 +46,40 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
 
     try {
       if (isLogin) {
-        // Real API login
-        const response = await apiService.login({
-          email: formData.email,
-          password: formData.password
-        })
-
-        onLogin({
-          email: response.user.email,
-          name: response.user.name,
-          role: response.user.role
-        })
+        // Login usando AuthContext
+        await login(formData.email, formData.password)
+        onLogin()
       } else {
-        // Real API registration
+        // Registration
         if (formData.password !== formData.confirmPassword) {
           setError('Le password non coincidono')
           return
         }
 
-        const response = await apiService.register({
-          email: formData.email,
-          password: formData.password,
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          role: 'business'
+        const API_URL = import.meta.env.VITE_API_URL || 'https://taxflow.vercel.app'
+        const response = await fetch(`${API_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            role: 'business'
+          })
         })
 
-        onLogin({
-          email: response.user.email,
-          name: response.user.name,
-          role: response.user.role
-        })
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Registration failed')
+        }
+
+        const data = await response.json()
+
+        // Dopo la registrazione, fai il login
+        await login(formData.email, formData.password)
+        onLogin()
       }
     } catch (error: any) {
       setError(error.message || 'Si è verificato un errore')

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import LandingPage from './components/LandingPage'
 import LoginRegister from './components/LoginRegister'
 import Dashboard from './components/Dashboard'
-import apiService from './services/api'
+import { useAuth } from './context/AuthContext'
 
 type UserRole = 'business' | 'admin'
 
@@ -13,29 +13,32 @@ interface User {
 }
 
 function App() {
+  const { user, isLoading } = useAuth()
   const [currentPage, setCurrentPage] = useState('landing')
   const [loginMode, setLoginMode] = useState(true)
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [showLoading, setShowLoading] = useState(true)
 
-  // Recupera lo stato di login dal localStorage al caricamento
+  // Recupera lo stato di login dal AuthContext
   useEffect(() => {
-    const savedUser = localStorage.getItem('taxflow_user')
-    const savedPage = localStorage.getItem('taxflow_current_page')
-
-    if (savedUser && savedPage) {
-      try {
-        const user = JSON.parse(savedUser)
-        setCurrentUser(user)
-        setCurrentPage(savedPage)
-      } catch (error) {
-        console.error('Errore nel recupero dati utente:', error)
-        localStorage.removeItem('taxflow_user')
-        localStorage.removeItem('taxflow_current_page')
-      }
+    if (user) {
+      setCurrentPage('dashboard')
+    } else {
+      setCurrentPage('landing')
     }
-    setIsLoading(false)
-  }, [])
+  }, [user])
+
+  // Gestisci l'animazione di uscita del loading
+  useEffect(() => {
+    if (!isLoading) {
+      // Aspetta 300ms per l'animazione di fade-out
+      const timer = setTimeout(() => {
+        setShowLoading(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    } else {
+      setShowLoading(true)
+    }
+  }, [isLoading])
 
   const showLoginPage = () => {
     setLoginMode(true)
@@ -49,21 +52,19 @@ function App() {
 
   const showLandingPage = () => {
     setCurrentPage('landing')
-    setCurrentUser(null)
-    apiService.logout()
-    localStorage.removeItem('taxflow_current_page')
   }
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user)
+  const handleLogin = () => {
     setCurrentPage('dashboard')
-    localStorage.setItem('taxflow_user', JSON.stringify(user))
-    localStorage.setItem('taxflow_current_page', 'dashboard')
   }
 
-  if (isLoading) {
+  if (showLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div
+        className={`min-h-screen bg-gray-50 flex items-center justify-center transition-opacity duration-300 ${
+          isLoading ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Caricamento...</p>
@@ -72,13 +73,13 @@ function App() {
     )
   }
 
-  if (currentPage === 'dashboard' && currentUser) {
+  if (currentPage === 'dashboard' && user) {
     return (
       <Dashboard
         onLogout={showLandingPage}
-        userRole={currentUser.role}
-        userName={currentUser.name}
-        userEmail={currentUser.email}
+        userRole={user.role}
+        userName={user.name}
+        userEmail={user.email}
       />
     )
   }

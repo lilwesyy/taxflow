@@ -15,7 +15,9 @@
     "build:all": "npm run build:frontend && npm run build:backend",
     "start:frontend": "cd frontend && npm run preview",
     "start:backend": "cd backend && npm start",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "add-user": "tsx scripts/add-user.ts",
+    "check-user": "tsx scripts/check-user.ts"
   },
   "dependencies": {
     "@vercel/node": "^5.3.24",
@@ -28,7 +30,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.10.5",
     "typescript": "^5.3.3",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "tsx": "^4.19.2"
   },
   "workspaces": [
     "frontend",

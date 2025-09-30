@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Home, FileText, Settings, HelpCircle, Brain, Calculator, Building, MessageSquare, Receipt, Target, Star } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
+import { useAuth } from '../../context/AuthContext'
 import DashboardOverview from './pages/business/DashboardOverview'
 import AperturaPiva from './pages/business/AperturaPiva'
 import SimulazioneImposte from './pages/business/SimulazioneImposte'
@@ -23,7 +24,22 @@ interface BusinessDashboardProps {
 }
 
 export default function BusinessDashboard({ onLogout, userRole, userName, userEmail }: BusinessDashboardProps) {
-  const [activeSection, setActiveSection] = useState('dashboard')
+  const { logout } = useAuth()
+  const [activeSection, setActiveSection] = useState(() => {
+    // Carica la sezione salvata o usa 'dashboard' come default
+    return localStorage.getItem('business_active_section') || 'dashboard'
+  })
+
+  const handleLogout = () => {
+    logout()
+    localStorage.removeItem('business_active_section')
+    onLogout()
+  }
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section)
+    localStorage.setItem('business_active_section', section)
+  }
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
@@ -114,13 +130,13 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
 
   return (
     <DashboardLayout
-      onLogout={onLogout}
+      onLogout={handleLogout}
       userRole={userRole}
       userName={userName}
       userEmail={userEmail}
       sidebarItems={sidebarItems}
       activeSection={activeSection}
-      onSectionChange={setActiveSection}
+      onSectionChange={handleSectionChange}
       headerTitle={headerInfo.title}
       headerDescription={headerInfo.description}
     >

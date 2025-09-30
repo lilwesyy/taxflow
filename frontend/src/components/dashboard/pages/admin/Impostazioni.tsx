@@ -1,21 +1,60 @@
 import { Settings, User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../../../context/AuthContext'
 
 export default function Impostazioni() {
+  const { user, token, updateUser } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const [profileData, setProfileData] = useState({
-    nome: 'Dr. Marco Bianchi',
-    email: 'marco.bianchi@taxflow.it',
-    telefono: '+39 338 123 4567',
-    ruolo: 'Dottore Commercialista',
-    bio: 'Esperto in consulenze fiscali e tributarie con oltre 15 anni di esperienza.',
-    indirizzo: 'Via Roma 123, 20121 Milano',
-    codiceFiscale: 'BNCMRC80A01F205Z',
-    ordineIscrizione: 'Ordine Commercialisti Milano n. 12345'
+    nome: '',
+    email: '',
+    telefono: '',
+    ruolo: '',
+    bio: '',
+    indirizzo: '',
+    codiceFiscale: '',
+    ordineIscrizione: ''
   })
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user || !token) return
+
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'https://taxflow.vercel.app/api'
+        const response = await fetch(`${API_URL}/user/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const userData = data.user
+
+          setProfileData({
+            nome: userData.name || '',
+            email: userData.email || '',
+            telefono: userData.phone || '',
+            ruolo: userData.professionalRole || '',
+            bio: userData.bio || '',
+            indirizzo: userData.address || '',
+            codiceFiscale: userData.fiscalCode || '',
+            ordineIscrizione: userData.registrationNumber || ''
+          })
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error)
+      }
+    }
+
+    loadUserProfile()
+  }, [user, token])
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -55,10 +94,83 @@ export default function Impostazioni() {
     { id: 'integrations', name: 'Integrazioni', icon: Database }
   ]
 
-  const handleSave = (section: string) => {
-    // Qui sarebbe implementata la logica per salvare le impostazioni
-    console.log(`Salvataggio impostazioni ${section}`)
-    // Mostra notifica di successo
+  const handleSave = async (section: string) => {
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://taxflow.vercel.app/api'
+
+      if (section === 'profile') {
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: profileData.nome,
+            email: profileData.email,
+            phone: profileData.telefono,
+            professionalRole: profileData.ruolo,
+            bio: profileData.bio,
+            address: profileData.indirizzo,
+            fiscalCode: profileData.codiceFiscale,
+            registrationNumber: profileData.ordineIscrizione
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update profile')
+        }
+
+        const data = await response.json()
+        updateUser(data.user)
+
+        // Aggiorna anche i campi del form con i nuovi dati
+        setProfileData({
+          nome: data.user.name || '',
+          email: data.user.email || '',
+          telefono: data.user.phone || '',
+          ruolo: data.user.professionalRole || '',
+          bio: data.user.bio || '',
+          indirizzo: data.user.address || '',
+          codiceFiscale: data.user.fiscalCode || '',
+          ordineIscrizione: data.user.registrationNumber || ''
+        })
+
+        setMessage({ type: 'success', text: 'Profilo aggiornato con successo!' })
+      } else if (section === 'password') {
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currentPassword: passwordData.currentPassword,
+            newPassword: passwordData.newPassword
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update password')
+        }
+
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        setMessage({ type: 'success', text: 'Password aggiornata con successo!' })
+      } else {
+        // Per ora le altre sezioni non sono implementate
+        setMessage({ type: 'success', text: `Impostazioni ${section} salvate!` })
+      }
+    } catch (error: any) {
+      console.error(`Error saving ${section}:`, error)
+      setMessage({ type: 'error', text: error.message || 'Errore durante il salvataggio' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const renderProfileTab = () => (
@@ -167,10 +279,11 @@ export default function Impostazioni() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => handleSave('profile')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
+            disabled={loading}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
-            Salva Modifiche
+            {loading ? 'Salvataggio...' : 'Salva Modifiche'}
           </button>
         </div>
       </div>
@@ -364,9 +477,10 @@ export default function Impostazioni() {
               <div className="flex justify-end">
                 <button
                   onClick={() => handleSave('password')}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200"
+                  disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword}
+                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Aggiorna Password
+                  {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
                 </button>
               </div>
             </div>
@@ -688,6 +802,15 @@ export default function Impostazioni() {
 
   return (
     <div className="space-y-6">
+      {/* Message feedback */}
+      {message && (
+        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+          <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+            {message.text}
+          </p>
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
