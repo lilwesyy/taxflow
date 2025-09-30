@@ -21,6 +21,14 @@ interface IUser extends mongoose.Document {
   password: string
   name: string
   role: 'business' | 'admin'
+  phone?: string
+  professionalRole?: string
+  bio?: string
+  address?: string
+  fiscalCode?: string
+  registrationNumber?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // User model
