@@ -4,6 +4,7 @@
   "description": "TaxFlow - Web application per regime forfettario",
   "private": true,
   "scripts": {
+    "build": "cd frontend && npm run build",
     "frontend": "cd frontend && npm run dev",
     "backend": "cd backend && npm run dev",
     "install:frontend": "cd frontend && npm install",
