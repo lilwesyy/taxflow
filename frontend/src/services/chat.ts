@@ -100,12 +100,36 @@ class ChatService {
     return response.json()
   }
 
+  // Upload files
+  async uploadFiles(files: File[]): Promise<{ filename: string; url: string; mimeType: string; size: number }[]> {
+    const formData = new FormData()
+    files.forEach(file => {
+      formData.append('files', file)
+    })
+
+    const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+    const response = await fetch(`${API_BASE_URL}/chat/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to upload files')
+    }
+
+    const data = await response.json()
+    return data.files
+  }
+
   // Send a message
-  async sendMessage(conversationId: string, testo: string): Promise<Message> {
+  async sendMessage(conversationId: string, testo: string, attachments?: any[]): Promise<Message> {
     const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ testo })
+      body: JSON.stringify({ testo, attachments })
     })
 
     if (!response.ok) {

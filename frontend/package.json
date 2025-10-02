@@ -11,8 +11,10 @@
     "vercel-build": "npm run build"
   },
   "dependencies": {
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.5.2",
     "lucide-react": "^0.544.0",
+    "multer": "^2.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "serve": "^14.2.5"

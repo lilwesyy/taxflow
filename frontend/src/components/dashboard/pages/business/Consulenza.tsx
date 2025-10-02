@@ -42,6 +42,10 @@ export default function Consulenza() {
   const [aiConversationId, setAiConversationId] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewFile, setPreviewFile] = useState<{ url: string; filename: string; mimeType: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load conversations, consultants, and AI assistant on mount
   useEffect(() => {
@@ -187,17 +191,46 @@ export default function Consulenza() {
     }
   }
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      setSelectedFiles(Array.from(files))
+    }
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSendMessage = async () => {
-    if (!message.trim() || !activeChat || sending) return
+    if ((!message.trim() && selectedFiles.length === 0) || !activeChat || sending) return
 
     const messageText = message.trim()
+    const filesToSend = [...selectedFiles]
+
     setMessage('') // Clear input immediately
+    setSelectedFiles([]) // Clear files
 
     try {
       setSending(true)
 
+      let attachments: any[] = []
+
+      // Upload files first if any
+      if (filesToSend.length > 0) {
+        const uploadedFiles = await chatService.uploadFiles(filesToSend)
+        attachments = uploadedFiles
+      }
+
       // Check if sending to AI
       if (activeChat === aiConversationId) {
+        // AI doesn't support attachments yet
+        if (attachments.length > 0) {
+          alert('L\'AI Assistant non supporta allegati')
+          setSending(false)
+          return
+        }
+
         // Add user message immediately
         const tempUserMessage: Message = {
           id: `temp-user-${Date.now()}`,
@@ -231,7 +264,7 @@ export default function Consulenza() {
         setAiLoading(false)
       } else {
         // Regular conversation
-        const newMessage = await chatService.sendMessage(activeChat, messageText)
+        const newMessage = await chatService.sendMessage(activeChat, messageText || '[File allegato]', attachments)
 
         // Add message to local state
         setMessaggi((prev) => ({
@@ -261,6 +294,20 @@ export default function Consulenza() {
     } finally {
       setSending(false)
     }
+  }
+
+  const handlePreviewFile = (file: { url: string; filename: string; mimeType: string }) => {
+    setPreviewFile(file)
+    setShowPreview(true)
+  }
+
+  const handleDownloadFile = (url: string, filename: string) => {
+    const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'
+    const downloadUrl = `${apiBaseUrl}${url}`
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    link.click()
   }
 
   const filteredConversazioni = conversazioni.filter(conv => {
@@ -626,6 +673,44 @@ export default function Consulenza() {
                             <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
                           )}
                           <p className="text-sm">{msg.testo}</p>
+
+                          {/* Attachments */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {msg.attachments.map((file: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center space-x-2 p-2 rounded ${
+                                    msg.mittente === 'user' ? 'bg-primary-700' : 'bg-gray-100'
+                                  }`}
+                                >
+                                  {file.mimeType.startsWith('image/') ? (
+                                    <img
+                                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${file.url}`}
+                                      alt={file.filename}
+                                      className="h-24 w-24 object-cover rounded cursor-pointer"
+                                      onClick={() => handlePreviewFile(file)}
+                                    />
+                                  ) : (
+                                    <Paperclip className="h-4 w-4" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs truncate">{file.filename}</p>
+                                    <p className="text-xs opacity-75">{(file.size / 1024).toFixed(1)} KB</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleDownloadFile(file.url, file.filename)}
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      msg.mittente === 'user' ? 'bg-primary-800 hover:bg-primary-900' : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                  >
+                                    Scarica
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           <div className={`flex items-center justify-between mt-1 ${
                             msg.mittente === 'user' ? 'text-white' : 'text-gray-500'
                           }`}>
@@ -662,10 +747,39 @@ export default function Consulenza() {
 
               {/* Input Messaggio */}
               <div className="p-4 border-t border-gray-200 bg-white">
+                {/* Selected Files Preview */}
+                {selectedFiles.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center space-x-2 bg-gray-100 rounded px-3 py-2">
+                        <Paperclip className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm text-gray-700">{file.name}</span>
+                        <button
+                          onClick={() => handleRemoveFile(index)}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center space-x-3">
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    className="hidden"
+                  />
+
                   {/* Attachment button - hide for AI conversations */}
                   {activeChat !== aiConversationId && (
                     <button
+                      onClick={() => fileInputRef.current?.click()}
                       className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110"
                       disabled={conversazioneAttiva?.status === 'pending'}
                     >
@@ -688,7 +802,7 @@ export default function Consulenza() {
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!message.trim() || sending || conversazioneAttiva?.status === 'pending'}
+                    disabled={(!message.trim() && selectedFiles.length === 0) || sending || conversazioneAttiva?.status === 'pending'}
                     className="flex-shrink-0 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
                   >
                     <Send className="h-5 w-5" />
@@ -1061,6 +1175,47 @@ export default function Consulenza() {
               </div>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* File Preview Modal */}
+      {showPreview && previewFile && (
+        <Modal
+          isOpen={showPreview}
+          onClose={() => {
+            setShowPreview(false)
+            setPreviewFile(null)
+          }}
+          title={previewFile.filename}
+        >
+          <div className="p-6">
+            {previewFile.mimeType.startsWith('image/') ? (
+              <img
+                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${previewFile.url}`}
+                alt={previewFile.filename}
+                className="max-w-full max-h-[70vh] mx-auto rounded"
+              />
+            ) : (
+              <div className="text-center py-12">
+                <Paperclip className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">Anteprima non disponibile per questo tipo di file</p>
+                <button
+                  onClick={() => handleDownloadFile(previewFile.url, previewFile.filename)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Scarica File
+                </button>
+              </div>
+            )}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => handleDownloadFile(previewFile.url, previewFile.filename)}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              >
+                Scarica
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

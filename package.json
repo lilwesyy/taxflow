@@ -13,11 +13,13 @@
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "dependencies": {
+    "@types/multer": "^2.0.0",
     "@vercel/node": "^5.3.24",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.2"
+    "mongoose": "^8.18.2",
+    "multer": "^2.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

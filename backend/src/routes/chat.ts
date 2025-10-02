@@ -1,4 +1,6 @@
 import express from 'express'
+import multer from 'multer'
+import path from 'path'
 import { authenticateToken, AuthRequest } from '../middleware/auth'
 import Conversation from '../models/Conversation'
 import Message from '../models/Message'
@@ -6,6 +8,36 @@ import User from '../models/User'
 import mongoose from 'mongoose'
 
 const router = express.Router()
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (_req: any, _file: any, cb: any) => {
+    cb(null, 'uploads/chat/')
+  },
+  filename: (_req: any, file: any, cb: any) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
+  }
+})
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max
+  },
+  fileFilter: (_req: any, file: any, cb: any) => {
+    // Allow images and common document types
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|txt/
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
+    const mimetype = allowedTypes.test(file.mimetype)
+
+    if (extname && mimetype) {
+      cb(null, true)
+    } else {
+      cb(new Error('Tipo di file non supportato'))
+    }
+  }
+})
 
 // Get all available consultants (admin users) - for business users
 router.get('/consultants', authenticateToken, async (req: AuthRequest, res) => {
@@ -149,16 +181,39 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
   }
 })
 
+// Upload files
+router.post('/upload', authenticateToken, (upload.array('files', 5) as any), async (req: any, res: any) => {
+  try {
+    const files = req.files as any[]
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'Nessun file caricato' })
+    }
+
+    const uploadedFiles = files.map((file: any) => ({
+      filename: file.originalname,
+      url: `/uploads/chat/${file.filename}`,
+      mimeType: file.mimetype,
+      size: file.size
+    }))
+
+    res.json({ success: true, files: uploadedFiles })
+  } catch (error) {
+    console.error('Error uploading files:', error)
+    res.status(500).json({ error: 'Errore nel caricamento dei file' })
+  }
+})
+
 // Send a message
 router.post('/conversations/:conversationId/messages', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { conversationId } = req.params
-    const { testo } = req.body
+    const { testo, attachments } = req.body
     const userId = req.user!.userId
     const userRole = req.user!.role
 
-    if (!testo || testo.trim().length === 0) {
-      return res.status(400).json({ error: 'Il messaggio non può essere vuoto' })
+    if ((!testo || testo.trim().length === 0) && (!attachments || attachments.length === 0)) {
+      return res.status(400).json({ error: 'Il messaggio deve contenere testo o allegati' })
     }
 
     // Verify user has access to this conversation
@@ -179,8 +234,9 @@ router.post('/conversations/:conversationId/messages', authenticateToken, async 
       conversationId,
       senderId: userId,
       senderRole: userRole,
-      testo: testo.trim(),
-      stato: 'sent'
+      testo: testo?.trim() || (attachments && attachments.length > 0 ? '[File allegato]' : ''),
+      stato: 'sent',
+      attachments: attachments || []
     })
 
     await message.save()
@@ -199,7 +255,8 @@ router.post('/conversations/:conversationId/messages', authenticateToken, async 
       nome: (message.senderId as any).name,
       testo: message.testo,
       timestamp: message.createdAt.toISOString(),
-      stato: message.stato
+      stato: message.stato,
+      attachments: message.attachments
     }
 
     res.status(201).json(formattedMessage)
