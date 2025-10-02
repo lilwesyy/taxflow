@@ -9,6 +9,7 @@ import securityRoutes from './routes/security'
 import chatRoutes from './routes/chat'
 import aiAssistantRoutes from './routes/ai-assistant'
 import clientsRoutes from './routes/clients'
+import feedbackRoutes from './routes/feedback'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 // Load .env from backend directory
@@ -37,6 +38,7 @@ app.use('/api/security', securityRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/ai', aiAssistantRoutes)
 app.use('/api/clients', clientsRoutes)
+app.use('/api/feedback', feedbackRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

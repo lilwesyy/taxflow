@@ -1,8 +1,11 @@
 import { MessageCircle, Star, Reply, Send, User, Clock, CheckCircle, AlertCircle, Search, Filter, Eye, ArrowLeft, TrendingUp, ThumbsUp, ThumbsDown } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
+import apiService from '../../../../services/api'
+import { useToast } from '../../../../context/ToastContext'
 
 export default function FeedbackClienti() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('pending')
   const [selectedFeedback, setSelectedFeedback] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -10,127 +13,86 @@ export default function FeedbackClienti() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [showResponseModal, setShowResponseModal] = useState(false)
   const [responseText, setResponseText] = useState('')
+  const [feedbackList, setFeedbackList] = useState<any[]>([])
+  const [consultantStats, setConsultantStats] = useState<any[]>([])
+  const [statistics, setStatistics] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Feedback ricevuti dai clienti (prospettiva admin/consulente)
-  const feedbackList = [
-    {
-      id: 'FB-2024-001',
-      clientName: 'Mario Rossi',
-      clientCompany: 'Rossi Consulting',
-      consultantName: 'Dott.ssa Maria Rossi', // Il consulente che ha ricevuto il feedback
-      service: 'Consulenza Fiscale',
-      date: '15/01/2024',
-      rating: 5,
-      status: 'pending', // pending, responded, archived
-      title: 'Ottima consulenza sulla partita IVA forfettaria',
-      message: 'La dottoressa Rossi è stata molto professionale e competente. Ha risposto a tutte le mie domande sulla partita IVA forfettaria e mi ha guidato nella scelta migliore per la mia attività. Il servizio è stato eccellente e i tempi di risposta molto rapidi.',
-      response: null,
-      responseDate: null,
-      category: 'Qualità Servizio',
-      recommend: true,
-      positiveAspects: 'Professionalità, competenza, tempi rapidi',
-      suggestions: 'Magari aggiungere più esempi pratici durante la spiegazione'
-    },
-    {
-      id: 'FB-2024-002',
-      clientName: 'Laura Bianchi',
-      clientCompany: 'Bianchi Design',
-      consultantName: 'Dott. Marco Bianchi',
-      service: 'Business Plan',
-      date: '10/01/2024',
-      rating: 4,
-      status: 'responded',
-      title: 'Business plan dettagliato e professionale',
-      message: 'Il business plan realizzato è molto dettagliato e professionale. La struttura è chiara e le proiezioni finanziarie sono realistiche. Unica nota: avrei apprezzato più esempi pratici nella sezione marketing.',
-      response: 'Grazie per il feedback costruttivo! Sono felice che abbia apprezzato il lavoro svolto. Prenderò nota del suggerimento sui casi pratici nella sezione marketing per i prossimi business plan.',
-      responseDate: '11/01/2024',
-      category: 'Contenuto',
-      recommend: true,
-      positiveAspects: 'Struttura chiara, proiezioni realistiche, professionalità',
-      suggestions: 'Aggiungere più esempi pratici nella sezione marketing'
-    },
-    {
-      id: 'FB-2024-003',
-      clientName: 'Giuseppe Verdi',
-      clientCompany: 'Verdi Solutions',
-      consultantName: 'Dott.ssa Anna Verdi',
-      service: 'Analisi AI',
-      date: '08/01/2024',
-      rating: 5,
-      status: 'responded',
-      title: 'Analisi AI molto utile per le decisioni strategiche',
-      message: 'L\'analisi AI fornita è stata estremamente utile per prendere decisioni strategiche importanti. I dati sono chiari e le raccomandazioni concrete. Questo strumento mi ha permesso di ottimizzare diversi processi aziendali.',
-      response: 'La ringrazio per il feedback positivo! L\'analisi AI è uno strumento che stiamo continuamente migliorando. Sono felice che le sia stata utile per le sue decisioni strategiche.',
-      responseDate: '09/01/2024',
-      category: 'Innovazione',
-      recommend: true,
-      positiveAspects: 'Chiarezza dati, raccomandazioni concrete, utilità pratica',
-      suggestions: 'Continuare a sviluppare questo tipo di servizi innovativi'
-    },
-    {
-      id: 'FB-2024-004',
-      clientName: 'Anna Neri',
-      clientCompany: 'Neri Marketing',
-      consultantName: 'Dott. Marco Bianchi',
-      service: 'Apertura Partita IVA',
-      date: '05/01/2024',
-      rating: 3,
-      status: 'pending',
-      title: 'Servizio nella media, ma tempi lunghi',
-      message: 'Il servizio è stato corretto ma i tempi sono stati più lunghi del previsto. La comunicazione potrebbe essere migliorata, soprattutto negli aggiornamenti sullo stato della pratica.',
-      response: null,
-      responseDate: null,
-      category: 'Tempestività',
-      recommend: false,
-      positiveAspects: 'Competenza tecnica, risultato finale corretto',
-      suggestions: 'Migliorare i tempi e la comunicazione durante il processo'
-    },
-    {
-      id: 'FB-2024-005',
-      clientName: 'Francesco Blu',
-      clientCompany: 'Blu Innovations',
-      consultantName: 'Dott.ssa Maria Rossi',
-      service: 'Gestione Contabilità',
-      date: '03/01/2024',
-      rating: 4,
-      status: 'pending',
-      title: 'Gestione contabilità precisa e affidabile',
-      message: 'La gestione della contabilità è stata molto precisa e affidabile. Tutti i documenti sono sempre stati in ordine e le scadenze rispettate. Apprezzo molto la professionalità dimostrata.',
-      response: null,
-      responseDate: null,
-      category: 'Professionalità',
-      recommend: true,
-      positiveAspects: 'Precisione, affidabilità, rispetto scadenze',
-      suggestions: 'Sarebbe utile avere report mensili più dettagliati'
-    },
-    {
-      id: 'FB-2024-006',
-      clientName: 'Sofia Viola',
-      clientCompany: 'Viola Creative',
-      consultantName: 'Dott.ssa Anna Verdi',
-      service: 'Consulenza Strategica',
-      date: '28/12/2023',
-      rating: 5,
-      status: 'responded',
-      title: 'Consulenza strategica eccellente',
-      message: 'La consulenza strategica è stata eccellente. Le analisi di mercato erano approfondite e le strategie proposte molto innovative. Ha superato le mie aspettative.',
-      response: 'Grazie mille per le belle parole! È sempre gratificante sapere che le nostre analisi e strategie hanno un impatto positivo sulla crescita del business dei nostri clienti.',
-      responseDate: '29/12/2023',
-      category: 'Qualità Servizio',
-      recommend: true,
-      positiveAspects: 'Analisi approfondite, strategie innovative, superamento aspettative',
-      suggestions: 'Continuare con questo livello di eccellenza'
+  // Load all feedbacks, consultant stats, and statistics
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Load all data in parallel
+        const [feedbacksRes, statsRes, statisticsRes] = await Promise.all([
+          apiService.getAllFeedbacks({ status: activeTab !== 'all' ? activeTab : undefined }),
+          apiService.getConsultantStats(),
+          apiService.getFeedbackStatistics()
+        ])
+
+        if (feedbacksRes.success) {
+          setFeedbackList(feedbacksRes.feedbacks)
+        }
+
+        if (statsRes.success) {
+          setConsultantStats(statsRes.stats)
+        }
+
+        if (statisticsRes.success) {
+          setStatistics(statisticsRes.statistics)
+        }
+      } catch (err: any) {
+        console.error('Error loading data:', err)
+        setError(err.message || 'Errore nel caricamento dei dati')
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  // Statistiche per i consulenti
-  const consultantStats = [
-    { name: 'Dott.ssa Maria Rossi', totalFeedbacks: 45, avgRating: 4.7, responseRate: 95 },
-    { name: 'Dott. Marco Bianchi', totalFeedbacks: 32, avgRating: 4.2, responseRate: 78 },
-    { name: 'Dott.ssa Anna Verdi', totalFeedbacks: 38, avgRating: 4.8, responseRate: 100 }
-  ]
+    loadData()
+  }, [activeTab])
 
-  const filteredFeedback = feedbackList.filter(feedback => {
+  // Format date helper
+  const formatDate = (date: Date | string | undefined | null) => {
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  // Handle response submission
+  const handleResponseSubmit = async () => {
+    if (selectedFeedback && responseText.trim()) {
+      try {
+        setLoading(true)
+        const response = await apiService.respondToFeedback(selectedFeedback._id, responseText)
+
+        if (response.success) {
+          // Reload feedbacks
+          const feedbacksRes = await apiService.getAllFeedbacks({ status: activeTab !== 'all' ? activeTab : undefined })
+          if (feedbacksRes.success) {
+            setFeedbackList(feedbacksRes.feedbacks)
+          }
+
+          setShowResponseModal(false)
+          setResponseText('')
+          setSelectedFeedback(null)
+          showToast('Risposta inviata con successo!', 'success')
+        }
+      } catch (err: any) {
+        console.error('Error responding to feedback:', err)
+        showToast(err.message || 'Errore nell\'invio della risposta', 'error')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  // consultantStats e feedbackList vengono caricati via API nell'useEffect sopra
+
+  const filteredFeedback = (feedbackList || []).filter(feedback => {
     const matchesSearch = feedback.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          feedback.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          feedback.consultantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,22 +163,43 @@ export default function FeedbackClienti() {
     )
   }
 
-  const handleResponseSubmit = () => {
-    if (selectedFeedback && responseText.trim()) {
-      // Qui implementeresti la logica per salvare la risposta
-      console.log('Risposta inviata:', responseText)
-      setShowResponseModal(false)
-      setResponseText('')
-      alert('Risposta inviata con successo!')
-    }
-  }
 
   const tabs = [
-    { id: 'pending', name: 'In Attesa', count: feedbackList.filter(f => f.status === 'pending').length },
-    { id: 'responded', name: 'Risposti', count: feedbackList.filter(f => f.status === 'responded').length },
-    { id: 'low-rating', name: 'Bassa Valutazione', count: feedbackList.filter(f => f.rating <= 3).length },
-    { id: 'all', name: 'Tutti', count: feedbackList.length }
+    { id: 'pending', name: 'In Attesa', icon: Clock, description: 'Feedback da rispondere', count: statistics?.pending || 0 },
+    { id: 'responded', name: 'Risposti', icon: CheckCircle, description: 'Feedback con risposta', count: statistics?.responded || 0 },
+    { id: 'low-rating', name: 'Bassa Valutazione', icon: AlertCircle, description: 'Valutazione ≤ 3 stelle', count: feedbackList.filter(f => f.rating <= 3).length },
+    { id: 'all', name: 'Tutti', icon: MessageCircle, description: 'Tutti i feedback', count: statistics?.total || 0 }
   ]
+
+  // Loading state
+  if (loading && !statistics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Caricamento...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error && !statistics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Ricarica
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -227,7 +210,7 @@ export default function FeedbackClienti() {
             <MessageCircle className="h-8 w-8 text-blue-600 mr-3" />
             <div>
               <p className="text-sm text-gray-600">Feedback Totali</p>
-              <p className="text-2xl font-bold text-gray-900">{feedbackList.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{statistics?.total || 0}</p>
             </div>
           </div>
         </div>
@@ -237,7 +220,7 @@ export default function FeedbackClienti() {
             <div>
               <p className="text-sm text-gray-600">Valutazione Media</p>
               <p className="text-2xl font-bold text-gray-900">
-                {(feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1)}
+                {statistics?.avgRating || 0}
               </p>
             </div>
           </div>
@@ -248,7 +231,7 @@ export default function FeedbackClienti() {
             <div>
               <p className="text-sm text-gray-600">In Attesa di Risposta</p>
               <p className="text-2xl font-bold text-gray-900">
-                {feedbackList.filter(f => f.status === 'pending').length}
+                {statistics?.pending || 0}
               </p>
             </div>
           </div>
@@ -259,42 +242,50 @@ export default function FeedbackClienti() {
             <div>
               <p className="text-sm text-gray-600">Tasso di Risposta</p>
               <p className="text-2xl font-bold text-gray-900">
-                {Math.round((feedbackList.filter(f => f.status === 'responded').length / feedbackList.length) * 100)}%
+                {statistics?.responseRate || 0}%
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span>{tab.name}</span>
-                {tab.count > 0 && (
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    activeTab === tab.id ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'
+      {/* Tabs Navigation */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`p-3 rounded-lg text-left transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-4 w-4" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
+              {tab.count > 0 && (
+                <div className="mt-1">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    activeTab === tab.id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
                   }`}>
                     {tab.count}
                   </span>
-                )}
-              </button>
-            ))}
-          </nav>
+                </div>
+              )}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Search and Filters */}
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -338,8 +329,17 @@ export default function FeedbackClienti() {
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {filteredFeedback.map((feedback) => (
-          <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+        {filteredFeedback.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+            <MessageCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun feedback disponibile</h3>
+            <p className="text-gray-600">
+              Non ci sono feedback che corrispondono ai filtri selezionati.
+            </p>
+          </div>
+        ) : (
+          filteredFeedback.map((feedback) => (
+            <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -351,7 +351,7 @@ export default function FeedbackClienti() {
                     <span>Cliente: {feedback.clientName}</span>
                     <span>Consulente: {feedback.consultantName}</span>
                     <span>Servizio: {feedback.service}</span>
-                    <span>Data: {feedback.date}</span>
+                    <span>Data: {formatDate(feedback.createdAt)}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     {renderStars(feedback.rating)}
@@ -396,7 +396,7 @@ export default function FeedbackClienti() {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-green-900 mb-1">Risposta del consulente</p>
                     <p className="text-sm text-green-800">{feedback.response}</p>
-                    <p className="text-xs text-green-600 mt-2">Risposta del {feedback.responseDate}</p>
+                    <p className="text-xs text-green-600 mt-2">Risposta del {formatDate(feedback.responseDate)}</p>
                   </div>
                 </div>
               </div>
@@ -431,7 +431,8 @@ export default function FeedbackClienti() {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Consultant Performance Summary */}

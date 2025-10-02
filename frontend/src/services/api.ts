@@ -269,6 +269,175 @@ class ApiService {
 
     return response.json()
   }
+
+  // Feedback Management
+  // Business endpoints
+  async getMyFeedbacks() {
+    const response = await fetch(`${API_BASE_URL}/feedback/my-feedbacks`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get feedbacks')
+    }
+
+    return response.json()
+  }
+
+  async createFeedback(data: {
+    consultantId?: string
+    consultantName: string
+    service: string
+    rating: number
+    title: string
+    message: string
+    category?: string
+    recommend?: boolean
+    positiveAspects?: string
+    suggestions?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/feedback/create`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create feedback')
+    }
+
+    return response.json()
+  }
+
+  async getConsultants() {
+    const response = await fetch(`${API_BASE_URL}/feedback/consultants/list`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get consultants')
+    }
+
+    return response.json()
+  }
+
+  async getFeedbackById(feedbackId: string) {
+    const response = await fetch(`${API_BASE_URL}/feedback/${feedbackId}`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get feedback')
+    }
+
+    return response.json()
+  }
+
+  // Admin endpoints
+  async getAllFeedbacks(filters?: {
+    status?: string
+    rating?: string
+    category?: string
+    consultantId?: string
+  }) {
+    const params = new URLSearchParams()
+    if (filters?.status) params.append('status', filters.status)
+    if (filters?.rating) params.append('rating', filters.rating)
+    if (filters?.category) params.append('category', filters.category)
+    if (filters?.consultantId) params.append('consultantId', filters.consultantId)
+
+    const url = `${API_BASE_URL}/feedback/admin/all${params.toString() ? '?' + params.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get feedbacks')
+    }
+
+    return response.json()
+  }
+
+  async respondToFeedback(feedbackId: string, responseText: string) {
+    const response = await fetch(`${API_BASE_URL}/feedback/${feedbackId}/respond`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ response: responseText }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to respond to feedback')
+    }
+
+    return response.json()
+  }
+
+  async updateFeedbackResponse(feedbackId: string, responseText: string) {
+    const response = await fetch(`${API_BASE_URL}/feedback/${feedbackId}/response`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ response: responseText }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update response')
+    }
+
+    return response.json()
+  }
+
+  async archiveFeedback(feedbackId: string) {
+    const response = await fetch(`${API_BASE_URL}/feedback/${feedbackId}/archive`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to archive feedback')
+    }
+
+    return response.json()
+  }
+
+  async getConsultantStats() {
+    const response = await fetch(`${API_BASE_URL}/feedback/admin/consultant-stats`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get consultant stats')
+    }
+
+    return response.json()
+  }
+
+  async getFeedbackStatistics() {
+    const response = await fetch(`${API_BASE_URL}/feedback/admin/statistics`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get statistics')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()

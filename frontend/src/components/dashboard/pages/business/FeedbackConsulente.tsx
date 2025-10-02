@@ -1,86 +1,125 @@
 import { MessageCircle, Star, ThumbsUp, ThumbsDown, Send, User, Clock, CheckCircle, AlertCircle, Plus, Search, Filter, Eye } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
+import apiService from '../../../../services/api'
+import { useToast } from '../../../../context/ToastContext'
 
 export default function FeedbackConsulente() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('feedback')
   const [showNewFeedback, setShowNewFeedback] = useState(false)
   const [selectedFeedback, setSelectedFeedback] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [rating, setRating] = useState(0)
+  const [feedbackList, setFeedbackList] = useState<any[]>([])
+  const [consultants, setConsultants] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const feedbackList = [
-    {
-      id: 'FB-2024-001',
-      consultantName: 'Dott.ssa Maria Rossi',
-      service: 'Consulenza Fiscale',
-      date: '15/01/2024',
-      rating: 5,
-      status: 'responded',
-      title: 'Ottima consulenza sulla partita IVA forfettaria',
-      message: 'La dottoressa Rossi è stata molto professionale e competente. Ha risposto a tutte le mie domande sulla partita IVA forfettaria e mi ha guidato nella scelta migliore per la mia attività.',
-      response: 'Grazie per il feedback positivo! Sono felice di averla aiutata nella scelta del regime forfettario. Resto a disposizione per qualsiasi chiarimento.',
-      responseDate: '16/01/2024',
-      category: 'Qualità Servizio'
-    },
-    {
-      id: 'FB-2024-002',
-      consultantName: 'Dott. Marco Bianchi',
-      service: 'Business Plan',
-      date: '10/01/2024',
-      rating: 4,
-      status: 'pending',
-      title: 'Business plan dettagliato e professionale',
-      message: 'Il business plan realizzato è molto dettagliato e professionale. Unica nota: avrei apprezzato più esempi pratici nella sezione marketing.',
-      response: null,
-      responseDate: null,
-      category: 'Contenuto'
-    },
-    {
-      id: 'FB-2024-003',
-      consultantName: 'Dott.ssa Anna Verdi',
-      service: 'Analisi AI',
-      date: '08/01/2024',
-      rating: 5,
-      status: 'responded',
-      title: 'Analisi AI molto utile per le decisioni strategiche',
-      message: 'L\'analisi AI fornita è stata estremamente utile per prendere decisioni strategiche importanti. I dati sono chiari e le raccomandazioni concrete.',
-      response: 'La ringrazio per il feedback! L\'analisi AI è uno strumento che stiamo continuamente migliorando. Sono felice che le sia stata utile.',
-      responseDate: '09/01/2024',
-      category: 'Innovazione'
-    }
-  ]
+  // Form state for new feedback
+  const [formData, setFormData] = useState({
+    consultantId: '',
+    consultantName: '',
+    service: '',
+    title: '',
+    message: '',
+    category: '',
+    recommend: true,
+    positiveAspects: '',
+    suggestions: ''
+  })
 
-  const consultants = [
-    {
-      id: 1,
-      name: 'Dott.ssa Maria Rossi',
-      specialization: 'Fiscalista',
-      rating: 4.8,
-      totalFeedbacks: 127,
-      image: '/api/placeholder/40/40',
-      services: ['Consulenza Fiscale', 'Partita IVA', 'Dichiarazioni']
-    },
-    {
-      id: 2,
-      name: 'Dott. Marco Bianchi',
-      specialization: 'Business Consultant',
-      rating: 4.6,
-      totalFeedbacks: 89,
-      image: '/api/placeholder/40/40',
-      services: ['Business Plan', 'Strategia', 'Crescita']
-    },
-    {
-      id: 3,
-      name: 'Dott.ssa Anna Verdi',
-      specialization: 'Data Analyst',
-      rating: 4.9,
-      totalFeedbacks: 156,
-      image: '/api/placeholder/40/40',
-      services: ['Analisi AI', 'Reporting', 'KPI']
+  // Load feedbacks and consultants
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Load user's feedbacks and consultants list in parallel
+        const [feedbacksRes, consultantsRes] = await Promise.all([
+          apiService.getMyFeedbacks(),
+          apiService.getConsultants()
+        ])
+
+        if (feedbacksRes.success) {
+          setFeedbackList(feedbacksRes.feedbacks)
+        }
+
+        if (consultantsRes.success) {
+          setConsultants(consultantsRes.consultants)
+        }
+      } catch (err: any) {
+        console.error('Error loading data:', err)
+        setError(err.message || 'Errore nel caricamento dei dati')
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    loadData()
+  }, [])
+
+  // Format date helper
+  const formatDate = (date: Date | string) => {
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  // Handle form submission
+  const handleSubmitFeedback = async () => {
+    try {
+      if (!formData.consultantName || !formData.service || !rating || !formData.title || !formData.message) {
+        showToast('Compila tutti i campi obbligatori', 'error')
+        return
+      }
+
+      setLoading(true)
+      const response = await apiService.createFeedback({
+        consultantId: formData.consultantId || undefined,
+        consultantName: formData.consultantName,
+        service: formData.service,
+        rating,
+        title: formData.title,
+        message: formData.message,
+        category: formData.category || undefined,
+        recommend: formData.recommend,
+        positiveAspects: formData.positiveAspects || undefined,
+        suggestions: formData.suggestions || undefined
+      })
+
+      if (response.success) {
+        // Reload feedbacks
+        const feedbacksRes = await apiService.getMyFeedbacks()
+        if (feedbacksRes.success) {
+          setFeedbackList(feedbacksRes.feedbacks)
+        }
+
+        // Reset form
+        setFormData({
+          consultantId: '',
+          consultantName: '',
+          service: '',
+          title: '',
+          message: '',
+          category: '',
+          recommend: true,
+          positiveAspects: '',
+          suggestions: ''
+        })
+        setRating(0)
+        setShowNewFeedback(false)
+        showToast('Feedback inviato con successo!', 'success')
+      }
+    } catch (err: any) {
+      console.error('Error submitting feedback:', err)
+      showToast(err.message || 'Errore nell\'invio del feedback', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredFeedback = feedbackList.filter(feedback => {
     const matchesSearch = feedback.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -154,7 +193,10 @@ export default function FeedbackConsulente() {
             <div>
               <p className="text-sm text-gray-600">Valutazione Media</p>
               <p className="text-2xl font-bold text-gray-900">
-                {(feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1)}
+                {feedbackList.length > 0
+                  ? (feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1)
+                  : '0.0'
+                }
               </p>
             </div>
           </div>
@@ -223,72 +265,89 @@ export default function FeedbackConsulente() {
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {filteredFeedback.map((feedback) => (
-          <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{feedback.title}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                    <span>Consulente: {feedback.consultantName}</span>
-                    <span>Servizio: {feedback.service}</span>
-                    <span>Data: {feedback.date}</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {renderStars(feedback.rating)}
-                    <span className="text-sm text-gray-500">({feedback.rating}/5)</span>
-                    <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(feedback.status)}`}>
-                      {getStatusIcon(feedback.status)}
-                      <span className="ml-1">{getStatusText(feedback.status)}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                {feedback.category}
-              </span>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-gray-700 text-sm leading-relaxed">{feedback.message}</p>
-            </div>
-
-            {feedback.response && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 text-green-600" />
+        {filteredFeedback.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+            <MessageCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun feedback disponibile</h3>
+            <p className="text-gray-600 mb-6">
+              Non hai ancora inviato feedback o non ci sono risultati per i filtri selezionati.
+            </p>
+            <button
+              onClick={() => setShowNewFeedback(true)}
+              className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-all duration-200 inline-flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Invia il tuo primo feedback
+            </button>
+          </div>
+        ) : (
+          filteredFeedback.map((feedback) => (
+            <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-green-900 mb-1">Risposta del consulente</p>
-                    <p className="text-sm text-green-800">{feedback.response}</p>
-                    <p className="text-xs text-green-600 mt-2">Risposta del {feedback.responseDate}</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{feedback.title}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                      <span>Consulente: {feedback.consultantName}</span>
+                      <span>Servizio: {feedback.service}</span>
+                      <span>Data: {formatDate(feedback.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      {renderStars(feedback.rating)}
+                      <span className="text-sm text-gray-500">({feedback.rating}/5)</span>
+                      <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(feedback.status)}`}>
+                        {getStatusIcon(feedback.status)}
+                        <span className="ml-1">{getStatusText(feedback.status)}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                  {feedback.category}
+                </span>
               </div>
-            )}
 
-            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-              <button
-                onClick={() => setSelectedFeedback(feedback)}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                Visualizza Dettagli
-              </button>
-              <div className="flex items-center space-x-2">
-                {!feedback.response && (
-                  <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                    In attesa di risposta
-                  </span>
-                )}
+              <div className="mb-4">
+                <p className="text-gray-700 text-sm leading-relaxed">{feedback.message}</p>
+              </div>
+
+              {feedback.response && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <MessageCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-900 mb-1">Risposta del consulente</p>
+                      <p className="text-sm text-green-800">{feedback.response}</p>
+                      <p className="text-xs text-green-600 mt-2">Risposta del {formatDate(feedback.responseDate)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setSelectedFeedback(feedback)}
+                  className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Visualizza Dettagli
+                </button>
+                <div className="flex items-center space-x-2">
+                  {!feedback.response && (
+                    <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                      In attesa di risposta
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )
@@ -300,74 +359,108 @@ export default function FeedbackConsulente() {
         <p className="text-gray-600">Visualizza e valuta i consulenti che ti hanno assistito</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {consultants.map((consultant) => (
-          <div key={consultant.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="h-8 w-8 text-primary-600" />
+      {consultants.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun consulente disponibile</h3>
+          <p className="text-gray-600">
+            Non ci sono consulenti disponibili al momento.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {consultants.map((consultant) => (
+            <div key={consultant.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="h-8 w-8 text-primary-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">{consultant.name}</h4>
+                <p className="text-sm text-gray-600 mb-3">{consultant.specialization}</p>
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  {renderStars(Math.floor(consultant.rating))}
+                  <span className="text-sm text-gray-600">({consultant.rating})</span>
+                </div>
+                <p className="text-xs text-gray-500">{consultant.totalFeedbacks} recensioni</p>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-1">{consultant.name}</h4>
-              <p className="text-sm text-gray-600 mb-3">{consultant.specialization}</p>
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                {renderStars(Math.floor(consultant.rating))}
-                <span className="text-sm text-gray-600">({consultant.rating})</span>
-              </div>
-              <p className="text-xs text-gray-500">{consultant.totalFeedbacks} recensioni</p>
-            </div>
 
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">Servizi offerti:</p>
-              <div className="flex flex-wrap gap-1">
-                {consultant.services.map((service, index) => (
-                  <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                    {service}
-                  </span>
-                ))}
-              </div>
+              <button
+                onClick={() => {
+                  setShowNewFeedback(true)
+                  // Pre-fill consultant data
+                }}
+                className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Lascia Feedback
+              </button>
             </div>
-
-            <button
-              onClick={() => {
-                setShowNewFeedback(true)
-                // Pre-fill consultant data
-              }}
-              className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center"
-            >
-              <Star className="h-4 w-4 mr-2" />
-              Lascia Feedback
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 
   const tabs = [
-    { id: 'feedback', name: 'I Miei Feedback', icon: MessageCircle },
-    { id: 'consultants', name: 'Consulenti', icon: User }
+    { id: 'feedback', name: 'I Miei Feedback', icon: MessageCircle, description: 'Visualizza e gestisci i tuoi feedback' },
+    { id: 'consultants', name: 'Consulenti', icon: User, description: 'Visualizza i consulenti disponibili' }
   ]
+
+  // Loading state
+  if (loading && feedbackList.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Caricamento...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error && feedbackList.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Ricarica
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      {/* Tabs Navigation */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+              className={`p-3 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.name}</span>
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-4 w-4" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -384,7 +477,18 @@ export default function FeedbackConsulente() {
           {/* Consultant Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Consulente *</label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select
+              value={formData.consultantId}
+              onChange={(e) => {
+                const consultant = consultants.find(c => c.id === e.target.value)
+                setFormData({
+                  ...formData,
+                  consultantId: e.target.value,
+                  consultantName: consultant ? consultant.name : ''
+                })
+              }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
               <option value="">Seleziona un consulente</option>
               {consultants.map((consultant) => (
                 <option key={consultant.id} value={consultant.id}>
@@ -397,14 +501,18 @@ export default function FeedbackConsulente() {
           {/* Service Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Servizio Ricevuto *</label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select
+              value={formData.service}
+              onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
               <option value="">Seleziona il servizio</option>
-              <option value="consulenza-fiscale">Consulenza Fiscale</option>
-              <option value="business-plan">Business Plan</option>
-              <option value="analisi-ai">Analisi AI</option>
-              <option value="partita-iva">Apertura Partita IVA</option>
-              <option value="contabilita">Gestione Contabilità</option>
-              <option value="altro">Altro</option>
+              <option value="Consulenza Fiscale">Consulenza Fiscale</option>
+              <option value="Business Plan">Business Plan</option>
+              <option value="Analisi AI">Analisi AI</option>
+              <option value="Apertura Partita IVA">Apertura Partita IVA</option>
+              <option value="Gestione Contabilità">Gestione Contabilità</option>
+              <option value="Altro">Altro</option>
             </select>
           </div>
 
@@ -424,6 +532,8 @@ export default function FeedbackConsulente() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Titolo Feedback *</label>
             <input
               type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="es. Ottima consulenza sulla partita IVA"
             />
@@ -432,14 +542,18 @@ export default function FeedbackConsulente() {
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
               <option value="">Seleziona categoria</option>
-              <option value="qualita-servizio">Qualità Servizio</option>
-              <option value="professionalita">Professionalità</option>
-              <option value="tempestivita">Tempestività</option>
-              <option value="contenuto">Contenuto</option>
-              <option value="innovazione">Innovazione</option>
-              <option value="comunicazione">Comunicazione</option>
+              <option value="Qualità Servizio">Qualità Servizio</option>
+              <option value="Professionalità">Professionalità</option>
+              <option value="Tempestività">Tempestività</option>
+              <option value="Contenuto">Contenuto</option>
+              <option value="Innovazione">Innovazione</option>
+              <option value="Comunicazione">Comunicazione</option>
             </select>
           </div>
 
@@ -448,6 +562,8 @@ export default function FeedbackConsulente() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Il Tuo Feedback *</label>
             <textarea
               rows={4}
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Descrivi la tua esperienza con il consulente e il servizio ricevuto..."
             ></textarea>
@@ -458,6 +574,8 @@ export default function FeedbackConsulente() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Cosa è andato bene</label>
             <textarea
               rows={2}
+              value={formData.positiveAspects}
+              onChange={(e) => setFormData({ ...formData, positiveAspects: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Cosa ti è piaciuto di più del servizio?"
             ></textarea>
@@ -468,6 +586,8 @@ export default function FeedbackConsulente() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Suggerimenti per migliorare</label>
             <textarea
               rows={2}
+              value={formData.suggestions}
+              onChange={(e) => setFormData({ ...formData, suggestions: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Hai suggerimenti per migliorare il servizio?"
             ></textarea>
@@ -478,12 +598,24 @@ export default function FeedbackConsulente() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Raccomandazione</label>
             <div className="flex items-center space-x-4">
               <label className="flex items-center">
-                <input type="radio" name="recommend" value="yes" className="text-primary-600 focus:ring-primary-500" />
+                <input
+                  type="radio"
+                  name="recommend"
+                  checked={formData.recommend === true}
+                  onChange={() => setFormData({ ...formData, recommend: true })}
+                  className="text-primary-600 focus:ring-primary-500"
+                />
                 <ThumbsUp className="h-4 w-4 ml-2 mr-1 text-green-600" />
                 <span className="text-sm text-gray-700">Raccomando</span>
               </label>
               <label className="flex items-center">
-                <input type="radio" name="recommend" value="no" className="text-primary-600 focus:ring-primary-500" />
+                <input
+                  type="radio"
+                  name="recommend"
+                  checked={formData.recommend === false}
+                  onChange={() => setFormData({ ...formData, recommend: false })}
+                  className="text-primary-600 focus:ring-primary-500"
+                />
                 <ThumbsDown className="h-4 w-4 ml-2 mr-1 text-red-600" />
                 <span className="text-sm text-gray-700">Non raccomando</span>
               </label>
@@ -495,18 +627,17 @@ export default function FeedbackConsulente() {
             <button
               onClick={() => setShowNewFeedback(false)}
               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={loading}
             >
               Annulla
             </button>
             <button
-              onClick={() => {
-                setShowNewFeedback(false)
-                alert('Feedback inviato con successo!')
-              }}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+              onClick={handleSubmitFeedback}
+              disabled={loading}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="h-4 w-4 mr-2" />
-              Invia Feedback
+              {loading ? 'Invio...' : 'Invia Feedback'}
             </button>
           </div>
         </div>
@@ -533,7 +664,7 @@ export default function FeedbackConsulente() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                       <span>Consulente: {selectedFeedback.consultantName}</span>
                       <span>Servizio: {selectedFeedback.service}</span>
-                      <span>Data: {selectedFeedback.date}</span>
+                      <span>Data: {formatDate(selectedFeedback.createdAt)}</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       {renderStars(selectedFeedback.rating)}
@@ -572,7 +703,7 @@ export default function FeedbackConsulente() {
                     </div>
                     <div className="flex-1">
                       <p className="text-green-800 leading-relaxed">{selectedFeedback.response}</p>
-                      <p className="text-sm text-green-600 mt-3">Risposta del {selectedFeedback.responseDate}</p>
+                      <p className="text-sm text-green-600 mt-3">Risposta del {formatDate(selectedFeedback.responseDate)}</p>
                     </div>
                   </div>
                 </div>
@@ -594,7 +725,7 @@ export default function FeedbackConsulente() {
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Feedback inviato</p>
-                    <p className="text-sm text-gray-600">{selectedFeedback.date}</p>
+                    <p className="text-sm text-gray-600">{formatDate(selectedFeedback.createdAt)}</p>
                   </div>
                 </div>
                 {selectedFeedback.response && (
@@ -602,7 +733,7 @@ export default function FeedbackConsulente() {
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Risposta ricevuta</p>
-                      <p className="text-sm text-gray-600">{selectedFeedback.responseDate}</p>
+                      <p className="text-sm text-gray-600">{formatDate(selectedFeedback.responseDate)}</p>
                     </div>
                   </div>
                 )}
