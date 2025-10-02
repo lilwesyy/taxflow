@@ -1,277 +1,456 @@
-import { FileText, Upload, Eye, Search, Filter, CheckCircle, Clock, AlertTriangle, Download, Trash2, FolderOpen, Building } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import {
+  FileText, Upload, Eye, Search, Filter, CheckCircle, Clock, AlertTriangle, Download,
+  Trash2, FolderOpen, Building, Receipt, DollarSign, FileCheck, BookOpen,
+  TrendingUp, Maximize2
+} from 'lucide-react'
+import { useState } from 'react'
 import Modal from '../../../common/Modal'
+import dummyPdf from '../../../../assets/dummy-pdf_2.pdf'
 
 export default function Documenti() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterAnno, setFilterAnno] = useState('all')
   const [selectedDocument, setSelectedDocument] = useState<any>(null)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('documenti')
-
-  useEffect(() => {
-    // Check if there's a hash in the URL to set the active tab
-    const hash = window.location.hash.substring(1)
-    if (hash && ['documenti', 'richieste', 'apertura-piva'].includes(hash)) {
-      setActiveTab(hash)
-      // Clear the hash after setting the tab
-      window.location.hash = ''
-    }
-  }, [])
+  const [activeTab, setActiveTab] = useState('dichiarazioni')
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState('')
+  const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
 
   const [uploadForm, setUploadForm] = useState({
     nome: '',
-    tipo: 'bilancio',
+    tipo: 'modello_redditi',
     descrizione: '',
-    categoria: 'fiscale',
+    categoria: 'dichiarazioni',
     file: null as File | null
   })
 
-  const documenti = [
-    {
-      id: 'doc-001',
-      nome: 'Bilancio 2023',
-      tipo: 'bilancio',
-      formato: 'PDF',
-      dimensione: '1.8 MB',
-      categoria: 'fiscale',
-      dataCaricamento: '15/01/2024',
-      dataModifica: '15/01/2024',
-      status: 'elaborato',
-      inviataA: 'Dr. Marco Bianchi',
-      descrizione: 'Bilancio completo anno fiscale 2023',
-      versione: '1.0',
-      note: 'Documento contabile principale per dichiarazione dei redditi',
-      cronologia: [
-        { data: '15/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '16/01/2024', azione: 'Documento ricevuto', utente: 'Dr. Marco Bianchi' },
-        { data: '18/01/2024', azione: 'Elaborazione completata', utente: 'Dr. Marco Bianchi' }
-      ]
-    },
-    {
-      id: 'doc-002',
-      nome: 'Fatture Gennaio 2024',
-      tipo: 'fatture',
-      formato: 'ZIP',
-      dimensione: '4.2 MB',
-      categoria: 'fatturazione',
-      dataCaricamento: '20/01/2024',
-      dataModifica: '20/01/2024',
-      status: 'in_elaborazione',
-      inviataA: 'Dr. Laura Verdi',
-      descrizione: 'Raccolta fatture emesse e ricevute gennaio 2024',
-      versione: '1.0',
-      note: 'Include 15 fatture attive e 8 passive',
-      cronologia: [
-        { data: '20/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '20/01/2024', azione: 'Documento ricevuto', utente: 'Dr. Laura Verdi' }
-      ]
-    },
-    {
-      id: 'doc-003',
-      nome: 'Contratto Locazione Ufficio',
-      tipo: 'contratto',
-      formato: 'PDF',
-      dimensione: '0.8 MB',
-      categoria: 'legale',
-      dataCaricamento: '22/01/2024',
-      dataModifica: '22/01/2024',
-      status: 'in_attesa',
-      inviataA: 'Dr. Marco Bianchi',
-      descrizione: 'Contratto di locazione sede operativa',
-      versione: '1.0',
-      note: 'Necessario per deduzione costi ufficio',
-      cronologia: [
-        { data: '22/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' }
-      ]
-    },
-    {
-      id: 'doc-004',
-      nome: 'Estratti Conto Q4 2023',
-      tipo: 'estratto_conto',
-      formato: 'PDF',
-      dimensione: '2.1 MB',
-      categoria: 'bancario',
-      dataCaricamento: '25/01/2024',
-      dataModifica: '25/01/2024',
-      status: 'elaborato',
-      inviataA: 'Dr. Marco Bianchi',
-      descrizione: 'Estratti conto bancari ultimo trimestre 2023',
-      versione: '1.0',
-      note: 'Movimenti necessari per quadratura contabile',
-      cronologia: [
-        { data: '25/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '25/01/2024', azione: 'Documento ricevuto', utente: 'Dr. Marco Bianchi' },
-        { data: '26/01/2024', azione: 'Elaborazione completata', utente: 'Dr. Marco Bianchi' }
-      ]
-    }
-  ]
-
-  const documentiAperturaPiva = [
-    {
-      id: 'piva-001',
-      nome: 'Documento Identità - Mario Rossi',
-      tipo: 'documento_identita',
-      formato: 'PDF',
-      dimensione: '0.5 MB',
-      categoria: 'identita',
-      dataCaricamento: '10/01/2024',
-      dataModifica: '10/01/2024',
-      status: 'approvato',
-      richiestaId: 'REQ-001',
-      descrizione: 'Carta d\'identità fronte/retro per apertura P.IVA',
-      versione: '1.0',
-      note: 'Documento valido fino al 2029',
-      cronologia: [
-        { data: '10/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '11/01/2024', azione: 'Documento verificato', utente: 'Sistema' },
-        { data: '11/01/2024', azione: 'Documento approvato', utente: 'Dr. Marco Bianchi' }
-      ]
-    },
-    {
-      id: 'piva-002',
-      nome: 'Codice Fiscale - Mario Rossi',
-      tipo: 'codice_fiscale',
-      formato: 'PDF',
-      dimensione: '0.3 MB',
-      categoria: 'identita',
-      dataCaricamento: '10/01/2024',
-      dataModifica: '10/01/2024',
-      status: 'approvato',
-      richiestaId: 'REQ-001',
-      descrizione: 'Tessera sanitaria con codice fiscale',
-      versione: '1.0',
-      note: 'Documento valido',
-      cronologia: [
-        { data: '10/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '11/01/2024', azione: 'Documento approvato', utente: 'Dr. Marco Bianchi' }
-      ]
-    },
-    {
-      id: 'piva-003',
-      nome: 'Contratto Locazione Ufficio',
-      tipo: 'contratto_locazione',
-      formato: 'PDF',
-      dimensione: '1.2 MB',
-      categoria: 'sede',
-      dataCaricamento: '12/01/2024',
-      dataModifica: '12/01/2024',
-      status: 'in_revisione',
-      richiestaId: 'REQ-001',
-      descrizione: 'Contratto di locazione per sede operativa',
-      versione: '1.0',
-      note: 'In attesa di verifica clausole',
-      cronologia: [
-        { data: '12/01/2024', azione: 'Documento caricato', utente: 'Mario Rossi' },
-        { data: '12/01/2024', azione: 'Documento in revisione', utente: 'Dr. Marco Bianchi' }
-      ]
-    },
-    {
-      id: 'piva-004',
-      nome: 'Visura Camerale',
-      tipo: 'visura_camerale',
-      formato: 'PDF',
-      dimensione: '0.7 MB',
-      categoria: 'camerale',
-      dataCaricamento: '13/01/2024',
-      dataModifica: '13/01/2024',
-      status: 'richiesto',
-      richiestaId: 'REQ-002',
-      descrizione: 'Visura camerale storica',
-      versione: '1.0',
-      note: 'Documento richiesto per pratica in corso',
-      cronologia: [
-        { data: '13/01/2024', azione: 'Documento richiesto', utente: 'Dr. Laura Verdi' }
-      ]
-    },
-    {
-      id: 'piva-005',
-      nome: 'Dichiarazione Inizio Attività',
-      tipo: 'dichiarazione_attivita',
-      formato: 'PDF',
-      dimensione: '0.9 MB',
-      categoria: 'attivita',
-      dataCaricamento: '14/01/2024',
-      dataModifica: '14/01/2024',
-      status: 'bozza',
-      richiestaId: 'REQ-002',
-      descrizione: 'Dichiarazione di inizio attività compilata',
-      versione: '2.0',
-      note: 'Bozza in fase di completamento',
-      cronologia: [
-        { data: '14/01/2024', azione: 'Bozza creata', utente: 'Dr. Laura Verdi' },
-        { data: '15/01/2024', azione: 'Bozza aggiornata', utente: 'Dr. Laura Verdi' }
-      ]
-    }
-  ]
-
-  const richiesteDaConsulente = [
-    {
-      id: 'req-001',
-      consulente: 'Dr. Marco Bianchi',
-      tipo: 'documenti_fiscali',
-      descrizione: 'Documenti necessari per dichiarazione IVA trimestrale',
-      dataRichiesta: '23/01/2024',
-      scadenza: '30/01/2024',
-      priorita: 'alta',
-      status: 'in_attesa',
-      documenti: [
-        'Fatture Q4 2023',
-        'Corrispettivi dicembre 2023',
-        'Ricevute fiscali'
-      ]
-    },
-    {
-      id: 'req-002',
-      consulente: 'Dr. Laura Verdi',
-      tipo: 'business_plan',
-      descrizione: 'Documenti per aggiornamento business plan',
-      dataRichiesta: '20/01/2024',
-      scadenza: '05/02/2024',
-      priorita: 'media',
-      status: 'completata',
-      documenti: [
-        'Proiezioni finanziarie 2024',
-        'Analisi competitor',
-        'Piano marketing'
-      ]
-    }
-  ]
-
-
+  // Documenti organizzati per categoria (Cassetto Fiscale AdE)
+  const documenti = {
+    dichiarazioni: [
+      {
+        id: 'dich-001',
+        nome: 'Modello Redditi PF 2025',
+        tipo: 'modello_redditi',
+        formato: 'PDF',
+        dimensione: '2.4 MB',
+        anno: '2025',
+        dataCaricamento: '15/03/2025',
+        dataModifica: '15/03/2025',
+        status: 'elaborato',
+        descrizione: 'Dichiarazione dei redditi persone fisiche anno 2025',
+        protocollo: 'DR202500123456',
+        fileUrl: dummyPdf,
+        note: 'Presentata telematicamente all\'Agenzia delle Entrate',
+        cronologia: [
+          { data: '15/03/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' },
+          { data: '16/03/2025', azione: 'Ricevuta protocollata', utente: 'Agenzia Entrate' }
+        ]
+      },
+      {
+        id: 'dich-002',
+        nome: 'Dichiarazione IVA Annuale 2023',
+        tipo: 'dichiarazione_iva',
+        formato: 'PDF',
+        dimensione: '1.8 MB',
+        anno: '2023',
+        dataCaricamento: '28/02/2025',
+        dataModifica: '28/02/2025',
+        status: 'elaborato',
+        descrizione: 'Dichiarazione IVA annuale anno 2023',
+        protocollo: 'IVA202300987654',
+        fileUrl: dummyPdf,
+        note: 'Regime forfettario - esente IVA',
+        cronologia: [
+          { data: '28/02/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' }
+        ]
+      },
+      {
+        id: 'dich-003',
+        nome: 'Modello 730/2025 Precompilato',
+        tipo: 'modello_730',
+        formato: 'PDF',
+        dimensione: '1.2 MB',
+        anno: '2025',
+        dataCaricamento: '15/04/2025',
+        dataModifica: '15/04/2025',
+        status: 'in_elaborazione',
+        descrizione: 'Dichiarazione 730 precompilata',
+        protocollo: null,
+        fileUrl: dummyPdf,
+        note: 'In fase di controllo',
+        cronologia: [
+          { data: '15/04/2025', azione: 'Documento scaricato da AdE', utente: 'Mario Rossi' }
+        ]
+      }
+    ],
+    fatturazione: [
+      {
+        id: 'fatt-001',
+        nome: 'Fattura Elettronica FE0012025',
+        tipo: 'fattura_elettronica',
+        formato: 'XML',
+        dimensione: '24 KB',
+        anno: '2025',
+        dataCaricamento: '10/01/2025',
+        dataModifica: '10/01/2025',
+        status: 'elaborato',
+        descrizione: 'Fattura n. 001/2025 - Cliente XYZ SRL',
+        protocollo: 'SDI2025001234567',
+        importo: '€ 1.500,00',
+        note: 'Inviata tramite Sistema di Interscambio',
+        cronologia: [
+          { data: '10/01/2025', azione: 'Fattura emessa', utente: 'Mario Rossi' },
+          { data: '10/01/2025', azione: 'Inviata a SDI', utente: 'Sistema' },
+          { data: '11/01/2025', azione: 'Consegnata al destinatario', utente: 'SDI' }
+        ]
+      },
+      {
+        id: 'fatt-002',
+        nome: 'Fattura Passiva FP0052025',
+        tipo: 'fattura_passiva',
+        formato: 'XML',
+        dimensione: '18 KB',
+        anno: '2025',
+        dataCaricamento: '15/01/2025',
+        dataModifica: '15/01/2025',
+        status: 'elaborato',
+        descrizione: 'Fattura acquisto materiale ufficio',
+        protocollo: 'SDI2025007654321',
+        importo: '€ 450,00',
+        note: 'Ricevuta tramite SDI',
+        cronologia: [
+          { data: '15/01/2025', azione: 'Fattura ricevuta', utente: 'Sistema SDI' }
+        ]
+      },
+      {
+        id: 'fatt-003',
+        nome: 'Corrispettivi Gennaio 2025',
+        tipo: 'corrispettivi',
+        formato: 'XML',
+        dimensione: '36 KB',
+        anno: '2025',
+        dataCaricamento: '31/01/2025',
+        dataModifica: '31/01/2025',
+        status: 'elaborato',
+        descrizione: 'Documento commerciale riepilogativo gennaio',
+        protocollo: 'CORR202501',
+        importo: '€ 3.200,00',
+        note: 'Trasmesso telematicamente',
+        cronologia: [
+          { data: '31/01/2025', azione: 'Corrispettivi trasmessi', utente: 'Sistema' }
+        ]
+      }
+    ],
+    comunicazioni: [
+      {
+        id: 'com-001',
+        nome: 'Comunicazione Liquidazioni IVA Q1 2025',
+        tipo: 'lipe',
+        formato: 'PDF',
+        dimensione: '0.8 MB',
+        anno: '2025',
+        dataCaricamento: '05/02/2025',
+        dataModifica: '05/02/2025',
+        status: 'elaborato',
+        descrizione: 'LIPE - Liquidazione periodica IVA 1° trimestre',
+        protocollo: 'LIPE202501Q1',
+        note: 'Regime forfettario - esente',
+        cronologia: [
+          { data: '05/02/2025', azione: 'Comunicazione inviata', utente: 'Sistema' }
+        ]
+      },
+      {
+        id: 'com-002',
+        nome: 'Esterometro Q4 2023',
+        tipo: 'esterometro',
+        formato: 'XML',
+        dimensione: '12 KB',
+        anno: '2023',
+        dataCaricamento: '15/01/2025',
+        dataModifica: '15/01/2025',
+        status: 'elaborato',
+        descrizione: 'Comunicazione operazioni transfrontaliere',
+        protocollo: 'EST202304',
+        note: 'Trimestre ottobre-dicembre 2023',
+        cronologia: [
+          { data: '15/01/2025', azione: 'Comunicazione trasmessa', utente: 'Sistema' }
+        ]
+      },
+      {
+        id: 'com-003',
+        nome: 'Comunicazione Dati Fatture 2023',
+        tipo: 'spesometro',
+        formato: 'XML',
+        dimensione: '156 KB',
+        anno: '2023',
+        dataCaricamento: '28/02/2025',
+        dataModifica: '28/02/2025',
+        status: 'in_attesa',
+        descrizione: 'Comunicazione dati fatture emesse/ricevute',
+        protocollo: null,
+        note: 'In fase di verifica',
+        cronologia: [
+          { data: '28/02/2025', azione: 'Documento preparato', utente: 'Mario Rossi' }
+        ]
+      }
+    ],
+    versamenti: [
+      {
+        id: 'vers-001',
+        nome: 'F24 Acconto IRPEF 2025',
+        tipo: 'f24',
+        formato: 'PDF',
+        dimensione: '0.3 MB',
+        anno: '2025',
+        dataCaricamento: '30/06/2025',
+        dataModifica: '30/06/2025',
+        status: 'elaborato',
+        descrizione: 'Primo acconto IRPEF anno 2025',
+        protocollo: 'F24202506001',
+        importo: '€ 2.400,00',
+        note: 'Pagato tramite home banking',
+        cronologia: [
+          { data: '30/06/2025', azione: 'F24 generato', utente: 'Sistema' },
+          { data: '30/06/2025', azione: 'Pagamento eseguito', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'vers-002',
+        nome: 'F24 Contributi INPS Gennaio 2025',
+        tipo: 'f24_inps',
+        formato: 'PDF',
+        dimensione: '0.2 MB',
+        anno: '2025',
+        dataCaricamento: '16/02/2025',
+        dataModifica: '16/02/2025',
+        status: 'elaborato',
+        descrizione: 'Contributi INPS gestione separata',
+        protocollo: 'F24202502INPS',
+        importo: '€ 650,00',
+        note: 'Pagamento regolare',
+        cronologia: [
+          { data: '16/02/2025', azione: 'Versamento effettuato', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'vers-003',
+        nome: 'Ravvedimento Operoso F24',
+        tipo: 'ravvedimento',
+        formato: 'PDF',
+        dimensione: '0.4 MB',
+        anno: '2025',
+        dataCaricamento: '15/03/2025',
+        dataModifica: '15/03/2025',
+        status: 'in_elaborazione',
+        descrizione: 'Ravvedimento pagamento in ritardo',
+        protocollo: null,
+        importo: '€ 120,00',
+        note: 'In attesa di conferma AdE',
+        cronologia: [
+          { data: '15/03/2025', azione: 'Ravvedimento presentato', utente: 'Sistema' }
+        ]
+      }
+    ],
+    consultazione: [
+      {
+        id: 'cons-001',
+        nome: 'Estratto Conto Fiscale 2023',
+        tipo: 'estratto_conto',
+        formato: 'PDF',
+        dimensione: '1.1 MB',
+        anno: '2023',
+        dataCaricamento: '10/01/2025',
+        dataModifica: '10/01/2025',
+        status: 'elaborato',
+        descrizione: 'Situazione debitoria/creditoria con Fisco',
+        protocollo: 'ECF202301',
+        note: 'Nessun debito pendente',
+        cronologia: [
+          { data: '10/01/2025', azione: 'Estratto scaricato', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'cons-002',
+        nome: 'Certificazione Unica 2025',
+        tipo: 'cu',
+        formato: 'PDF',
+        dimensione: '0.6 MB',
+        anno: '2025',
+        dataCaricamento: '16/03/2025',
+        dataModifica: '16/03/2025',
+        status: 'elaborato',
+        descrizione: 'CU redditi lavoro dipendente/assimilati',
+        protocollo: 'CU202500456',
+        note: 'Ricevuta da sostituto d\'imposta',
+        cronologia: [
+          { data: '16/03/2025', azione: 'CU emessa', utente: 'Datore lavoro' }
+        ]
+      },
+      {
+        id: 'cons-003',
+        nome: 'Visura Partita IVA',
+        tipo: 'visura',
+        formato: 'PDF',
+        dimensione: '0.4 MB',
+        anno: '2025',
+        dataCaricamento: '05/02/2025',
+        dataModifica: '05/02/2025',
+        status: 'elaborato',
+        descrizione: 'Visura anagrafica partita IVA',
+        protocollo: 'VIS202502',
+        note: 'P.IVA attiva - regime forfettario',
+        cronologia: [
+          { data: '05/02/2025', azione: 'Visura richiesta', utente: 'Mario Rossi' }
+        ]
+      }
+    ],
+    registri: [
+      {
+        id: 'reg-001',
+        nome: 'Registro Incassi 2025',
+        tipo: 'registro_incassi',
+        formato: 'XLSX',
+        dimensione: '0.8 MB',
+        anno: '2025',
+        dataCaricamento: '31/01/2025',
+        dataModifica: '28/02/2025',
+        status: 'elaborato',
+        descrizione: 'Registro cronologico incassi regime forfettario',
+        protocollo: 'REG-INC-2025',
+        note: 'Aggiornato mensilmente',
+        cronologia: [
+          { data: '31/01/2025', azione: 'Registro creato', utente: 'Mario Rossi' },
+          { data: '28/02/2025', azione: 'Aggiornamento febbraio', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'reg-002',
+        nome: 'Registro Acquisti 2025',
+        tipo: 'registro_acquisti',
+        formato: 'XLSX',
+        dimensione: '0.6 MB',
+        anno: '2025',
+        dataCaricamento: '31/01/2025',
+        dataModifica: '28/02/2025',
+        status: 'elaborato',
+        descrizione: 'Registro cronologico spese sostenute',
+        protocollo: 'REG-ACQ-2025',
+        note: 'Include tutte le fatture passive',
+        cronologia: [
+          { data: '31/01/2025', azione: 'Registro creato', utente: 'Mario Rossi' },
+          { data: '28/02/2025', azione: 'Aggiornamento febbraio', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'reg-003',
+        nome: 'Libro Cespiti 2025',
+        tipo: 'libro_cespiti',
+        formato: 'PDF',
+        dimensione: '0.5 MB',
+        anno: '2025',
+        dataCaricamento: '15/01/2025',
+        dataModifica: '15/01/2025',
+        status: 'elaborato',
+        descrizione: 'Registro beni ammortizzabili',
+        protocollo: 'CESP-2025',
+        note: 'Regime forfettario - non obbligatorio',
+        cronologia: [
+          { data: '15/01/2025', azione: 'Libro caricato', utente: 'Mario Rossi' }
+        ]
+      }
+    ],
+    altri_documenti: [
+      {
+        id: 'alt-001',
+        nome: 'Contratto Locazione Ufficio',
+        tipo: 'contratto',
+        formato: 'PDF',
+        dimensione: '1.2 MB',
+        anno: '2025',
+        dataCaricamento: '10/01/2025',
+        dataModifica: '10/01/2025',
+        status: 'elaborato',
+        descrizione: 'Contratto affitto sede operativa',
+        protocollo: null,
+        note: 'Registrato all\'Agenzia Entrate',
+        cronologia: [
+          { data: '10/01/2025', azione: 'Contratto caricato', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'alt-002',
+        nome: 'Visura Camerale Aggiornata',
+        tipo: 'visura_camerale',
+        formato: 'PDF',
+        dimensione: '0.7 MB',
+        anno: '2025',
+        dataCaricamento: '15/02/2025',
+        dataModifica: '15/02/2025',
+        status: 'elaborato',
+        descrizione: 'Visura CCIAA aggiornata',
+        protocollo: 'VC202502',
+        note: 'Scaricata da Registro Imprese',
+        cronologia: [
+          { data: '15/02/2025', azione: 'Visura scaricata', utente: 'Mario Rossi' }
+        ]
+      },
+      {
+        id: 'alt-003',
+        nome: 'Polizza Assicurativa RC Professionale',
+        tipo: 'assicurazione',
+        formato: 'PDF',
+        dimensione: '0.9 MB',
+        anno: '2025',
+        dataCaricamento: '01/01/2025',
+        dataModifica: '01/01/2025',
+        status: 'elaborato',
+        descrizione: 'Polizza RC professionale anno 2025',
+        protocollo: 'ASS-RC-2025-001',
+        note: 'Valida fino al 31/12/2025',
+        cronologia: [
+          { data: '01/01/2025', azione: 'Polizza attivata', utente: 'Compagnia Assicurativa' }
+        ]
+      }
+    ]
+  }
 
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulazione upload
     alert('Documento caricato con successo!')
     setIsUploadModalOpen(false)
     setUploadForm({
       nome: '',
-      tipo: 'bilancio',
+      tipo: 'modello_redditi',
       descrizione: '',
-      categoria: 'fiscale',
+      categoria: 'dichiarazioni',
       file: null
     })
   }
 
-  const filteredDocumenti = documenti.filter(doc => {
-    const matchesSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === 'all' || doc.tipo === filterType
-    const matchesStatus = filterStatus === 'all' || doc.status === filterStatus
-    return matchesSearch && matchesType && matchesStatus
-  })
+  const getFilteredDocuments = () => {
+    const docs = documenti[activeTab as keyof typeof documenti] || []
+    return docs.filter(doc => {
+      const matchesSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = filterStatus === 'all' || doc.status === filterStatus
+      const matchesAnno = filterAnno === 'all' || doc.anno === filterAnno
+      return matchesSearch && matchesStatus && matchesAnno
+    })
+  }
+
+  // Estrai tutti gli anni disponibili dai documenti
+  const getAvailableYears = () => {
+    const years = new Set(allDocuments.map(doc => doc.anno))
+    return Array.from(years).sort((a, b) => b.localeCompare(a)) // Ordine decrescente
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'elaborato': return 'bg-green-100 text-green-600'
-      case 'approvato': return 'bg-green-100 text-green-600'
       case 'in_elaborazione': return 'bg-blue-100 text-blue-600'
-      case 'in_revisione': return 'bg-blue-100 text-blue-600'
       case 'in_attesa': return 'bg-yellow-100 text-yellow-600'
-      case 'richiesto': return 'bg-yellow-100 text-yellow-600'
-      case 'bozza': return 'bg-gray-100 text-gray-600'
       case 'rifiutato': return 'bg-red-100 text-red-600'
       default: return 'bg-gray-100 text-gray-600'
     }
@@ -280,124 +459,204 @@ export default function Documenti() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'elaborato': return 'Elaborato'
-      case 'approvato': return 'Approvato'
       case 'in_elaborazione': return 'In elaborazione'
-      case 'in_revisione': return 'In revisione'
       case 'in_attesa': return 'In attesa'
-      case 'richiesto': return 'Richiesto'
-      case 'bozza': return 'Bozza'
       case 'rifiutato': return 'Rifiutato'
       default: return 'Sconosciuto'
+    }
+  }
+
+  const handleOpenPdfViewer = (documento: any) => {
+    if (documento.formato === 'PDF' && documento.fileUrl) {
+      setPdfUrl(documento.fileUrl)
+      setIsPdfViewerOpen(true)
+      setIsPdfFullscreen(false)
+    } else {
+      setSelectedDocument(documento)
+    }
+  }
+
+  const togglePdfFullscreen = () => {
+    if (!isPdfFullscreen) {
+      // Quando apro fullscreen, chiudo il modale normale
+      setIsPdfViewerOpen(false)
+      setIsPdfFullscreen(true)
+    } else {
+      // Quando chiudo fullscreen, riapro il modale normale
+      setIsPdfFullscreen(false)
+      setIsPdfViewerOpen(true)
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'elaborato': return <CheckCircle className="h-4 w-4" />
-      case 'approvato': return <CheckCircle className="h-4 w-4" />
       case 'in_elaborazione': return <Clock className="h-4 w-4" />
-      case 'in_revisione': return <Clock className="h-4 w-4" />
       case 'in_attesa': return <Clock className="h-4 w-4" />
-      case 'richiesto': return <Clock className="h-4 w-4" />
-      case 'bozza': return <FileText className="h-4 w-4" />
       case 'rifiutato': return <AlertTriangle className="h-4 w-4" />
       default: return <Clock className="h-4 w-4" />
     }
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'alta': return 'text-red-600 bg-red-50'
-      case 'media': return 'text-yellow-600 bg-yellow-50'
-      case 'bassa': return 'text-green-600 bg-green-50'
-      default: return 'text-gray-600 bg-gray-50'
-    }
-  }
+  const tabs = [
+    { id: 'dichiarazioni', name: 'Dichiarazioni', icon: FileCheck, description: 'Modelli redditi, IVA, 730' },
+    { id: 'fatturazione', name: 'Fatturazione', icon: Receipt, description: 'Fatture elettroniche, corrispettivi' },
+    { id: 'comunicazioni', name: 'Comunicazioni', icon: BookOpen, description: 'LIPE, Esterometro, Spesometro' },
+    { id: 'versamenti', name: 'Versamenti', icon: DollarSign, description: 'F24, tributi, ravvedimenti' },
+    { id: 'consultazione', name: 'Consultazione', icon: Eye, description: 'Estratti conto, CU, visure' },
+    { id: 'registri', name: 'Registri', icon: BookOpen, description: 'Registri IVA, incassi, cespiti' },
+    { id: 'altri_documenti', name: 'Altri Documenti', icon: FolderOpen, description: 'Contratti, visure, assicurazioni' }
+  ]
 
-  const renderDocumentiTab = () => (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <FileText className="h-8 w-8 text-blue-600 mr-3" />
+  const allDocuments = Object.values(documenti).flat()
+  const currentTabData = tabs.find(t => t.id === activeTab)
+  const filteredDocuments = getFilteredDocuments()
+  const availableYears = getAvailableYears()
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Building className="h-8 w-8" />
             <div>
-              <p className="text-sm text-gray-600">Documenti Totali</p>
-              <p className="text-2xl font-bold text-gray-900">{documenti.length}</p>
+              <h2 className="text-2xl font-bold">Il tuo Cassetto Fiscale</h2>
+              <p className="text-blue-100 text-sm">Documenti organizzati come nell'Agenzia delle Entrate</p>
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Elaborati</p>
-              <p className="text-2xl font-bold text-gray-900">{documenti.filter(d => d.status === 'elaborato').length}</p>
+          <div className="flex items-center space-x-8">
+            <div className="text-center">
+              <p className="text-3xl font-bold">{allDocuments.length}</p>
+              <p className="text-blue-100 text-sm">Documenti totali</p>
             </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <Clock className="h-8 w-8 text-yellow-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">In elaborazione</p>
-              <p className="text-2xl font-bold text-gray-900">{documenti.filter(d => d.status === 'in_elaborazione').length}</p>
+            <div className="h-12 w-px bg-blue-400"></div>
+            <div className="text-center">
+              <p className="text-3xl font-bold">{allDocuments.filter(d => d.status === 'elaborato').length}</p>
+              <p className="text-blue-100 text-sm">Elaborati</p>
             </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <Upload className="h-8 w-8 text-primary-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Caricati Questo Mese</p>
-              <p className="text-2xl font-bold text-gray-900">{documenti.length}</p>
+            <div className="h-12 w-px bg-blue-400"></div>
+            <div className="text-center">
+              <p className="text-3xl font-bold">{allDocuments.filter(d => d.status === 'in_elaborazione').length}</p>
+              <p className="text-blue-100 text-sm">In lavorazione</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Actions and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cerca documenti..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Totale Documenti</p>
+              <p className="text-2xl font-bold text-gray-900">{allDocuments.length}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="all">Tutti i tipi</option>
-                <option value="bilancio">Bilanci</option>
-                <option value="fatture">Fatture</option>
-                <option value="contratto">Contratti</option>
-                <option value="estratto_conto">Estratti Conto</option>
-              </select>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="all">Tutti gli stati</option>
-                <option value="elaborato">Elaborato</option>
-                <option value="in_elaborazione">In elaborazione</option>
-                <option value="in_attesa">In attesa</option>
-              </select>
+            <FileText className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Elaborati</p>
+              <p className="text-2xl font-bold text-green-600">
+                {allDocuments.filter(d => d.status === 'elaborato').length}
+              </p>
             </div>
+            <CheckCircle className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">In Elaborazione</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {allDocuments.filter(d => d.status === 'in_elaborazione').length}
+              </p>
+            </div>
+            <Clock className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Anno Corrente</p>
+              <p className="text-2xl font-bold text-gray-900">2025</p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-purple-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`p-3 rounded-lg text-left transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-4 w-4" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cerca documenti..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">Tutti gli stati</option>
+              <option value="elaborato">Elaborato</option>
+              <option value="in_elaborazione">In elaborazione</option>
+              <option value="in_attesa">In attesa</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4 text-gray-400" />
+            <select
+              value={filterAnno}
+              onChange={(e) => setFilterAnno(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">Tutti gli anni</option>
+              {availableYears.map((anno) => (
+                <option key={anno} value={anno}>
+                  Anno {anno}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             onClick={() => setIsUploadModalOpen(true)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg flex items-center whitespace-nowrap"
           >
             <Upload className="h-4 w-4 mr-2" />
             Carica Documento
@@ -405,14 +664,27 @@ export default function Documenti() {
         </div>
       </div>
 
+      {/* Current Tab Info */}
+      {currentTabData && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <currentTabData.icon className="h-6 w-6 text-blue-600 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-blue-900">{currentTabData.name}</h3>
+              <p className="text-sm text-blue-700">{currentTabData.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Documents Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDocumenti.map((documento) => (
-          <div key={documento.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+        {filteredDocuments.map((documento) => (
+          <div key={documento.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start space-x-3">
-                <div className="p-3 bg-primary-50 rounded-lg">
-                  <FileText className="h-6 w-6 text-primary-600" />
+              <div className="flex items-start space-x-3 flex-1">
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <FileText className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 mb-1 truncate">{documento.nome}</h3>
@@ -421,9 +693,14 @@ export default function Documenti() {
                     <span>{documento.formato}</span>
                     <span>•</span>
                     <span>{documento.dimensione}</span>
+                    <span>•</span>
+                    <span>Anno {documento.anno}</span>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="mb-4">
               <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(documento.status)}`}>
                 {getStatusIcon(documento.status)}
                 <span className="ml-1">{getStatusText(documento.status)}</span>
@@ -431,33 +708,37 @@ export default function Documenti() {
             </div>
 
             <div className="space-y-2 mb-4">
+              {documento.protocollo && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Protocollo:</span>
+                  <span className="text-gray-900 font-mono text-xs">{documento.protocollo}</span>
+                </div>
+              )}
+              {(documento as any).importo && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Importo:</span>
+                  <span className="text-gray-900 font-semibold">{(documento as any).importo}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Inviato a:</span>
-                <span className="text-gray-900">{documento.inviataA}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Data caricamento:</span>
+                <span className="text-gray-600">Data:</span>
                 <span className="text-gray-900">{documento.dataCaricamento}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Categoria:</span>
-                <span className="text-gray-900 capitalize">{documento.categoria}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-100">
               <button
-                onClick={() => setSelectedDocument(documento)}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
+                onClick={() => handleOpenPdfViewer(documento)}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
               >
                 <Eye className="h-4 w-4 mr-1" />
                 Visualizza
               </button>
               <div className="flex items-center space-x-2">
-                <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 hover:scale-110 transition-transform duration-200" title="Download">
+                <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50" title="Download">
                   <Download className="h-4 w-4" />
                 </button>
-                <button className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 hover:scale-110 transition-transform duration-200" title="Elimina">
+                <button className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50" title="Elimina">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -465,256 +746,24 @@ export default function Documenti() {
           </div>
         ))}
       </div>
-    </div>
-  )
 
-  const renderRichiesteTab = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Richieste dai Consulenti</h3>
-          <p className="text-gray-600">Documenti richiesti dai tuoi consulenti</p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {richiesteDaConsulente.map((richiesta) => (
-          <div key={richiesta.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-4 flex-1">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <FolderOpen className="h-5 w-5 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="font-semibold text-gray-900">{richiesta.descrizione}</h4>
-                    <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getPriorityColor(richiesta.priorita)}`}>
-                      Priorità {richiesta.priorita}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>Richiesto da: <span className="font-medium text-gray-900">{richiesta.consulente}</span></span>
-                      <span>•</span>
-                      <span>Data: {richiesta.dataRichiesta}</span>
-                      <span>•</span>
-                      <span>Scadenza: {richiesta.scadenza}</span>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">Documenti richiesti:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {richiesta.documenti.map((doc, index) => (
-                          <span key={index} className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                            {doc}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                  richiesta.status === 'completata' ? 'bg-green-100 text-green-600' :
-                  richiesta.status === 'in_attesa' ? 'bg-yellow-100 text-yellow-600' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {richiesta.status === 'completata' ? 'Completata' : 'In attesa'}
-                </span>
-                {richiesta.status === 'in_attesa' && (
-                  <button
-                    onClick={() => setIsUploadModalOpen(true)}
-                    className="bg-primary-600 text-white px-3 py-1 rounded text-xs hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                  >
-                    Carica Documenti
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const renderAperturaPivaTab = () => (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <Building className="h-8 w-8 text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Documenti P.IVA</p>
-              <p className="text-2xl font-bold text-gray-900">{documentiAperturaPiva.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Approvati</p>
-              <p className="text-2xl font-bold text-gray-900">{documentiAperturaPiva.filter(d => d.status === 'approvato').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <Clock className="h-8 w-8 text-yellow-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">In revisione</p>
-              <p className="text-2xl font-bold text-gray-900">{documentiAperturaPiva.filter(d => d.status === 'in_revisione' || d.status === 'richiesto').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-          <div className="flex items-center">
-            <FileText className="h-8 w-8 text-primary-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Bozze</p>
-              <p className="text-2xl font-bold text-gray-900">{documentiAperturaPiva.filter(d => d.status === 'bozza').length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Documenti Apertura P.IVA</h3>
-            <p className="text-gray-600">Gestisci i documenti necessari per l'apertura della partita IVA</p>
-          </div>
+      {/* Empty State */}
+      {filteredDocuments.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun documento trovato</h3>
+          <p className="text-gray-600 mb-6">
+            Non ci sono documenti in questa categoria o che corrispondono ai filtri selezionati.
+          </p>
           <button
             onClick={() => setIsUploadModalOpen(true)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 inline-flex items-center"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Carica Documento
+            Carica il primo documento
           </button>
         </div>
-      </div>
-
-      {/* Documents by Category */}
-      <div className="space-y-6">
-        {['identita', 'sede', 'camerale', 'attivita'].map((categoria) => {
-          const documentiCategoria = documentiAperturaPiva.filter(doc => doc.categoria === categoria)
-          const categoriaNome = {
-            'identita': 'Documenti di Identità',
-            'sede': 'Documenti Sede',
-            'camerale': 'Documenti Camerali',
-            'attivita': 'Documenti Attività'
-          }[categoria]
-
-          if (documentiCategoria.length === 0) return null
-
-          return (
-            <div key={categoria} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Building className="h-5 w-5 text-primary-600 mr-2" />
-                {categoriaNome}
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {documentiCategoria.map((documento) => (
-                  <div key={documento.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow relative z-10">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div className="p-2 bg-primary-50 rounded-lg">
-                          <FileText className="h-5 w-5 text-primary-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-gray-900 mb-1 truncate">{documento.nome}</h5>
-                          <p className="text-sm text-gray-600 mb-2">{documento.descrizione}</p>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
-                            <span>{documento.formato}</span>
-                            <span>•</span>
-                            <span>{documento.dimensione}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(documento.status)}`}>
-                        {getStatusIcon(documento.status)}
-                        <span className="ml-1">{getStatusText(documento.status)}</span>
-                      </span>
-                    </div>
-
-                    <div className="space-y-1 mb-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Richiesta:</span>
-                        <span className="text-gray-900">{documento.richiestaId}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Data:</span>
-                        <span className="text-gray-900">{documento.dataCaricamento}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <button
-                        onClick={() => setSelectedDocument(documento)}
-                        className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Dettagli
-                      </button>
-                      <div className="flex items-center space-x-2">
-                        <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 hover:scale-110 transition-transform duration-200" title="Download">
-                          <Download className="h-4 w-4" />
-                        </button>
-                        {documento.status === 'bozza' && (
-                          <button className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 hover:scale-110 transition-transform duration-200" title="Elimina">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-
-  const tabs = [
-    { id: 'documenti', name: 'I Miei Documenti', icon: FileText },
-    { id: 'richieste', name: 'Richieste Consulenti', icon: FolderOpen },
-    { id: 'apertura-piva', name: 'Apertura P.IVA', icon: Building }
-  ]
-
-  return (
-    <div className="space-y-8">
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'documenti' ? renderDocumentiTab() :
-       activeTab === 'richieste' ? renderRichiesteTab() :
-       renderAperturaPivaTab()}
+      )}
 
       {/* Upload Modal */}
       <Modal
@@ -724,6 +773,24 @@ export default function Documenti() {
         maxWidth="xl"
       >
         <form onSubmit={handleUploadSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+            <select
+              value={uploadForm.categoria}
+              onChange={(e) => setUploadForm({...uploadForm, categoria: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="dichiarazioni">Dichiarazioni</option>
+              <option value="fatturazione">Fatturazione</option>
+              <option value="comunicazioni">Comunicazioni</option>
+              <option value="versamenti">Versamenti</option>
+              <option value="consultazione">Consultazione</option>
+              <option value="registri">Registri</option>
+              <option value="altri_documenti">Altri Documenti</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Nome documento *</label>
@@ -731,8 +798,8 @@ export default function Documenti() {
                 type="text"
                 value={uploadForm.nome}
                 onChange={(e) => setUploadForm({...uploadForm, nome: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Es. Bilancio 2023"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Es. Modello Redditi 2025"
                 required
               />
             </div>
@@ -741,32 +808,18 @@ export default function Documenti() {
               <select
                 value={uploadForm.tipo}
                 onChange={(e) => setUploadForm({...uploadForm, tipo: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               >
-                <option value="bilancio">Bilancio</option>
-                <option value="fatture">Fatture</option>
-                <option value="contratto">Contratto</option>
-                <option value="estratto_conto">Estratto Conto</option>
-                <option value="documento_identita">Documento Identità</option>
+                <option value="modello_redditi">Modello Redditi</option>
+                <option value="dichiarazione_iva">Dichiarazione IVA</option>
+                <option value="modello_730">Modello 730</option>
+                <option value="fattura_elettronica">Fattura Elettronica</option>
+                <option value="f24">F24</option>
+                <option value="cu">Certificazione Unica</option>
                 <option value="altro">Altro</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
-            <select
-              value={uploadForm.categoria}
-              onChange={(e) => setUploadForm({...uploadForm, categoria: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              required
-            >
-              <option value="fiscale">Fiscale</option>
-              <option value="fatturazione">Fatturazione</option>
-              <option value="legale">Legale</option>
-              <option value="bancario">Bancario</option>
-            </select>
           </div>
 
           <div>
@@ -775,7 +828,7 @@ export default function Documenti() {
               value={uploadForm.descrizione}
               onChange={(e) => setUploadForm({...uploadForm, descrizione: e.target.value})}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Descrizione opzionale del documento..."
             />
           </div>
@@ -785,12 +838,12 @@ export default function Documenti() {
             <input
               type="file"
               onChange={(e) => setUploadForm({...uploadForm, file: e.target.files?.[0] || null})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              accept=".pdf,.xml,.doc,.docx,.xls,.xlsx"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Formati supportati: PDF, DOC, DOCX, XLS, XLSX, ZIP (max 10MB)
+              Formati supportati: PDF, XML, DOC, DOCX, XLS, XLSX (max 10MB)
             </p>
           </div>
 
@@ -798,9 +851,9 @@ export default function Documenti() {
             <div className="flex items-start space-x-2">
               <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-blue-900">Sicurezza e Privacy</p>
+                <p className="text-sm font-medium text-blue-900">Conformità Agenzia delle Entrate</p>
                 <p className="text-xs text-blue-800 mt-1">
-                  I tuoi documenti sono protetti con crittografia end-to-end e saranno visibili solo ai consulenti autorizzati.
+                  I documenti vengono organizzati secondo la struttura del Cassetto Fiscale AdE per massima conformità e tracciabilità.
                 </p>
               </div>
             </div>
@@ -816,7 +869,7 @@ export default function Documenti() {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
             >
               Carica Documento
             </button>
@@ -839,7 +892,7 @@ export default function Documenti() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Tipo:</p>
-                  <p className="font-medium text-gray-900 capitalize">{selectedDocument.tipo.replace('_', ' ')}</p>
+                  <p className="font-medium text-gray-900 capitalize">{selectedDocument.tipo.replace(/_/g, ' ')}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Formato:</p>
@@ -850,17 +903,21 @@ export default function Documenti() {
                   <p className="font-medium text-gray-900">{selectedDocument.dimensione}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Categoria:</p>
-                  <p className="font-medium text-gray-900 capitalize">{selectedDocument.categoria}</p>
+                  <p className="text-sm text-gray-600">Anno:</p>
+                  <p className="font-medium text-gray-900">{selectedDocument.anno}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Data caricamento:</p>
-                  <p className="font-medium text-gray-900">{selectedDocument.dataCaricamento}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Inviato a:</p>
-                  <p className="font-medium text-gray-900">{selectedDocument.inviataA}</p>
-                </div>
+                {selectedDocument.protocollo && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">Protocollo:</p>
+                    <p className="font-medium text-gray-900 font-mono">{selectedDocument.protocollo}</p>
+                  </div>
+                )}
+                {selectedDocument.importo && (
+                  <div>
+                    <p className="text-sm text-gray-600">Importo:</p>
+                    <p className="font-medium text-gray-900 text-lg">{selectedDocument.importo}</p>
+                  </div>
+                )}
               </div>
 
               {selectedDocument.note && (
@@ -877,7 +934,7 @@ export default function Documenti() {
               <div className="space-y-3">
                 {selectedDocument.cronologia.map((evento: any, index: number) => (
                   <div key={index} className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-primary-600 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">{evento.azione}</p>
                       <p className="text-xs text-gray-500">{evento.data} - {evento.utente}</p>
@@ -895,13 +952,91 @@ export default function Documenti() {
               >
                 Chiudi
               </button>
-              <button className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center">
+              <button className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center">
                 <Download className="h-4 w-4 mr-2" />
                 Scarica
               </button>
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* PDF Viewer Modal */}
+      {isPdfViewerOpen && !isPdfFullscreen && (
+        <Modal
+          isOpen={isPdfViewerOpen}
+          onClose={() => setIsPdfViewerOpen(false)}
+          title="Visualizzatore PDF"
+          maxWidth="4xl"
+        >
+          <div className="space-y-4">
+            {/* PDF Container */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[600px] border-0"
+                title="PDF Viewer"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+              <button
+                onClick={togglePdfFullscreen}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Maximize2 className="h-4 w-4 mr-2" />
+                Schermo intero
+              </button>
+              <a
+                href={pdfUrl}
+                download
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Scarica
+              </a>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* PDF Fullscreen Mode */}
+      {isPdfFullscreen && (
+        <div className="fixed inset-0 !m-0 !mt-0 bg-gray-900 z-[9999] flex flex-col animate-fade-in">
+          {/* Header */}
+          <div className="bg-gray-900 text-white px-6 py-6 flex items-center justify-between flex-shrink-0 border-b border-gray-700">
+            <div className="flex items-center space-x-3">
+              <FileText className="h-5 w-5" />
+              <h2 className="text-base font-semibold">Visualizzatore PDF - Schermo Intero</h2>
+            </div>
+            <div className="flex items-center space-x-3">
+              <a
+                href={pdfUrl}
+                download
+                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Scarica
+              </a>
+              <button
+                onClick={togglePdfFullscreen}
+                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Chiudi schermo intero
+              </button>
+            </div>
+          </div>
+
+          {/* PDF Viewer */}
+          <div className="flex-1 bg-gray-900">
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full border-0"
+              title="PDF Viewer Fullscreen"
+            />
+          </div>
+        </div>
       )}
     </div>
   )

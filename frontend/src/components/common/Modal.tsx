@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   isOpen: boolean
@@ -59,41 +60,46 @@ export default function Modal({
     '6xl': 'max-w-6xl'
   }
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-full p-4">
-        {/* Background overlay */}
-        <div
-          className={`fixed inset-0 transition-opacity bg-gray-900 bg-opacity-50 ${
-            isClosing ? 'animate-fade-out' : 'animate-fade-in'
-          }`}
-          onClick={handleClose}
-        ></div>
+  const modalContent = (
+    <>
+      {/* Background overlay */}
+      <div
+        className={`fixed inset-0 z-[9998] transition-opacity bg-gray-900 bg-opacity-50 ${
+          isClosing ? 'animate-fade-out' : 'animate-fade-in'
+        }`}
+        onClick={handleClose}
+      ></div>
 
-        {/* Modal panel */}
-        <div
-          ref={modalRef}
-          className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden ${
-            isClosing ? 'animate-scale-out' : 'animate-scale-in'
-          }`}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-            <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
-            <button
-              onClick={handleClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
+      {/* Modal container */}
+      <div className="fixed inset-0 z-[9999] overflow-y-auto pointer-events-none">
+        <div className="flex items-center justify-center min-h-full p-4">
+          {/* Modal panel */}
+          <div
+            ref={modalRef}
+            className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden pointer-events-auto ${
+              isClosing ? 'animate-scale-out' : 'animate-scale-in'
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
+              <button
+                onClick={handleClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {children}
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {children}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
+
+  return createPortal(modalContent, document.body)
 }

@@ -1,13 +1,18 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import path from 'path'
 import connectDB from './config/database'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
 import securityRoutes from './routes/security'
+import chatRoutes from './routes/chat'
+import aiAssistantRoutes from './routes/ai-assistant'
+import clientsRoutes from './routes/clients'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
-dotenv.config()
+// Load .env from backend directory
+dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -29,6 +34,9 @@ app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/security', securityRoutes)
+app.use('/api/chat', chatRoutes)
+app.use('/api/ai', aiAssistantRoutes)
+app.use('/api/clients', clientsRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

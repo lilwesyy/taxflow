@@ -8,9 +8,9 @@ import { UAParser } from 'ua-parser-js'
 const router = Router()
 
 // Generate JWT Token
-const generateToken = (userId: string): string => {
+const generateToken = (userId: string, role: 'business' | 'admin'): string => {
   const JWT_SECRET = process.env.JWT_SECRET || 'taxflow_jwt_secret_key_2024'
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' })
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '24h' })
 }
 
 // Validation helpers
@@ -89,7 +89,7 @@ router.post('/login', async (req: Request, res: Response) => {
       })
     }
 
-    const token = generateToken((user._id as any).toString())
+    const token = generateToken((user._id as any).toString(), user.role)
 
     // Parse user agent
     const userAgent = req.headers['user-agent'] || 'Unknown'
@@ -162,7 +162,7 @@ router.post('/login/verify-2fa', async (req: Request, res: Response) => {
     }
 
     // Generate JWT token
-    const token = generateToken((user._id as any).toString())
+    const token = generateToken((user._id as any).toString(), user.role)
 
     // Parse user agent and create session
     const userAgent = req.headers['user-agent'] || 'Unknown'
@@ -240,7 +240,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
     await user.save()
 
-    const token = generateToken((user._id as any).toString())
+    const token = generateToken((user._id as any).toString(), user.role)
 
     res.status(201).json({
       success: true,

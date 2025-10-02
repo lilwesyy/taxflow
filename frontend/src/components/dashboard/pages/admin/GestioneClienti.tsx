@@ -1,6 +1,7 @@
 import { Users, Search, Filter, Eye, MessageSquare, Phone, MoreVertical, Building2, Calendar, DollarSign, ChevronLeft, ChevronRight, FileText, Euro, Clock, AlertTriangle, Building, Mail, User } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
+import apiService from '../../../../services/api'
 
 interface GestioneClientiProps {
   onSectionChange?: (section: string) => void
@@ -14,6 +15,9 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [clienti, setClienti] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const closeModal = () => {
     setSelectedClient(null)
@@ -25,113 +29,58 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
     }
   }
 
-  const clienti = [
-    {
-      id: 1,
-      nome: 'Mario Rossi',
-      email: 'mario.rossi@email.com',
-      telefono: '+39 123 456 7890',
-      company: 'Rossi Consulting',
-      status: 'active',
-      piva: 'IT12345678901',
-      codiceAteco: '62.02.00',
-      fatturato: 35000,
-      dataRegistrazione: '15/01/2024',
-      ultimaAttivita: '2 ore fa',
-      consulenze: 12,
-      pendingRequests: 2,
-      indirizzo: 'Via Roma 15, 20121 Milano (MI)',
-      codiceFiscale: 'RSSMRA85M15F205Z',
-      regimeContabile: 'Forfettario',
-      aliquotaIva: '5%',
-      fatturePagate: 8,
-      fattureInAttesa: 2,
-      documentiForniti: 15,
-      prossimaTasse: '30/06/2024',
-      note: 'Cliente affidabile, sempre puntuale nei pagamenti',
-      attivitaRecenti: [
-        { data: '15/03/2024', azione: 'Documento caricato', dettaglio: 'Fattura elettronica Q1 2024' },
-        { data: '10/03/2024', azione: 'Consulenza completata', dettaglio: 'Revisione dichiarazione IVA' },
-        { data: '05/03/2024', azione: 'Pagamento ricevuto', dettaglio: 'Fattura FAT-001 - €650' },
-        { data: '28/02/2024', azione: 'Richiesta inviata', dettaglio: 'Calcolo imposte Q1' }
-      ]
-    },
-    {
-      id: 2,
-      nome: 'Laura Bianchi',
-      email: 'laura.bianchi@email.com',
-      telefono: '+39 234 567 8901',
-      company: 'Bianchi Design',
-      status: 'pending',
-      piva: 'In elaborazione',
-      codiceAteco: '74.10.10',
-      fatturato: 28000,
-      dataRegistrazione: '10/01/2024',
-      ultimaAttivita: '1 giorno fa',
-      consulenze: 8,
-      pendingRequests: 1,
-      indirizzo: 'Via Garibaldi 42, 10123 Torino (TO)',
-      codiceFiscale: 'BNCLRA88D52L219K',
-      regimeContabile: 'Forfettario',
-      aliquotaIva: '22%',
-      fatturePagate: 5,
-      fattureInAttesa: 3,
-      documentiForniti: 12,
-      prossimaTasse: '16/07/2024',
-      note: 'Nuova attività, necessita supporto per setup iniziale P.IVA',
-      attivitaRecenti: [
-        { data: '12/03/2024', azione: 'Richiesta P.IVA inviata', dettaglio: 'Documentazione completa caricata' },
-        { data: '08/03/2024', azione: 'Consulenza iniziale', dettaglio: 'Setup regime forfettario' },
-        { data: '01/03/2024', azione: 'Primo contatto', dettaglio: 'Valutazione requisiti' }
-      ]
-    },
-    {
-      id: 3,
-      nome: 'Giuseppe Verdi',
-      email: 'giuseppe.verdi@email.com',
-      telefono: '+39 345 678 9012',
-      company: 'Verdi Solutions',
-      status: 'active',
-      piva: 'IT98765432109',
-      codiceAteco: '73.11.00',
-      fatturato: 52000,
-      dataRegistrazione: '05/01/2024',
-      ultimaAttivita: '3 giorni fa',
-      consulenze: 15,
-      pendingRequests: 0,
-      indirizzo: 'Corso Italia 88, 50123 Firenze (FI)',
-      codiceFiscale: 'VRDGPP82L15D612M',
-      regimeContabile: 'Forfettario',
-      aliquotaIva: '5%',
-      fatturePagate: 12,
-      fattureInAttesa: 1,
-      documentiForniti: 20,
-      prossimaTasse: '20/06/2024',
-      note: 'Cliente esperto, gestisce autonomamente molti aspetti',
-      attivitaRecenti: [
-        { data: '18/03/2024', azione: 'Dichiarazione IVA trimestrale', dettaglio: 'Q4 2023 completata' },
-        { data: '15/03/2024', azione: 'Consulenza strategica', dettaglio: 'Pianificazione investimenti 2024' },
-        { data: '10/03/2024', azione: 'Fattura emessa', dettaglio: 'Consulenza marzo - €850' }
-      ]
-    },
-    {
-      id: 4,
-      nome: 'Anna Neri',
-      email: 'anna.neri@email.com',
-      telefono: '+39 456 789 0123',
-      company: 'Neri Marketing',
-      status: 'new',
-      piva: 'Richiesta inviata',
-      codiceAteco: '73.11.00',
-      fatturato: 0,
-      dataRegistrazione: '01/01/2024',
-      ultimaAttivita: '1 settimana fa',
-      consulenze: 3,
-      pendingRequests: 3
+  // Load clients from API
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await apiService.getClients()
+        if (response.success) {
+          setClienti(response.clients)
+        }
+      } catch (err: any) {
+        console.error('Error loading clients:', err)
+        setError(err.message || 'Errore nel caricamento dei clienti')
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  const filteredClienti = clienti.filter(cliente => {
+    loadClients()
+  }, [])
+
+  // Helper function to format date
+  const formatDate = (date: Date | string) => {
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  // Helper function to format time ago
+  const formatTimeAgo = (date: Date | string) => {
+    if (!date) return 'Mai'
+    const d = new Date(date)
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+    const diffWeeks = Math.floor(diffDays / 7)
+
+    if (diffMins < 60) return `${diffMins} minuti fa`
+    if (diffHours < 24) return `${diffHours} ore fa`
+    if (diffDays < 7) return `${diffDays} giorni fa`
+    return `${diffWeeks} settimane fa`
+  }
+
+  const clientiWithFormattedDates = clienti.map(cliente => ({
+    ...cliente,
+    dataRegistrazione: formatDate(cliente.dataRegistrazione),
+    ultimaAttivita: formatTimeAgo(cliente.ultimaAttivita)
+  }))
+
+  const filteredClienti = clientiWithFormattedDates.filter(cliente => {
     const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cliente.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cliente.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -176,6 +125,36 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
     }
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Caricamento clienti...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Ricarica
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
 
@@ -188,7 +167,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Totale Clienti</p>
-              <p className="text-2xl font-bold text-gray-900">{clienti.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.length}</p>
             </div>
           </div>
         </div>
@@ -199,7 +178,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Attivi</p>
-              <p className="text-2xl font-bold text-gray-900">{clienti.filter(c => c.status === 'active').length}</p>
+              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'active').length}</p>
             </div>
           </div>
         </div>
@@ -210,7 +189,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">In Attesa</p>
-              <p className="text-2xl font-bold text-gray-900">{clienti.filter(c => c.status === 'pending').length}</p>
+              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'pending').length}</p>
             </div>
           </div>
         </div>
@@ -221,7 +200,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Fatturato Tot.</p>
-              <p className="text-2xl font-bold text-gray-900">€ {clienti.reduce((sum, c) => sum + c.fatturato, 0).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">€ {clientiWithFormattedDates.reduce((sum, c) => sum + (c.fatturato || 0), 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -599,7 +578,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
                   <div className="mt-4 p-3 bg-red-50 rounded-lg">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-red-700">Prossima Scadenza Tasse:</span>
-                      <span className="text-sm font-bold text-red-800">{selectedClient.prossimaTasse || '30/06/2024'}</span>
+                      <span className="text-sm font-bold text-red-800">{selectedClient.prossimaTasse ? formatDate(selectedClient.prossimaTasse) : 'Non impostata'}</span>
                     </div>
                   </div>
                 </div>
@@ -615,19 +594,19 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
                     Attività Recenti
                   </h4>
                   <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {(selectedClient.attivitaRecenti || [
-                      { data: '15/03/2024', azione: 'Documento caricato', dettaglio: 'Fattura elettronica Q1 2024' },
-                      { data: '10/03/2024', azione: 'Consulenza completata', dettaglio: 'Revisione dichiarazione IVA' },
-                      { data: '05/03/2024', azione: 'Pagamento ricevuto', dettaglio: 'Fattura FAT-001 - €650' }
-                    ]).map((attivita: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary-200 pl-4 pb-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{attivita.azione}</p>
-                          <span className="text-xs text-gray-500">{attivita.data}</span>
+                    {(selectedClient.attivitaRecenti && selectedClient.attivitaRecenti.length > 0) ? (
+                      selectedClient.attivitaRecenti.map((attivita: any, index: number) => (
+                        <div key={index} className="border-l-2 border-primary-200 pl-4 pb-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">{attivita.action}</p>
+                            <span className="text-xs text-gray-500">{formatDate(attivita.date)}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">{attivita.detail}</p>
                         </div>
-                        <p className="text-sm text-gray-600">{attivita.dettaglio}</p>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">Nessuna attività recente</p>
+                    )}
                   </div>
                 </div>
 

@@ -1,222 +1,266 @@
-import { MessageSquare, Send, Paperclip, Phone, Video, Clock, CheckCircle, Search, Filter, Star, Eye, CreditCard, DollarSign, AlertCircle } from 'lucide-react'
-import { useState } from 'react'
+import { MessageSquare, Send, Paperclip, Clock, CheckCircle, Search, Filter, Star, CreditCard, DollarSign, AlertCircle, Plus } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import Modal from '../../../common/Modal'
+import chatService, { type Message, type Consultant } from '../../../../services/chat'
+import { useAuth } from '../../../../context/AuthContext'
+
+const formatMessageTimestamp = (timestamp: string) => {
+  const date = new Date(timestamp)
+  const today = new Date()
+  const isToday = date.toDateString() === today.toDateString()
+
+  if (isToday) {
+    // Show only time for today's messages
+    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  } else {
+    // Show date and time for older messages
+    return date.toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+}
 
 export default function Consulenza() {
-  const [activeChat, setActiveChat] = useState<string | null>('conv-001')
+  useAuth()
+  const [activeChat, setActiveChat] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [message, setMessage] = useState('')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showNewChatModal, setShowNewChatModal] = useState(false)
+  const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null)
+  const [conversazioni, setConversazioni] = useState<any[]>([])
+  const [consulenti, setConsulenti] = useState<Consultant[]>([])
+  const [messaggi, setMessaggi] = useState<{ [key: string]: Message[] }>({})
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [viewMode, setViewMode] = useState<'conversations' | 'consultants'>('conversations')
+  const [aiConversationId, setAiConversationId] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const conversazioni = [
-    {
-      id: 'conv-001',
-      consulente: {
-        nome: 'Dr. Marco Bianchi',
-        specializzazione: 'Consulente Fiscale CFO',
-        avatar: '👨‍💼',
-        email: 'marco.bianchi@taxflow.com'
-      },
-      status: 'active',
-      priority: 'high',
-      ultimoMessaggio: 'Perfetto, ho preparato la documentazione per la sua P.IVA',
-      orarioUltimoMessaggio: '14:30',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_fiscale',
-      argomento: 'Apertura P.IVA forfettaria',
-      durataConsulenza: '45 min',
-      rating: 5,
-      fatturata: true,
-      importo: 150
-    },
-    {
-      id: 'conv-002',
-      consulente: {
-        nome: 'Dr. Laura Verdi',
-        specializzazione: 'Business Strategy',
-        avatar: '👩‍💼',
-        email: 'laura.verdi@taxflow.com'
-      },
-      status: 'pending',
-      priority: 'medium',
-      ultimoMessaggio: 'Le invio il business plan rivisto entro domani',
-      orarioUltimoMessaggio: '11:20',
-      dataUltimaAttivita: '25/01/2024',
-      messaggiNonLetti: 1,
-      tipo: 'business_plan',
-      argomento: 'Revisione business plan',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 200
-    },
-    {
-      id: 'conv-003',
-      consulente: {
-        nome: 'Supporto TaxFlow',
-        specializzazione: 'Assistenza Tecnica',
-        avatar: '🛠️',
-        email: 'support@taxflow.com'
-      },
-      status: 'active',
-      priority: 'low',
-      ultimoMessaggio: 'Come posso aiutarla oggi?',
-      orarioUltimoMessaggio: '12:15',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 2,
-      tipo: 'supporto_tecnico',
-      argomento: 'Problemi piattaforma',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 0
-    },
-    {
-      id: 'conv-004',
-      consulente: {
-        nome: 'AI Assistant',
-        specializzazione: 'Assistente Virtuale',
-        avatar: '🤖',
-        email: 'ai@taxflow.com'
-      },
-      status: 'active',
-      priority: 'low',
-      ultimoMessaggio: 'Hai domande sui tuoi documenti fiscali?',
-      orarioUltimoMessaggio: '11:45',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'ai_assistant',
-      argomento: 'Assistenza automatica',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 0
+  // Load conversations, consultants, and AI assistant on mount
+  useEffect(() => {
+    loadAIAssistant()
+    loadConversations()
+    loadConsultants()
+  }, [])
+
+  const loadAIAssistant = async () => {
+    try {
+      const aiConv = await chatService.getAIConversation()
+      setAiConversationId(aiConv.id)
+
+      // Set AI as default active chat
+      setActiveChat(aiConv.id)
+    } catch (error) {
+      console.error('Error loading AI assistant:', error)
     }
-  ]
+  }
 
-  const messaggi = {
-    'conv-001': [
-      {
-        id: 1,
-        mittente: 'user',
-        nome: 'Mario Rossi',
-        testo: 'Buongiorno Dottore, ho bisogno di aprire la partita IVA forfettaria per la mia consulenza informatica.',
-        timestamp: '09:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Buongiorno Mario! Sarò felice di aiutarla. Per il codice ATECO 62.02.00 il coefficiente di redditività è 0.78. Qual è il suo fatturato previsto?',
-        timestamp: '09:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'user',
-        nome: 'Mario Rossi',
-        testo: 'Penso circa 35.000€ annui. È compatibile con il forfettario?',
-        timestamp: '10:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Perfetto! È ben sotto il limite di 65.000€. Con il forfettario avrà una tassazione del 15% (5% per i primi 5 anni se è neo-attività). Procediamo con la documentazione?',
-        timestamp: '10:15',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'user',
-        nome: 'Mario Rossi',
-        testo: 'Sì, perfetto. Quando possiamo programmare la call?',
-        timestamp: '14:25',
-        stato: 'read'
-      },
-      {
-        id: 6,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Perfetto, ho preparato la documentazione per la sua P.IVA. Le invio tutto via email e possiamo fare la call domani alle 15:00.',
-        timestamp: '14:30',
-        stato: 'delivered'
+  const loadConsultants = async () => {
+    try {
+      console.log('📞 Loading consultants...')
+      const data = await chatService.getConsultants()
+      console.log('✅ Consultants loaded:', data)
+      setConsulenti(data)
+    } catch (error) {
+      console.error('❌ Error loading consultants:', error)
+    }
+  }
+
+  // Set up polling for active conversation
+  useEffect(() => {
+    if (activeChat) {
+      // Check if it's the AI conversation
+      if (activeChat === aiConversationId) {
+        loadAIMessages()
+        // No polling needed for AI - responses are instant
+      } else {
+        // Load messages for regular conversation
+        loadMessages(activeChat)
+
+        // Start polling for new messages
+        chatService.startPolling(activeChat, (newMessages) => {
+          setMessaggi((prev) => {
+            const existingMessages = prev[activeChat] || []
+            const existingIds = new Set(existingMessages.map(m => m.id))
+
+            // Only add messages that don't already exist
+            const newUniqueMessages = newMessages.filter(msg => !existingIds.has(msg.id))
+
+            if (newUniqueMessages.length === 0) {
+              return prev
+            }
+
+            return {
+              ...prev,
+              [activeChat]: [...existingMessages, ...newUniqueMessages]
+            }
+          })
+        })
       }
-    ],
-    'conv-002': [
-      {
-        id: 1,
-        mittente: 'user',
-        nome: 'Mario Rossi',
-        testo: 'Salve, ho bisogno di una revisione del mio business plan per un finanziamento bancario.',
-        timestamp: '10:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Buongiorno! Posso aiutarla. Che tipo di attività svolge e di che importo è il finanziamento richiesto?',
-        timestamp: '10:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'user',
-        nome: 'Mario Rossi',
-        testo: 'Consulenza informatica. Chiedo 30.000€ per attrezzature e marketing.',
-        timestamp: '11:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Le invio il business plan rivisto entro domani. Include proiezioni finanziarie dettagliate e analisi di mercato.',
-        timestamp: '11:20',
-        stato: 'unread'
+    }
+
+    // Cleanup: stop polling when conversation changes
+    return () => {
+      if (activeChat && activeChat !== aiConversationId) {
+        chatService.stopPolling(activeChat)
       }
-    ],
-    'conv-003': [
-      {
-        id: 1,
-        mittente: 'consulente',
-        nome: 'Supporto TaxFlow',
-        testo: 'Ciao! Ho notato che hai avuto problemi con il caricamento dei documenti. Posso aiutarti?',
-        timestamp: '12:00',
-        stato: 'delivered'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Supporto TaxFlow',
-        testo: 'Come posso aiutarla oggi?',
-        timestamp: '12:15',
-        stato: 'unread'
+    }
+  }, [activeChat, aiConversationId])
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      chatService.stopAllPolling()
+    }
+  }, [])
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true)
+      const data = await chatService.getConversations()
+
+      // Transform data to match component structure
+      const transformed = data.map((conv: any) => ({
+        id: conv._id,
+        consulente: {
+          nome: conv.adminUserId?.name || 'Consulente non assegnato',
+          specializzazione: conv.adminUserId?.professionalRole || 'In attesa di assegnazione',
+          avatar: '👨‍💼',
+          email: conv.adminUserId?.email || ''
+        },
+        status: conv.status,
+        priority: conv.priority,
+        ultimoMessaggio: conv.ultimoMessaggio,
+        orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
+        dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
+        messaggiNonLetti: conv.messaggiNonLetti,
+        tipo: conv.tipo,
+        argomento: conv.argomento,
+        durataConsulenza: conv.durataConsulenza,
+        rating: conv.rating,
+        fatturata: conv.fatturata,
+        importo: conv.importo
+      }))
+
+      setConversazioni(transformed)
+
+      // Auto-select first conversation if none selected
+      if (!activeChat && transformed.length > 0) {
+        setActiveChat(transformed[0].id)
       }
-    ],
-    'conv-004': [
-      {
-        id: 1,
-        mittente: 'consulente',
-        nome: 'AI Assistant',
-        testo: 'Ciao! Sono il tuo assistente virtuale. Posso aiutarti con domande su regime forfettario, fatturazione e adempimenti fiscali.',
-        timestamp: '11:30',
-        stato: 'delivered'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'AI Assistant',
-        testo: 'Hai domande sui tuoi documenti fiscali?',
-        timestamp: '11:45',
-        stato: 'delivered'
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const messages = await chatService.getMessages(conversationId)
+      setMessaggi((prev) => ({
+        ...prev,
+        [conversationId]: messages
+      }))
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    }
+  }
+
+  const loadAIMessages = async () => {
+    if (!aiConversationId) return
+    try {
+      const messages = await chatService.getAIMessages()
+      setMessaggi((prev) => ({
+        ...prev,
+        [aiConversationId]: messages
+      }))
+    } catch (error) {
+      console.error('Error loading AI messages:', error)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !activeChat || sending) return
+
+    const messageText = message.trim()
+    setMessage('') // Clear input immediately
+
+    try {
+      setSending(true)
+
+      // Check if sending to AI
+      if (activeChat === aiConversationId) {
+        // Add user message immediately
+        const tempUserMessage: Message = {
+          id: `temp-user-${Date.now()}`,
+          mittente: 'user',
+          nome: 'Tu',
+          testo: messageText,
+          timestamp: new Date().toISOString(),
+          stato: 'sent'
+        }
+
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [...(prev[activeChat] || []), tempUserMessage]
+        }))
+
+        // Show AI loading indicator
+        setAiLoading(true)
+
+        const { userMessage, aiMessage } = await chatService.sendAIMessage(messageText)
+
+        // Replace temp message with real messages
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [
+            ...(prev[activeChat] || []).filter(m => m.id !== tempUserMessage.id),
+            userMessage,
+            aiMessage
+          ]
+        }))
+
+        setAiLoading(false)
+      } else {
+        // Regular conversation
+        const newMessage = await chatService.sendMessage(activeChat, messageText)
+
+        // Add message to local state
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [...(prev[activeChat] || []), newMessage]
+        }))
+
+        // Update conversation's last message
+        const formattedTime = new Date(newMessage.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+
+        setConversazioni((prev) =>
+          prev.map((conv) =>
+            conv.id === activeChat
+              ? {
+                  ...conv,
+                  ultimoMessaggio: newMessage.testo,
+                  orarioUltimoMessaggio: formattedTime
+                }
+              : conv
+          )
+        )
       }
-    ]
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('Errore nell\'invio del messaggio')
+      setAiLoading(false)
+    } finally {
+      setSending(false)
+    }
   }
 
   const filteredConversazioni = conversazioni.filter(conv => {
@@ -226,15 +270,71 @@ export default function Consulenza() {
     return matchesSearch && matchesStatus
   })
 
-  const conversazioneAttiva = conversazioni.find(conv => conv.id === activeChat)
-  const messaggiAttivi = conversazioneAttiva ? (messaggi as any)[conversazioneAttiva.id] || [] : []
+  const filteredConsulenti = consulenti.filter(cons =>
+    cons.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (cons.professionalRole && cons.professionalRole.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Logica per inviare messaggio
-      setMessage('')
+  const handleStartChat = async (consultant: Consultant) => {
+    setSelectedConsultant(consultant)
+    setShowNewChatModal(true)
+  }
+
+  const handleCreateConversation = async (argomento: string, tipo: string) => {
+    if (!selectedConsultant) return
+
+    try {
+      await chatService.createConversation({
+        argomento,
+        tipo,
+        adminUserId: selectedConsultant._id,
+        importo: 0
+      })
+
+      // Reload conversations to show the new pending conversation
+      await loadConversations()
+
+      // Close modal
+      setShowNewChatModal(false)
+      setSelectedConsultant(null)
+
+      // Switch to conversations view
+      setViewMode('conversations')
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+      alert('Errore nella creazione della conversazione')
     }
   }
+
+  // Check if active chat is AI or regular conversation
+  const conversazioneAttiva = activeChat === aiConversationId
+    ? {
+        id: aiConversationId,
+        consulente: {
+          nome: 'Assistente AI',
+          specializzazione: 'Consulente Fiscale AI',
+          avatar: '🤖',
+          email: 'ai@taxflow.it'
+        },
+        status: 'active',
+        priority: 'medium',
+        argomento: 'Assistente Personale AI',
+        tipo: 'AI Assistant',
+        importo: 0,
+        fatturata: true,
+        messaggiNonLetti: 0,
+        ultimoMessaggio: '',
+        orarioUltimoMessaggio: '',
+        dataUltimaAttivita: new Date().toLocaleDateString('it-IT')
+      }
+    : conversazioni.find(conv => conv.id === activeChat)
+
+  const messaggiAttivi = activeChat ? messaggi[activeChat] || [] : []
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messaggiAttivi])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -272,6 +372,17 @@ export default function Consulenza() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="h-[calc(100vh-120px)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Caricamento conversazioni...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-[calc(100vh-120px)] flex items-center justify-center">
       {/* Main Chat Interface */}
@@ -280,37 +391,95 @@ export default function Consulenza() {
         <div className="w-80 border-r border-gray-200 flex flex-col">
           {/* Header Sidebar */}
           <div className="p-4 border-b border-gray-200">
+            {/* Toggle between views */}
+            <div className="flex mb-3 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('conversations')}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'conversations'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Le Mie Chat ({conversazioni.length + (aiConversationId ? 1 : 0)})
+              </button>
+              <button
+                onClick={() => setViewMode('consultants')}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'consultants'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Consulenti ({consulenti.length})
+              </button>
+            </div>
+
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">I Tuoi Consulenti</h3>
-              <span className="text-sm text-gray-500">{conversazioni.length} contatti</span>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {viewMode === 'conversations' ? 'Le Mie Conversazioni' : 'Consulenti Disponibili'}
+              </h3>
             </div>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cerca consulenti..."
+                placeholder={viewMode === 'conversations' ? "Cerca conversazioni..." : "Cerca consulenti..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm transition-all duration-200"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-              >
-                <option value="all">Tutti</option>
-                <option value="active">Online</option>
-                <option value="pending">In attesa</option>
-              </select>
-            </div>
+            {viewMode === 'conversations' && (
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="all">Tutti</option>
+                  <option value="active">Online</option>
+                  <option value="pending">In attesa</option>
+                </select>
+              </div>
+            )}
           </div>
 
-          {/* Lista Conversazioni */}
+          {/* Lista Conversazioni o Consulenti */}
           <div className="flex-1 overflow-y-auto">
-            {filteredConversazioni.map((conv) => (
+            {viewMode === 'conversations' ? (
+              // Lista conversazioni
+              <>
+                {/* AI Assistant - Always first */}
+                {aiConversationId && (
+                  <button
+                    onClick={() => setActiveChat(aiConversationId)}
+                    className={`w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200 ${
+                      activeChat === aiConversationId ? 'bg-gradient-to-r from-primary-50 to-green-50 border-r-2 border-r-primary-500' : ''
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-green-500 rounded-full flex items-center justify-center text-lg">
+                        🤖
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold text-gray-900">Assistente AI</p>
+                          <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">
+                            Sempre disponibile
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-1">Consulente Fiscale AI</p>
+                        <p className="text-sm text-gray-600">Chiedi informazioni sul regime forfettario</p>
+                      </div>
+                    </div>
+                  </button>
+                )}
+
+                {/* Regular conversations */}
+                {filteredConversazioni.length > 0 ? (
+                  filteredConversazioni.map((conv) => (
               <button
                 key={conv.id}
                 onClick={() => setActiveChat(conv.id)}
@@ -343,7 +512,61 @@ export default function Consulenza() {
                   </div>
                 </div>
               </button>
-            ))}
+                ))
+              ) : !aiConversationId ? (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                  <MessageSquare className="h-12 w-12 mb-2 text-gray-300" />
+                  <p className="text-sm">Nessuna conversazione</p>
+                  <button
+                    onClick={() => setViewMode('consultants')}
+                    className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium"
+                  >
+                    Inizia una nuova chat
+                  </button>
+                </div>
+              ) : null}
+              </>
+            ) : (
+              // Lista consulenti
+              filteredConsulenti.length > 0 ? (
+                filteredConsulenti.map((consultant) => (
+                  <button
+                    key={consultant._id}
+                    onClick={() => handleStartChat(consultant)}
+                    className="w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b border-gray-100"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-lg">
+                        <span className="text-primary-600 font-semibold">
+                          {consultant.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{consultant.name}</p>
+                        <p className="text-xs text-gray-600 mb-1">
+                          {consultant.professionalRole || 'Consulente Fiscale'}
+                        </p>
+                        {consultant.bio && (
+                          <p className="text-sm text-gray-500 line-clamp-2">{consultant.bio}</p>
+                        )}
+                        <div className="mt-2">
+                          <span className="inline-flex items-center px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full">
+                            <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                            Disponibile
+                          </span>
+                        </div>
+                      </div>
+                      <Plus className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                  <Search className="h-12 w-12 mb-2 text-gray-300" />
+                  <p className="text-sm">Nessun consulente trovato</p>
+                </div>
+              )
+            )}
           </div>
         </div>
 
@@ -363,57 +586,92 @@ export default function Consulenza() {
                       <p className="text-sm text-gray-600">{conversazioneAttiva.argomento}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Phone className="h-5 w-5" />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Video className="h-5 w-5" />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </div>
                 </div>
               </div>
 
               {/* Messaggi */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {messaggiAttivi.map((msg: any) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.mittente === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        msg.mittente === 'user'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-white text-gray-900 border border-gray-200'
-                      }`}
-                    >
-                      {msg.mittente === 'consulente' && (
-                        <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
-                      )}
-                      <p className="text-sm">{msg.testo}</p>
-                      <div className={`flex items-center justify-between mt-1 ${
-                        msg.mittente === 'user' ? 'text-white' : 'text-gray-500'
-                      }`}>
-                        <span className="text-xs opacity-75">{msg.timestamp}</span>
-                        {msg.mittente === 'user' && (
-                          <CheckCircle className="h-3 w-3 ml-2" />
-                        )}
+                {conversazioneAttiva?.status === 'pending' ? (
+                  /* Pending conversation - show waiting message */
+                  <div className="h-full flex items-center justify-center">
+                    <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
+                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Clock className="h-8 w-8 text-yellow-600" />
                       </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta in Attesa</h3>
+                      <p className="text-gray-600 mb-2">
+                        La tua richiesta di consulenza deve essere accettata dal consulente
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium">{conversazioneAttiva.consulente.nome}</span> riceverà una notifica e potrà accettare la tua richiesta. Riceverai una notifica quando la consulenza sarà attiva.
+                      </p>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  /* Active conversation - show messages */
+                  <>
+                    {messaggiAttivi.map((msg: any) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.mittente === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            msg.mittente === 'user'
+                              ? 'bg-primary-600 text-white'
+                              : 'bg-white text-gray-900 border border-gray-200'
+                          }`}
+                        >
+                          {msg.mittente === 'consulente' && (
+                            <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
+                          )}
+                          <p className="text-sm">{msg.testo}</p>
+                          <div className={`flex items-center justify-between mt-1 ${
+                            msg.mittente === 'user' ? 'text-white' : 'text-gray-500'
+                          }`}>
+                            <span className="text-xs opacity-75">{formatMessageTimestamp(msg.timestamp)}</span>
+                            {msg.mittente === 'user' && (
+                              <CheckCircle className="h-3 w-3 ml-2" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* AI Loading Indicator */}
+                    {aiLoading && activeChat === aiConversationId && (
+                      <div className="flex justify-start">
+                        <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-white text-gray-900 border border-gray-200">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                            <span className="text-xs text-gray-500">L'AI sta pensando...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Scroll anchor */}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
               </div>
 
               {/* Input Messaggio */}
               <div className="p-4 border-t border-gray-200 bg-white">
                 <div className="flex items-center space-x-3">
-                  <button className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                    <Paperclip className="h-5 w-5" />
-                  </button>
+                  {/* Attachment button - hide for AI conversations */}
+                  {activeChat !== aiConversationId && (
+                    <button
+                      className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110"
+                      disabled={conversazioneAttiva?.status === 'pending'}
+                    >
+                      <Paperclip className="h-5 w-5" />
+                    </button>
+                  )}
                   <input
                     type="text"
                     value={message}
@@ -424,12 +682,13 @@ export default function Consulenza() {
                         handleSendMessage()
                       }
                     }}
-                    placeholder="Scrivi un messaggio al consulente..."
+                    placeholder={conversazioneAttiva?.status === 'pending' ? 'In attesa di accettazione...' : 'Scrivi un messaggio al consulente...'}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    disabled={sending || conversazioneAttiva?.status === 'pending'}
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || sending || conversazioneAttiva?.status === 'pending'}
                     className="flex-shrink-0 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
                   >
                     <Send className="h-5 w-5" />
@@ -448,8 +707,8 @@ export default function Consulenza() {
           )}
         </div>
 
-        {/* Info Panel Consulente */}
-        {conversazioneAttiva && (
+        {/* Info Panel Consulente - Hide for AI chat and pending conversations */}
+        {conversazioneAttiva && activeChat !== aiConversationId && conversazioneAttiva.status !== 'pending' && (
           <div className="w-64 border-l border-gray-200 p-4 bg-white shadow-sm flex flex-col h-full hover:shadow-md transition-shadow duration-300">
             <h4 className="font-semibold text-gray-900 mb-4">Dettagli Consulenza</h4>
 
@@ -713,6 +972,95 @@ export default function Consulenza() {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* New Chat Modal */}
+      {selectedConsultant && (
+        <Modal
+          isOpen={showNewChatModal}
+          onClose={() => {
+            setShowNewChatModal(false)
+            setSelectedConsultant(null)
+          }}
+          title={`Nuova Conversazione con ${selectedConsultant.name}`}
+          maxWidth="lg"
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              const argomento = formData.get('argomento') as string
+              const tipo = formData.get('tipo') as string
+              handleCreateConversation(argomento, tipo)
+            }}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Argomento della consulenza
+                </label>
+                <input
+                  type="text"
+                  name="argomento"
+                  required
+                  placeholder="Es: Apertura P.IVA forfettaria"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo di consulenza
+                </label>
+                <select
+                  name="tipo"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="consulenza_fiscale">Consulenza Fiscale</option>
+                  <option value="business_plan">Business Plan</option>
+                  <option value="analisi_finanziaria">Analisi Finanziaria</option>
+                  <option value="consulenza_generale">Consulenza Generale</option>
+                  <option value="adempimenti_fiscali">Adempimenti Fiscali</option>
+                  <option value="consulenza_immobiliare">Consulenza Immobiliare</option>
+                </select>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Stai per iniziare una conversazione con {selectedConsultant.name}
+                    </p>
+                    <p className="text-xs text-blue-800 mt-1">
+                      {selectedConsultant.professionalRole || 'Consulente Fiscale'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewChatModal(false)
+                    setSelectedConsultant(null)
+                  }}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                >
+                  Inizia Conversazione
+                </button>
+              </div>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

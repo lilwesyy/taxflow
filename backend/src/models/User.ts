@@ -1,6 +1,12 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 
+interface ActivityLog {
+  date: Date
+  action: string
+  detail: string
+}
+
 interface IUser extends mongoose.Document {
   email: string
   password: string
@@ -12,6 +18,25 @@ interface IUser extends mongoose.Document {
   address?: string
   fiscalCode?: string
   registrationNumber?: string
+
+  // Business/Tax related fields
+  company?: string
+  piva?: string
+  codiceAteco?: string
+  regimeContabile?: 'Forfettario' | 'Ordinario' | 'Semplificato'
+  aliquotaIva?: string
+  fatturato?: number
+  status?: 'active' | 'pending' | 'new' | 'inactive'
+  pendingRequests?: number
+  consulenze?: number
+  fatturePagate?: number
+  fattureInAttesa?: number
+  documentiForniti?: number
+  prossimaTasse?: Date
+  note?: string
+  attivitaRecenti?: ActivityLog[]
+  ultimaAttivita?: Date
+
   notificationSettings?: {
     emailNewClient: boolean
     emailNewRequest: boolean
@@ -40,6 +65,29 @@ const UserSchema = new mongoose.Schema({
   address: { type: String },
   fiscalCode: { type: String },
   registrationNumber: { type: String },
+
+  // Business/Tax related fields
+  company: { type: String },
+  piva: { type: String },
+  codiceAteco: { type: String },
+  regimeContabile: { type: String, enum: ['Forfettario', 'Ordinario', 'Semplificato'], default: 'Forfettario' },
+  aliquotaIva: { type: String, default: '5%' },
+  fatturato: { type: Number, default: 0 },
+  status: { type: String, enum: ['active', 'pending', 'new', 'inactive'], default: 'new' },
+  pendingRequests: { type: Number, default: 0 },
+  consulenze: { type: Number, default: 0 },
+  fatturePagate: { type: Number, default: 0 },
+  fattureInAttesa: { type: Number, default: 0 },
+  documentiForniti: { type: Number, default: 0 },
+  prossimaTasse: { type: Date },
+  note: { type: String },
+  attivitaRecenti: [{
+    date: { type: Date, default: Date.now },
+    action: String,
+    detail: String
+  }],
+  ultimaAttivita: { type: Date, default: Date.now },
+
   notificationSettings: {
     type: mongoose.Schema.Types.Mixed,
     default: {

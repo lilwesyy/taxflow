@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star } from 'lucide-react'
+import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star, FolderOpen } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -53,8 +53,8 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
     { id: 'analisi-ai', name: 'Analisi AI Clienti', icon: Brain },
     { id: 'business-plans', name: 'Business Plans', icon: Target },
     { id: 'consulenze', name: 'Chat Consulenze', icon: MessageSquare },
-    { id: 'documenti', name: 'Documenti Clienti', icon: Receipt },
-    { id: 'fatturazione', name: 'Fatturazione', icon: FileText },
+    { id: 'documenti', name: 'Cassetti Fiscali', icon: FolderOpen },
+    { id: 'fatturazione', name: 'Fatturazione', icon: Receipt },
     { id: 'reports', name: 'Report & Analytics', icon: TrendingUp },
     { id: 'feedback-clienti', name: 'Feedback Clienti', icon: Star },
     { id: 'impostazioni', name: 'Impostazioni', icon: Settings },
@@ -70,7 +70,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
       'analisi-ai': 'Analisi AI per Clienti',
       'business-plans': 'Gestione Business Plans',
       'consulenze': 'Centro Consulenze',
-      'documenti': 'Documenti Clienti',
+      'documenti': 'Cassetti Fiscali Clienti',
       'fatturazione': 'Fatturazione Consulenze',
       'reports': 'Report & Analytics',
       'feedback-clienti': 'Feedback Clienti',
@@ -85,7 +85,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
       'analisi-ai': 'Strumenti avanzati di analisi AI per supportare le tue consulenze',
       'business-plans': 'Gestisci e revisiona i business plan dei tuoi clienti',
       'consulenze': 'Gestisci tutte le conversazioni e consulenze con i clienti',
-      'documenti': 'Documenti e contratti dei tuoi clienti',
+      'documenti': 'Cassetti fiscali organizzati come Agenzia delle Entrate',
       'fatturazione': 'Gestione fatturazione delle tue consulenze',
       'reports': 'Report e analytics dettagliati sui tuoi clienti',
       'feedback-clienti': 'Visualizza e rispondi ai feedback ricevuti dai clienti',

@@ -1,592 +1,369 @@
-import { MessageSquare, Users, Search, Filter, Phone, Video, Clock, CheckCircle, AlertTriangle, Send, Paperclip, Eye, Star, TrendingUp } from 'lucide-react'
-import { useState } from 'react'
+import { MessageSquare, Users, Search, Filter, Clock, CheckCircle, AlertTriangle, Send, Paperclip, Star, TrendingUp, Trash2, Check, X, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import chatService, { type Message } from '../../../../services/chat'
+import { useAuth } from '../../../../context/AuthContext'
+import { useToast } from '../../../../context/ToastContext'
+import Modal from '../../../common/Modal'
+
+type TransformedMessage = Message & {
+  mittente: 'consulente' | 'cliente'
+  nome: string
+}
+
+const formatMessageTimestamp = (timestamp: string) => {
+  const date = new Date(timestamp)
+  const today = new Date()
+  const isToday = date.toDateString() === today.toDateString()
+
+  if (isToday) {
+    // Show only time for today's messages
+    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  } else {
+    // Show date and time for older messages
+    return date.toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+}
 
 export default function Consulenze() {
+  const { user } = useAuth()
+  const { showToast } = useToast()
   const [activeChat, setActiveChat] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [message, setMessage] = useState('')
+  const [conversazioni, setConversazioni] = useState<any[]>([])
+  const [messaggi, setMessaggi] = useState<{ [key: string]: TransformedMessage[] }>({})
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [aiConversationId, setAiConversationId] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingConversation, setDeletingConversation] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const conversazioni = [
-    {
-      id: 'conv-001',
-      cliente: {
-        nome: 'Mario Rossi',
-        azienda: 'Rossi Consulting',
-        avatar: '👨‍💼',
-        email: 'mario.rossi@email.com'
-      },
-      status: 'active',
-      priority: 'high',
-      ultimoMessaggio: 'Grazie per la consulenza, molto utile!',
-      orarioUltimoMessaggio: '14:30',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_fiscale',
-      argomento: 'Apertura P.IVA forfettaria',
-      consulente: 'Dr. Marco Bianchi',
-      durataConsulenza: '45 min',
-      rating: 5,
-      fatturata: true,
-      importo: 150
-    },
-    {
-      id: 'conv-002',
-      cliente: {
-        nome: 'Laura Bianchi',
-        azienda: 'Bianchi Design',
-        avatar: '👩‍🎨',
-        email: 'laura.bianchi@email.com'
-      },
-      status: 'pending',
-      priority: 'medium',
-      ultimoMessaggio: 'Quando possiamo fare la call di follow-up?',
-      orarioUltimoMessaggio: '11:20',
-      dataUltimaAttivita: '25/01/2024',
-      messaggiNonLetti: 3,
-      tipo: 'business_plan',
-      argomento: 'Revisione business plan',
-      consulente: 'Dr. Laura Verdi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 0
-    },
-    {
-      id: 'conv-003',
-      cliente: {
-        nome: 'Giuseppe Verdi',
-        azienda: 'Verdi Solutions',
-        avatar: '👨‍💻',
-        email: 'giuseppe.verdi@email.com'
-      },
-      status: 'scheduled',
-      priority: 'high',
-      ultimoMessaggio: 'Confermo appuntamento per domani ore 15:00',
-      orarioUltimoMessaggio: '16:45',
-      dataUltimaAttivita: '24/01/2024',
-      messaggiNonLetti: 1,
-      tipo: 'analisi_finanziaria',
-      argomento: 'Analisi di bilancio',
-      consulente: 'Dr. Marco Bianchi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 200
-    },
-    {
-      id: 'conv-004',
-      cliente: {
-        nome: 'Anna Neri',
-        azienda: 'Neri Marketing',
-        avatar: '👩‍💼',
-        email: 'anna.neri@email.com'
-      },
-      status: 'completed',
-      priority: 'low',
-      ultimoMessaggio: 'Perfetto, grazie per tutto il supporto',
-      orarioUltimoMessaggio: '09:30',
-      dataUltimaAttivita: '23/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_generale',
-      argomento: 'Domande varie regime forfettario',
-      consulente: 'Dr. Laura Verdi',
-      durataConsulenza: '30 min',
-      rating: 4,
-      fatturata: true,
-      importo: 100
-    },
-    {
-      id: 'conv-005',
-      cliente: {
-        nome: 'Francesco Greco',
-        azienda: 'Greco Immobiliare',
-        avatar: '🏢',
-        email: 'francesco.greco@email.com'
-      },
-      status: 'active',
-      priority: 'medium',
-      ultimoMessaggio: 'Posso avere chiarimenti sulla cedolare secca?',
-      orarioUltimoMessaggio: '16:15',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 2,
-      tipo: 'consulenza_immobiliare',
-      argomento: 'Cedolare secca affitti',
-      consulente: 'Dr. Marco Bianchi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 120
-    },
-    {
-      id: 'conv-006',
-      cliente: {
-        nome: 'Silvia Conti',
-        azienda: 'Conti & Partners',
-        avatar: '👩‍⚖️',
-        email: 'silvia.conti@email.com'
-      },
-      status: 'pending',
-      priority: 'high',
-      ultimoMessaggio: 'Urgente: scadenza F24 domani!',
-      orarioUltimoMessaggio: '18:30',
-      dataUltimaAttivita: '25/01/2024',
-      messaggiNonLetti: 5,
-      tipo: 'adempimenti_fiscali',
-      argomento: 'Scadenze fiscali gennaio',
-      consulente: 'Dr. Laura Verdi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 180
-    },
-    {
-      id: 'conv-007',
-      cliente: {
-        nome: 'Roberto Martinelli',
-        azienda: 'Martinelli SRL',
-        avatar: '🚛',
-        email: 'roberto.martinelli@email.com'
-      },
-      status: 'scheduled',
-      priority: 'medium',
-      ultimoMessaggio: 'Ok per lunedì mattina alle 09:00',
-      orarioUltimoMessaggio: '20:45',
-      dataUltimaAttivita: '24/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_societaria',
-      argomento: 'Trasformazione in SPA',
-      consulente: 'Dr. Marco Bianchi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 350
-    },
-    {
-      id: 'conv-008',
-      cliente: {
-        nome: 'Elena Ferretti',
-        azienda: 'Ferretti Beauty',
-        avatar: '💄',
-        email: 'elena.ferretti@email.com'
-      },
-      status: 'completed',
-      priority: 'low',
-      ultimoMessaggio: 'Documentazione ricevuta, tutto perfetto!',
-      orarioUltimoMessaggio: '12:00',
-      dataUltimaAttivita: '22/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_commerciale',
-      argomento: 'Registrazione marchio',
-      consulente: 'Dr. Laura Verdi',
-      durataConsulenza: '60 min',
-      rating: 5,
-      fatturata: true,
-      importo: 250
-    },
-    {
-      id: 'conv-009',
-      cliente: {
-        nome: 'Davide Romano',
-        azienda: 'Romano Tech',
-        avatar: '💻',
-        email: 'davide.romano@email.com'
-      },
-      status: 'active',
-      priority: 'high',
-      ultimoMessaggio: 'Serve aiuto con la dichiarazione IVA',
-      orarioUltimoMessaggio: '08:45',
-      dataUltimaAttivita: '26/01/2024',
-      messaggiNonLetti: 1,
-      tipo: 'adempimenti_iva',
-      argomento: 'Dichiarazione IVA trimestrale',
-      consulente: 'Dr. Marco Bianchi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 90
-    },
-    {
-      id: 'conv-010',
-      cliente: {
-        nome: 'Paola Marchetti',
-        azienda: 'Marchetti Wellness',
-        avatar: '🧘‍♀️',
-        email: 'paola.marchetti@email.com'
-      },
-      status: 'pending',
-      priority: 'low',
-      ultimoMessaggio: 'Grazie, attendo il preventivo per la consulenza',
-      orarioUltimoMessaggio: '15:20',
-      dataUltimaAttivita: '25/01/2024',
-      messaggiNonLetti: 0,
-      tipo: 'consulenza_startup',
-      argomento: 'Avvio attività benessere',
-      consulente: 'Dr. Laura Verdi',
-      durataConsulenza: null,
-      rating: null,
-      fatturata: false,
-      importo: 0
+  // Load conversations and AI assistant on mount
+  useEffect(() => {
+    loadAIAssistant()
+    loadConversations()
+  }, [])
+
+  const loadAIAssistant = async () => {
+    try {
+      const aiConv = await chatService.getAIConversation()
+      setAiConversationId(aiConv.id)
+
+      // Set AI as default active chat
+      setActiveChat(aiConv.id)
+    } catch (error) {
+      console.error('Error loading AI assistant:', error)
     }
-  ]
+  }
 
-  const messaggi = {
-    'conv-001': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Mario Rossi',
-        testo: 'Buongiorno Dottore, ho bisogno di aprire la partita IVA forfettaria per la mia consulenza informatica.',
-        timestamp: '09:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Buongiorno Mario! Sarò felice di aiutarla. Per il codice ATECO 62.02.00 il coefficiente di redditività è 0.78. Qual è il suo fatturato previsto?',
-        timestamp: '09:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Mario Rossi',
-        testo: 'Penso circa 35.000€ annui. È compatibile con il forfettario?',
-        timestamp: '10:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Perfetto! È ben sotto il limite di 65.000€. Con il forfettario avrà una tassazione del 15% (5% per i primi 5 anni se è neo-attività). Procediamo con la documentazione?',
-        timestamp: '10:15',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Mario Rossi',
-        testo: 'Grazie per la consulenza, molto utile!',
-        timestamp: '14:30',
-        stato: 'read'
+  // Set up polling for active conversation
+  useEffect(() => {
+    if (activeChat) {
+      // Check if it's the AI conversation
+      if (activeChat === aiConversationId) {
+        loadAIMessages()
+        // No polling needed for AI - responses are instant
+      } else {
+        // Load messages for regular conversation
+        loadMessages(activeChat)
+
+        // Start polling for new messages
+        chatService.startPolling(activeChat, (newMessages) => {
+          // Transform new messages to match component structure
+          const transformed: TransformedMessage[] = newMessages.map((msg) => ({
+            ...msg,
+            mittente: msg.mittente === 'consulente' || msg.mittente === 'user' ? 'consulente' : 'cliente',
+            nome: msg.mittente === 'consulente' || msg.mittente === 'user' ? (user?.name || 'Consulente') : msg.nome
+          }))
+
+          setMessaggi((prev) => {
+            const existingMessages = prev[activeChat] || []
+            const existingIds = new Set(existingMessages.map(m => m.id))
+
+            // Only add messages that don't already exist
+            const newUniqueMessages = transformed.filter(msg => !existingIds.has(msg.id))
+
+            if (newUniqueMessages.length === 0) {
+              return prev
+            }
+
+            return {
+              ...prev,
+              [activeChat]: [...existingMessages, ...newUniqueMessages]
+            }
+          })
+        })
       }
-    ],
-    'conv-002': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Laura Bianchi',
-        testo: 'Salve, ho bisogno di una revisione del mio business plan per un finanziamento bancario.',
-        timestamp: '10:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Buongiorno Laura! Posso aiutarla. Che tipo di attività svolge e di che importo è il finanziamento richiesto?',
-        timestamp: '10:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Laura Bianchi',
-        testo: 'Design grafico e comunicazione. Chiedo 50.000€ per attrezzature e marketing.',
-        timestamp: '11:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Perfetto. Dovremmo aggiornare le proiezioni finanziarie e il piano di ammortamento. Può inviarmi il business plan attuale?',
-        timestamp: '11:10',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Laura Bianchi',
-        testo: 'Quando possiamo fare la call di follow-up?',
-        timestamp: '11:20',
-        stato: 'unread'
+    }
+
+    // Cleanup: stop polling when conversation changes
+    return () => {
+      if (activeChat && activeChat !== aiConversationId) {
+        chatService.stopPolling(activeChat)
       }
-    ],
-    'conv-003': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Giuseppe Verdi',
-        testo: 'Buongiorno, avrei bisogno di un\'analisi di bilancio approfondita.',
-        timestamp: '15:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Salve Giuseppe! Certamente. Si tratta dell\'analisi per l\'anno fiscale 2023?',
-        timestamp: '15:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Giuseppe Verdi',
-        testo: 'Esatto, ho bisogno di capire gli indici di liquidità e redditività per presentazione agli investitori.',
-        timestamp: '16:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Perfetto. Programmiamo una videochiamata per domani alle 15:00 così possiamo vedere tutto insieme?',
-        timestamp: '16:30',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Giuseppe Verdi',
-        testo: 'Confermo appuntamento per domani ore 15:00',
-        timestamp: '16:45',
-        stato: 'unread'
+    }
+  }, [activeChat, aiConversationId, user])
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      chatService.stopAllPolling()
+    }
+  }, [])
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true)
+      const data = await chatService.getConversations()
+
+      // Transform data to match component structure
+      const transformed = data.map((conv: any) => ({
+        id: conv._id,
+        cliente: {
+          nome: conv.businessUserId?.name || 'Cliente sconosciuto',
+          azienda: conv.businessUserId?.company || 'Non specificata',
+          avatar: '👨‍💼',
+          email: conv.businessUserId?.email || ''
+        },
+        status: conv.status,
+        priority: conv.priority,
+        ultimoMessaggio: conv.ultimoMessaggio,
+        orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
+        dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
+        messaggiNonLetti: conv.messaggiNonLetti,
+        tipo: conv.tipo,
+        argomento: conv.argomento,
+        consulente: user?.name || 'Dr. Marco Bianchi',
+        durataConsulenza: conv.durataConsulenza,
+        rating: conv.rating,
+        fatturata: conv.fatturata,
+        importo: conv.importo
+      }))
+
+      setConversazioni(transformed)
+
+      // Auto-select first conversation if none selected
+      if (!activeChat && transformed.length > 0) {
+        setActiveChat(transformed[0].id)
       }
-    ],
-    'conv-004': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Anna Neri',
-        testo: 'Ho alcune domande sul regime forfettario, posso disturbarla?',
-        timestamp: '09:00',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Certamente Anna! Mi dica pure, sono qui per aiutarla.',
-        timestamp: '09:10',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Anna Neri',
-        testo: 'Devo emettere fattura per un cliente estero UE. Come funziona l\'IVA?',
-        timestamp: '09:15',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Per i clienti UE con partita IVA valida, la fattura va emessa senza IVA con la dicitura "Operazione non soggetta ex art. 7-ter DPR 633/72". Il cliente applicherà il reverse charge.',
-        timestamp: '09:20',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Anna Neri',
-        testo: 'Perfetto, grazie per tutto il supporto',
-        timestamp: '09:30',
-        stato: 'read'
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const messages = await chatService.getMessages(conversationId)
+
+      // Transform messages to match component structure
+      const transformed: TransformedMessage[] = messages.map((msg) => ({
+        ...msg,
+        // For admin role: admin messages on RIGHT (consulente), client messages on LEFT (cliente)
+        mittente: msg.mittente === 'consulente' || msg.mittente === 'user' ? 'consulente' : 'cliente',
+        nome: msg.mittente === 'consulente' || msg.mittente === 'user' ? (user?.name || 'Consulente') : msg.nome
+      }))
+
+      setMessaggi((prev) => ({
+        ...prev,
+        [conversationId]: transformed
+      }))
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    }
+  }
+
+  const loadAIMessages = async () => {
+    if (!aiConversationId) return
+    try {
+      const messages = await chatService.getAIMessages()
+
+      // Transform AI messages to match component structure
+      const transformed: TransformedMessage[] = messages.map((msg) => ({
+        ...msg,
+        mittente: msg.mittente === 'ai' ? 'cliente' : 'consulente', // AI shows on left, user on right
+        nome: msg.mittente === 'ai' ? 'AI Assistant' : (user?.name || 'Tu')
+      }))
+
+      setMessaggi((prev) => ({
+        ...prev,
+        [aiConversationId]: transformed
+      }))
+    } catch (error) {
+      console.error('Error loading AI messages:', error)
+    }
+  }
+
+  const handleAcceptConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await chatService.acceptConversation(conversationId)
+
+      // Reload conversations to get updated list
+      await loadConversations()
+
+      // Set as active chat
+      setActiveChat(conversationId)
+
+      showToast('Richiesta accettata con successo', 'success')
+    } catch (error) {
+      console.error('Error accepting conversation:', error)
+      showToast('Errore nell\'accettare la richiesta', 'error')
+    }
+  }
+
+  const handleRejectConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await chatService.rejectConversation(conversationId)
+
+      // Remove from list
+      setConversazioni((prev) => prev.filter(conv => conv.id !== conversationId))
+
+      showToast('Richiesta rifiutata', 'info')
+    } catch (error) {
+      console.error('Error rejecting conversation:', error)
+      showToast('Errore nel rifiutare la richiesta', 'error')
+    }
+  }
+
+  const handleDeleteConversation = async () => {
+    if (!activeChat || activeChat === aiConversationId || deletingConversation) return
+
+    try {
+      setDeletingConversation(true)
+      await chatService.deleteConversation(activeChat)
+
+      // Remove conversation from state
+      setConversazioni((prev) => prev.filter(conv => conv.id !== activeChat))
+
+      // Remove messages from state
+      setMessaggi((prev) => {
+        const newMessages = { ...prev }
+        delete newMessages[activeChat]
+        return newMessages
+      })
+
+      // Close modal and clear active chat
+      setShowDeleteModal(false)
+      setActiveChat(null)
+
+      // Show success toast
+      showToast('Conversazione eliminata con successo', 'success')
+    } catch (error) {
+      console.error('Error deleting conversation:', error)
+      showToast('Errore nell\'eliminazione della conversazione', 'error')
+    } finally {
+      setDeletingConversation(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !activeChat || sending) return
+
+    const messageText = message.trim()
+    setMessage('') // Clear input immediately
+
+    try {
+      setSending(true)
+
+      // Check if sending to AI
+      if (activeChat === aiConversationId) {
+        // Add user message immediately
+        const tempUserMessage: TransformedMessage = {
+          id: `temp-user-${Date.now()}`,
+          mittente: 'consulente',
+          nome: user?.name || 'Tu',
+          testo: messageText,
+          timestamp: new Date().toISOString(),
+          stato: 'sent'
+        }
+
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [...(prev[activeChat] || []), tempUserMessage]
+        }))
+
+        // Show AI loading indicator
+        setAiLoading(true)
+
+        const { userMessage, aiMessage } = await chatService.sendAIMessage(messageText)
+
+        // Transform both messages
+        const transformedUser: TransformedMessage = {
+          ...userMessage,
+          mittente: 'consulente',
+          nome: user?.name || 'Tu'
+        }
+        const transformedAI: TransformedMessage = {
+          ...aiMessage,
+          mittente: 'cliente',
+          nome: 'AI Assistant'
+        }
+
+        // Replace temp message with real messages
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [
+            ...(prev[activeChat] || []).filter(m => m.id !== tempUserMessage.id),
+            transformedUser,
+            transformedAI
+          ]
+        }))
+
+        setAiLoading(false)
+      } else {
+        // Regular conversation
+        const newMessage = await chatService.sendMessage(activeChat, messageText)
+
+        // Transform message to match component structure
+        const transformedMessage: TransformedMessage = {
+          ...newMessage,
+          mittente: 'consulente' as const,
+          nome: user?.name || 'Consulente'
+        }
+
+        // Add message to local state
+        setMessaggi((prev) => ({
+          ...prev,
+          [activeChat]: [...(prev[activeChat] || []), transformedMessage]
+        }))
       }
-    ],
-    'conv-005': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Francesco Greco',
-        testo: 'Buongiorno Dottore, sto valutando la cedolare secca per i miei immobili.',
-        timestamp: '15:45',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Salve Francesco! La cedolare secca può essere molto conveniente. Quanti immobili ha in locazione?',
-        timestamp: '16:00',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Francesco Greco',
-        testo: 'Posso avere chiarimenti sulla cedolare secca?',
-        timestamp: '16:15',
-        stato: 'unread'
+
+      // Update conversation's last message (only for regular conversations, not AI)
+      if (activeChat !== aiConversationId) {
+        const now = new Date()
+        const formattedTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+
+        setConversazioni((prev) =>
+          prev.map((conv) =>
+            conv.id === activeChat
+              ? {
+                  ...conv,
+                  ultimoMessaggio: messageText,
+                  orarioUltimoMessaggio: formattedTime
+                }
+              : conv
+          )
+        )
       }
-    ],
-    'conv-006': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Silvia Conti',
-        testo: 'URGENTE: Ho dimenticato di pagare l\'F24 di dicembre!',
-        timestamp: '18:00',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Silvia, non si preoccupi. Possiamo ancora sistemare. Mi può dire che tipo di F24 era?',
-        timestamp: '18:10',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Silvia Conti',
-        testo: 'Ritenute d\'acconto e contributi INPS. La scadenza era il 16 gennaio!',
-        timestamp: '18:15',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Calcoleremo le sanzioni per ritardato pagamento. Sono del 0.15% per ogni giorno di ritardo più interessi.',
-        timestamp: '18:25',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Silvia Conti',
-        testo: 'Urgente: scadenza F24 domani!',
-        timestamp: '18:30',
-        stato: 'unread'
-      }
-    ],
-    'conv-007': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Roberto Martinelli',
-        testo: 'Stiamo pensando di trasformare la SRL in SPA. È conveniente?',
-        timestamp: '20:00',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Roberto, dipende da diversi fattori. Fatturato, numero di soci, obiettivi futuri. Possiamo fare una call per valutare?',
-        timestamp: '20:30',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Roberto Martinelli',
-        testo: 'Ok per lunedì mattina alle 09:00',
-        timestamp: '20:45',
-        stato: 'read'
-      }
-    ],
-    'conv-008': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Elena Ferretti',
-        testo: 'Ho bisogno di registrare il marchio della mia linea di cosmetici.',
-        timestamp: '11:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Elena, perfetto! Registrazione nazionale o comunitaria? E in che classi merceologiche?',
-        timestamp: '11:45',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Elena Ferretti',
-        testo: 'Comunitaria, classe 3 per cosmetici e prodotti per la cura della persona.',
-        timestamp: '12:00',
-        stato: 'read'
-      },
-      {
-        id: 4,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Perfetto. Ho preparato tutta la documentazione. La invio via email.',
-        timestamp: '12:15',
-        stato: 'delivered'
-      },
-      {
-        id: 5,
-        mittente: 'cliente',
-        nome: 'Elena Ferretti',
-        testo: 'Documentazione ricevuta, tutto perfetto!',
-        timestamp: '12:00',
-        stato: 'read'
-      }
-    ],
-    'conv-009': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Davide Romano',
-        testo: 'Buongiorno, ho problemi con la dichiarazione IVA trimestrale.',
-        timestamp: '08:30',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Marco Bianchi',
-        testo: 'Buongiorno Davide! Mi dica, che tipo di difficoltà ha incontrato?',
-        timestamp: '08:40',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Davide Romano',
-        testo: 'Serve aiuto con la dichiarazione IVA',
-        timestamp: '08:45',
-        stato: 'unread'
-      }
-    ],
-    'conv-010': [
-      {
-        id: 1,
-        mittente: 'cliente',
-        nome: 'Paola Marchetti',
-        testo: 'Vorrei aprire un centro benessere. Che forma societaria mi consiglia?',
-        timestamp: '15:00',
-        stato: 'read'
-      },
-      {
-        id: 2,
-        mittente: 'consulente',
-        nome: 'Dr. Laura Verdi',
-        testo: 'Ciao Paola! Dipende da investimento iniziale e numero di soci. Puoi darmi più dettagli?',
-        timestamp: '15:10',
-        stato: 'delivered'
-      },
-      {
-        id: 3,
-        mittente: 'cliente',
-        nome: 'Paola Marchetti',
-        testo: 'Grazie, attendo il preventivo per la consulenza',
-        timestamp: '15:20',
-        stato: 'read'
-      }
-    ]
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('Errore nell\'invio del messaggio')
+      setAiLoading(false)
+    } finally {
+      setSending(false)
+    }
   }
 
   const filteredConversazioni = conversazioni.filter(conv => {
@@ -645,15 +422,46 @@ export default function Consulenze() {
     { title: 'Fatturato Mensile', value: `€ ${conversazioni.filter(c => c.fatturata).reduce((sum, c) => sum + c.importo, 0)}`, icon: TrendingUp, color: 'text-purple-600' }
   ]
 
-  const conversazioneAttiva = conversazioni.find(c => c.id === activeChat)
-  const messaggiAttivi = activeChat ? messaggi[activeChat as keyof typeof messaggi] || [] : []
+  // Check if active chat is AI or regular conversation
+  const conversazioneAttiva = activeChat === aiConversationId
+    ? {
+        id: aiConversationId,
+        cliente: {
+          nome: 'Assistente AI',
+          azienda: 'TaxFlow AI',
+          avatar: '🤖',
+          email: 'ai@taxflow.it'
+        },
+        status: 'active',
+        priority: 'medium',
+        argomento: 'Assistente Personale AI',
+        tipo: 'AI Assistant',
+        consulente: user?.name || 'Consulente',
+        importo: 0,
+        fatturata: true,
+        messaggiNonLetti: 0,
+        ultimoMessaggio: '',
+        orarioUltimoMessaggio: '',
+        dataUltimaAttivita: new Date().toLocaleDateString('it-IT')
+      }
+    : conversazioni.find(c => c.id === activeChat)
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Qui sarebbe implementata la logica per inviare il messaggio
-      console.log('Invio messaggio:', message)
-      setMessage('')
-    }
+  const messaggiAttivi = activeChat ? messaggi[activeChat] || [] : []
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messaggiAttivi])
+
+  if (loading) {
+    return (
+      <div className="h-[calc(100vh-200px)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Caricamento conversazioni...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -714,26 +522,56 @@ export default function Consulenze() {
 
           {/* Lista Conversazioni */}
           <div className="flex-1 overflow-y-auto">
+            {/* AI Assistant - Always first */}
+            {aiConversationId && (
+              <button
+                onClick={() => setActiveChat(aiConversationId)}
+                className={`w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200 ${
+                  activeChat === aiConversationId ? 'bg-gradient-to-r from-primary-50 to-green-50 border-r-2 border-r-primary-500' : ''
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-green-500 rounded-full flex items-center justify-center text-lg">
+                    🤖
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-gray-900">Assistente AI</p>
+                      <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">
+                        Sempre disponibile
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">Consulente Fiscale AI</p>
+                    <p className="text-sm text-gray-600">Chiedi informazioni sul regime forfettario</p>
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {/* Regular conversations */}
             {filteredConversazioni.map((conv) => (
               <button
                 key={conv.id}
                 onClick={() => setActiveChat(conv.id)}
-                className={`w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 ${
+                className={`w-full p-4 border-b border-gray-100 text-left hover:bg-gray-50 transition-colors ${
                   activeChat === conv.id ? 'bg-primary-50 border-r-2 border-r-primary-500' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg flex-shrink-0">
                     {conv.cliente.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-gray-900 truncate">{conv.cliente.nome}</p>
-                      <span className="text-xs text-gray-500">{conv.orarioUltimoMessaggio}</span>
+                      {conv.status !== 'pending' && (
+                        <span className="text-xs text-gray-500">{conv.orarioUltimoMessaggio}</span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-600 mb-1">{conv.cliente.azienda}</p>
-                    <p className="text-sm text-gray-600 truncate mb-1">{conv.ultimoMessaggio}</p>
-                    <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600 truncate mb-1">{conv.argomento}</p>
+
+                    <div className="flex items-center justify-between mt-2">
                       <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(conv.status)}`}>
                         {getStatusIcon(conv.status)}
                         <span className="ml-1">{getStatusText(conv.status)}</span>
@@ -767,57 +605,124 @@ export default function Consulenze() {
                       <p className="text-sm text-gray-600">{conversazioneAttiva.argomento}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Phone className="h-5 w-5" />
+                  {/* Delete button - only show for non-AI conversations */}
+                  {activeChat !== aiConversationId && (
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Elimina conversazione"
+                    >
+                      <Trash2 className="h-5 w-5" />
                     </button>
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Video className="h-5 w-5" />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
 
               {/* Messaggi */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {messaggiAttivi.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.mittente === 'consulente' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        msg.mittente === 'consulente'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-white text-gray-900 border border-gray-200'
-                      }`}
-                    >
-                      {msg.mittente === 'cliente' && (
-                        <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
-                      )}
-                      <p className="text-sm">{msg.testo}</p>
-                      <div className={`flex items-center justify-between mt-1 ${
-                        msg.mittente === 'consulente' ? 'text-white' : 'text-gray-500'
-                      }`}>
-                        <span className="text-xs opacity-75">{msg.timestamp}</span>
-                        {msg.mittente === 'consulente' && (
-                          <CheckCircle className="h-3 w-3 ml-2" />
-                        )}
+                {conversazioneAttiva?.status === 'pending' ? (
+                  /* Pending conversation - show accept/reject buttons */
+                  <div className="h-full flex items-center justify-center">
+                    <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
+                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-yellow-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta di Consulenza</h3>
+                      <p className="text-gray-600 mb-2">
+                        <span className="font-medium">{conversazioneAttiva.cliente.nome}</span> ha richiesto una consulenza
+                      </p>
+                      <p className="text-sm text-gray-500 mb-6">
+                        Argomento: <span className="font-medium">{conversazioneAttiva.argomento}</span>
+                      </p>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleAcceptConversation(activeChat!, e)
+                          }}
+                          className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center space-x-2"
+                        >
+                          <Check className="h-5 w-5" />
+                          <span>Accetta Richiesta</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleRejectConversation(activeChat!, e)
+                          }}
+                          className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center space-x-2"
+                        >
+                          <X className="h-5 w-5" />
+                          <span>Rifiuta Richiesta</span>
+                        </button>
                       </div>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  /* Active conversation - show messages */
+                  <>
+                    {messaggiAttivi.map((msg: any) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.mittente === 'consulente' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            msg.mittente === 'consulente'
+                              ? 'bg-primary-600 text-white'
+                              : 'bg-white text-gray-900 border border-gray-200'
+                          }`}
+                        >
+                          {msg.mittente === 'cliente' && (
+                            <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
+                          )}
+                          <p className="text-sm">{msg.testo}</p>
+                          <div className={`flex items-center justify-between mt-1 ${
+                            msg.mittente === 'consulente' ? 'text-white' : 'text-gray-500'
+                          }`}>
+                            <span className="text-xs opacity-75">{formatMessageTimestamp(msg.timestamp)}</span>
+                            {msg.mittente === 'consulente' && (
+                              <CheckCircle className="h-3 w-3 ml-2" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* AI Loading Indicator */}
+                    {aiLoading && activeChat === aiConversationId && (
+                      <div className="flex justify-start">
+                        <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-white text-gray-900 border border-gray-200">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                            <span className="text-xs text-gray-500">L'AI sta pensando...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Scroll anchor */}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
               </div>
 
               {/* Input Messaggio */}
               <div className="p-4 border-t border-gray-200 bg-white">
                 <div className="flex items-center space-x-3">
-                  <button className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110">
-                    <Paperclip className="h-5 w-5" />
-                  </button>
+                  {/* Attachment button - hide for AI conversations */}
+                  {activeChat !== aiConversationId && (
+                    <button
+                      className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110"
+                      disabled={conversazioneAttiva?.status === 'pending'}
+                    >
+                      <Paperclip className="h-5 w-5" />
+                    </button>
+                  )}
                   <input
                     type="text"
                     value={message}
@@ -828,12 +733,13 @@ export default function Consulenze() {
                         handleSendMessage()
                       }
                     }}
-                    placeholder="Scrivi una risposta al cliente..."
+                    placeholder={conversazioneAttiva?.status === 'pending' ? 'Accetta la richiesta per inviare messaggi' : 'Scrivi una risposta al cliente...'}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    disabled={sending || conversazioneAttiva?.status === 'pending'}
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || sending || conversazioneAttiva?.status === 'pending'}
                     className="flex-shrink-0 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
                   >
                     <Send className="h-5 w-5" />
@@ -852,8 +758,8 @@ export default function Consulenze() {
           )}
         </div>
 
-        {/* Info Panel Cliente */}
-        {conversazioneAttiva && (
+        {/* Info Panel Cliente - Hide for AI chat and pending conversations */}
+        {conversazioneAttiva && activeChat !== aiConversationId && conversazioneAttiva.status !== 'pending' && (
           <div className="w-64 border-l border-gray-200 p-4 bg-white shadow-sm flex flex-col h-full hover:shadow-md transition-shadow relative z-10">
             <h4 className="font-semibold text-gray-900 mb-4">Dettagli Consulenza</h4>
 
@@ -922,6 +828,39 @@ export default function Consulenze() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Conferma Eliminazione Conversazione"
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Sei sicuro di voler eliminare questa conversazione con{' '}
+            <span className="font-semibold">{conversazioneAttiva?.cliente.nome}</span>?
+            Tutti i messaggi verranno eliminati permanentemente.
+          </p>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deletingConversation}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Annulla
+            </button>
+            <button
+              onClick={handleDeleteConversation}
+              disabled={deletingConversation}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+            >
+              {deletingConversation ? 'Eliminazione...' : 'Elimina Conversazione'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -31,7 +31,8 @@ class ApiService {
     }
 
     if (includeAuth) {
-      const token = localStorage.getItem('taxflow_token')
+      // Use 'token' key to match AuthContext
+      const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
       if (token) {
         headers.Authorization = `Bearer ${token}`
       }
@@ -54,8 +55,10 @@ class ApiService {
 
     const data = await response.json()
 
-    // Store token in localStorage
+    // Store token in localStorage (using both keys for compatibility)
     if (data.token) {
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('taxflow_token', data.token)
       localStorage.setItem('taxflow_user', JSON.stringify(data.user))
     }
@@ -77,8 +80,10 @@ class ApiService {
 
     const data = await response.json()
 
-    // Store token in localStorage
+    // Store token in localStorage (using both keys for compatibility)
     if (data.token) {
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('taxflow_token', data.token)
       localStorage.setItem('taxflow_user', JSON.stringify(data.user))
     }
@@ -101,17 +106,19 @@ class ApiService {
   }
 
   logout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
     localStorage.removeItem('taxflow_token')
     localStorage.removeItem('taxflow_user')
   }
 
   getCurrentUser() {
-    const userString = localStorage.getItem('taxflow_user')
+    const userString = localStorage.getItem('user') || localStorage.getItem('taxflow_user')
     return userString ? JSON.parse(userString) : null
   }
 
   getToken() {
-    return localStorage.getItem('taxflow_token')
+    return localStorage.getItem('token') || localStorage.getItem('taxflow_token')
   }
 
   isAuthenticated() {
@@ -199,6 +206,65 @@ class ApiService {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.error || 'Failed to cleanup sessions')
+    }
+
+    return response.json()
+  }
+
+  // Clients Management (Admin only)
+  async getClients() {
+    const response = await fetch(`${API_BASE_URL}/clients/list`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get clients')
+    }
+
+    return response.json()
+  }
+
+  async getClientById(clientId: string) {
+    const response = await fetch(`${API_BASE_URL}/clients/${clientId}`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get client')
+    }
+
+    return response.json()
+  }
+
+  async updateClient(clientId: string, data: any) {
+    const response = await fetch(`${API_BASE_URL}/clients/${clientId}`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update client')
+    }
+
+    return response.json()
+  }
+
+  async addClientActivity(clientId: string, action: string, detail: string) {
+    const response = await fetch(`${API_BASE_URL}/clients/${clientId}/activity`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ action, detail }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to add activity')
     }
 
     return response.json()

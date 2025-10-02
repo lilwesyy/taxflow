@@ -58,7 +58,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
   // Banner data for carousel
   const banners = [
     {
-      badge: { text: "Metodologia Banca d'Italia", icon: Award },
+      badge: { text: "Metodologia Polyvis", icon: Award },
       title: "Partita IVA Forfettaria",
       subtitle: "che migliora il tuo rating",
       description: "Gestione fiscale avanzata con conformità normativa D.Lgs. 14/2019 e preparazione al credito bancario. Metodologia Banca d'Italia per ottimizzare le tue relazioni bancarie.",
@@ -70,9 +70,9 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       }
     },
     {
-      badge: { text: "Early Warning System", icon: Shield },
-      title: "Monitoraggio Predittivo",
-      subtitle: "prevenzione crisi aziendale",
+      badge: { text: "Metodologia Banca D'Italia", icon: Shield },
+      title: "Business Plan Pedittivo",
+      subtitle: "strategie aziendali proattive",
       description: "Sistema di allerta precoce conforme al D.Lgs. 14/2019 per identificare tempestivamente i segnali di crisi e garantire la continuità aziendale.",
       features: ["Analisi predittiva", "Alert automatici", "Conformità normativa"],
       image: "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -82,15 +82,15 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       }
     },
     {
-      badge: { text: "Credit Assessment", icon: TrendingUp },
-      title: "Valutazione Creditizia",
-      subtitle: "criteri Banca d'Italia",
-      description: "Assessment creditizio professionale secondo i criteri ICAS per prepararti al meglio alle richieste di finanziamento bancario.",
-      features: ["Score ICAS", "Report Centrale Rischi", "Analisi qualitativa"],
+      badge: { text: "Pianificazione Strategica", icon: Target },
+      title: "Analisi SWOT",
+      subtitle: "per decisioni vincenti",
+      description: "Matrice strategica per valutare punti di forza, debolezze, opportunità e minacce del tuo business. Minimizza i rischi e definisci la tua strategia di crescita sul lungo periodo.",
+      features: ["Analisi interna/esterna", "Riduzione rischi", "Obiettivi chiari"],
       image: "https://images.pexels.com/photos/3760069/pexels-photo-3760069.jpeg?auto=compress&cs=tinysrgb&w=800",
       floatingCards: {
-        top: { icon: BarChart3, title: "Score ICAS", subtitle: "Banca d'Italia", color: "blue" },
-        bottom: { icon: Building, title: "Centrale Rischi", subtitle: "Ottimizzato", color: "green" }
+        top: { icon: Target, title: "Strategia", subtitle: "Obiettivi chiari", color: "purple" },
+        bottom: { icon: Shield, title: "Risk Control", subtitle: "Minimizzato", color: "green" }
       }
     }
   ]
@@ -226,7 +226,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: Building,
       title: "Apertura P.IVA Ottimizzata",
       description: "Apertura partita IVA forfettaria con impostazione ottimale per future relazioni bancarie e accesso al credito.",
-      price: "€299",
+      price: "€199",
       features: ["Setup creditizio", "Documentazione bancaria", "Rating optimization", "Timeline monitorata"],
       learnMoreUrl: "https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/dichiarazione-di-inizio-attivita-iva/infogen-dichiarazione-inizio-attivita",
       learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria"

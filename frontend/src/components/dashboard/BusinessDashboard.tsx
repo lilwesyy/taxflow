@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { Home, FileText, Settings, HelpCircle, Brain, Calculator, Building, MessageSquare, Receipt, Target, Star } from 'lucide-react'
+import { Home, FileText, Settings, HelpCircle, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import DashboardOverview from './pages/business/DashboardOverview'
-import AperturaPiva from './pages/business/AperturaPiva'
 import SimulazioneImposte from './pages/business/SimulazioneImposte'
 import AnalisiAI from './pages/business/AnalisiAI'
 import Fatturazione from './pages/business/Fatturazione'
@@ -46,13 +45,12 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'apertura-piva', name: 'Apertura P.IVA', icon: Building },
-    { id: 'fatture', name: 'Fatturazione', icon: FileText },
+    { id: 'fatture', name: 'Fatturazione', icon: Receipt },
     { id: 'simulazione-imposte', name: 'Simulazione Imposte', icon: Calculator },
     { id: 'analisi-ai', name: 'Analisi AI', icon: Brain },
     { id: 'business-plan', name: 'Business Plan', icon: Target },
     { id: 'consulenza', name: 'Chat Consulente', icon: MessageSquare },
-    { id: 'documenti', name: 'Documenti', icon: Receipt },
+    { id: 'documenti', name: 'Cassetto Fiscale', icon: FolderOpen },
     { id: 'impostazioni', name: 'Impostazioni', icon: Settings },
     { id: 'supporto', name: 'Supporto', icon: HelpCircle },
     { id: 'feedback-consulente', name: 'Feedback Consulente', icon: Star }
@@ -63,14 +61,13 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     const item = sidebarItems.find(item => item.id === activeSection)
     const descriptions: Record<string, string> = {
       'dashboard': 'Panoramica della tua attività forfettaria',
-      'apertura-piva': 'Richiedi apertura partita IVA forfettaria',
       'fatture': 'Gestisci la fatturazione elettronica',
       'simulazione-imposte': 'Calcola le imposte con codice ATECO',
       'analisi-ai': 'Analisi aziendale powered by AI',
       'business-plan': 'Crea il tuo business plan con AI',
       'consulenza': 'Chat con il tuo consulente CFO',
       'feedback-consulente': 'Valuta e lascia feedback sui consulenti',
-      'documenti': 'Condividi documenti con i consulenti',
+      'documenti': 'Documenti fiscali organizzati come Agenzia delle Entrate',
       'impostazioni': 'Configura il tuo account',
       'supporto': 'Ottieni aiuto e assistenza'
     }
@@ -85,13 +82,6 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     switch (activeSection) {
       case 'dashboard':
         return <DashboardOverview onSectionChange={setActiveSection} />
-
-      case 'apertura-piva':
-        return <AperturaPiva onNavigateToDocuments={(tab) => {
-          setActiveSection('documenti')
-          // Pass the tab to Documenti component via URL hash or state
-          window.location.hash = `#${tab}`
-        }} />
 
       case 'simulazione-imposte':
         return <SimulazioneImposte />

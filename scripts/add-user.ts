@@ -32,10 +32,17 @@ async function addUser() {
   const email = process.argv[2]
   const password = process.argv[3]
   const name = process.argv[4] || 'Admin User'
+  const role = (process.argv[5] as 'admin' | 'business') || 'admin'
 
   if (!email || !password) {
-    console.error('❌ Usage: npm run add-user <email> <password> [name]')
-    console.error('Example: npm run add-user admin@taxflow.com Password123 "Admin User"')
+    console.error('❌ Usage: npm run add-user <email> <password> [name] [role]')
+    console.error('Example: npm run add-user admin@taxflow.com Password123 "Admin User" admin')
+    console.error('Example: npm run add-user cliente@test.com Password123 "Cliente Test" business')
+    process.exit(1)
+  }
+
+  if (role !== 'admin' && role !== 'business') {
+    console.error('❌ Role must be either "admin" or "business"')
     process.exit(1)
   }
 
@@ -59,17 +66,17 @@ async function addUser() {
       process.exit(1)
     }
 
-    // Crea nuovo utente admin
+    // Crea nuovo utente
     const user = new User({
       email,
       password,
       name,
-      role: 'admin'
+      role
     })
 
     await user.save()
 
-    console.log('✅ Admin user created successfully!')
+    console.log(`✅ ${role.charAt(0).toUpperCase() + role.slice(1)} user created successfully!`)
     console.log('📧 Email:', user.email)
     console.log('👤 Name:', user.name)
     console.log('🔑 Role:', user.role)
