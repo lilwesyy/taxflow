@@ -72,10 +72,10 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     },
     {
       badge: { text: "Metodologia Banca D'Italia", icon: Shield },
-      title: "Business Plan Pedittivo",
+      title: "Business Plan Predittivo",
       subtitle: "strategie aziendali proattive",
       description: "Sistema di allerta precoce conforme al D.Lgs. 14/2019 per identificare tempestivamente i segnali di crisi e garantire la continuità aziendale.",
-      features: ["Analisi predittiva", "Alert automatici", "Conformità normativa"],
+      features: ["Strategico", "Innovativo", "Dinamico"],
       image: "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
       floatingCards: {
         top: { icon: Clock, title: "Alert 24/7", subtitle: "Monitoraggio", color: "orange" },
