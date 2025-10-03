@@ -746,7 +746,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             </button>
 
             {/* Infinite Scrolling Services */}
-            <div className="overflow-hidden px-4 sm:px-6 lg:px-8">
+            <div className="overflow-visible px-4 sm:px-6 lg:px-8 py-4">
               <div
                 className="flex transition-transform duration-500 ease-out"
                 style={{ transform: `translateX(calc(-${(currentService % services.length) * (100 / 3)}% - ${currentService * 1.5}rem))` }}
