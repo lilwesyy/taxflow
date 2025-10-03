@@ -858,11 +858,102 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
         </div>
       </section>
 
+      {/* Chi Siamo Section */}
+      <section
+        id="chi-siamo"
+        ref={setSectionRef('chi-siamo')}
+        className="py-20 bg-gray-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className={`${visibleSections.has('chi-siamo') ? 'animate-fade-in-up' : 'opacity-0'}`}>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Chi Siamo
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                TaxFlow è una piattaforma innovativa nata per semplificare la gestione fiscale e bancaria delle partite IVA forfettarie.
+                Utilizziamo metodologie bancarie professionali e standard normativi per offrirti un servizio di eccellenza.
+              </p>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                Il nostro team di esperti fiscali e consulenti finanziari lavora quotidianamente per ottimizzare la tua posizione creditizia
+                e garantirti la massima conformità normativa secondo i criteri di Banca d'Italia e gli Accordi di Basilea III.
+              </p>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 mt-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary-600 mb-2">500+</div>
+                  <div className="text-sm text-gray-600">Clienti Attivi</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary-600 mb-2">98%</div>
+                  <div className="text-sm text-gray-600">Soddisfazione</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary-600 mb-2">24/7</div>
+                  <div className="text-sm text-gray-600">Supporto</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Image/Features */}
+            <div className={`${visibleSections.has('chi-siamo') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('chi-siamo') ? {animationDelay: '0.2s'} : {}}>
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">I Nostri Valori</h3>
+
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-primary-100 rounded-lg p-3 flex-shrink-0">
+                      <Shield className="h-6 w-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Conformità Normativa</h4>
+                      <p className="text-gray-600 text-sm">Piena aderenza a D.Lgs. 14/2019 e standard Banca d'Italia</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-green-100 rounded-lg p-3 flex-shrink-0">
+                      <Users className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Orientamento al Cliente</h4>
+                      <p className="text-gray-600 text-sm">Supporto personalizzato e consulenza dedicata</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-blue-100 rounded-lg p-3 flex-shrink-0">
+                      <Brain className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Innovazione Tecnologica</h4>
+                      <p className="text-gray-600 text-sm">AI e analytics avanzati per previsioni accurate</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-purple-100 rounded-lg p-3 flex-shrink-0">
+                      <Award className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Eccellenza Professionale</h4>
+                      <p className="text-gray-600 text-sm">Metodologie bancarie certificate e team qualificato</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section
         id="benefici"
         ref={setSectionRef('benefici')}
-        className="py-20 bg-gray-50"
+        className="py-20 bg-white"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
