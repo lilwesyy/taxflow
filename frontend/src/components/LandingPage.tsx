@@ -470,8 +470,9 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                         </div>
 
                         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                          {banner.title} <span className="text-blue-600">{banner.subtitle.split(' ')[0]}</span>
+                          {banner.title}
                           <br />
+                          <span className="text-blue-600">{banner.subtitle.split(' ')[0]}</span>{' '}
                           <span className="text-gray-600 text-2xl md:text-3xl lg:text-4xl">
                             {banner.subtitle.split(' ').slice(1).join(' ')}
                           </span>
