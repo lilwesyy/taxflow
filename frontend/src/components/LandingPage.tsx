@@ -52,6 +52,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
 
   // Carousel states
   const [currentBanner, setCurrentBanner] = useState(0)
+  const [currentService, setCurrentService] = useState(0)
 
   const sectionRefs = useRef<Record<string, Element | null>>({})
 
@@ -205,58 +206,49 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
 
   const services = [
     {
-      icon: Shield,
-      title: "Credit Readiness Assessment",
-      description: "Valutazione creditizia secondo i criteri di Banca d'Italia (ICAS) per prepararti al meglio alle richieste di finanziamento.",
-      price: "€199",
-      features: ["Analisi quantitativa", "Valutazione qualitativa", "Score comportamentale", "Report Centrale Rischi"],
-      learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/qualita-crediti/index.html",
-      learnMoreText: "Scopri il sistema ICAS di Banca d'Italia"
-    },
-    {
-      icon: TrendingUp,
-      title: "Forward-Looking Analysis",
-      description: "Monitoraggio predittivo conforme al D.Lgs. 14/2019 per prevenire crisi aziendali e garantire continuità operativa.",
-      price: "€149/mese",
-      features: ["Early warning system", "Cash flow forecasting", "Analisi competitività", "Alert automatici"],
-      learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
-      learnMoreText: "Leggi il D.Lgs. 14/2019 - Codice della Crisi"
-    },
-    {
       icon: Building,
-      title: "Apertura P.IVA Ottimizzata",
-      description: "Apertura partita IVA forfettaria con impostazione ottimale per future relazioni bancarie e accesso al credito.",
+      title: "P.IVA Forfettari",
+      description: "Apertura e gestione partita IVA forfettaria ottimizzata per massimizzare i vantaggi fiscali e prepararti all'accesso al credito bancario.",
       price: "€199",
-      features: ["Setup creditizio", "Documentazione bancaria", "Rating optimization", "Timeline monitorata"],
+      features: ["Setup creditizio", "Regime forfettario", "Rating optimization", "Adempimenti fiscali"],
       learnMoreUrl: "https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/dichiarazione-di-inizio-attivita-iva/infogen-dichiarazione-inizio-attivita",
       learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria"
     },
     {
-      icon: BarChart3,
-      title: "Banking Relationship Manager",
-      description: "Ottimizza le tue relazioni bancarie e migliora il tuo rating creditizio attraverso reporting avanzato.",
-      price: "€99/mese",
-      features: ["Rating monitoring", "Basel III compliance", "Bank reporting", "Cost optimization"],
-      learnMoreUrl: "https://www.bis.org/basel_framework/",
-      learnMoreText: "Scopri gli Accordi di Basilea III"
+      icon: TrendingUp,
+      title: "Business Plan Predittivo VisionFlow",
+      description: "Sistema di pianificazione strategica con analisi predittiva conforme al D.Lgs. 14/2019 per anticipare le dinamiche di mercato e garantire la crescita sostenibile.",
+      price: "€299",
+      features: ["Analisi predittiva", "Cash flow forecasting", "Scenario planning", "Alert automatici"],
+      learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
+      learnMoreText: "Leggi il D.Lgs. 14/2019 - Codice della Crisi"
     },
     {
-      icon: FileCheck,
-      title: "Regulatory Compliance Hub",
-      description: "Sistema completo per conformità normativa, fatturazione e adempimenti con standard bancari.",
-      price: "Incluso",
-      features: ["D.Lgs. 14/2019", "Fatturazione elettronica", "Adempimenti automatici", "Audit trail"],
-      learnMoreUrl: "https://www.fatturapa.gov.it/export/documenti/fatturapa/it/normativa/f-2.htm",
-      learnMoreText: "Normativa Fatturazione Elettronica"
+      icon: Target,
+      title: "Analisi SWOT Evolution",
+      description: "Matrice strategica avanzata per valutare punti di forza, debolezze, opportunità e minacce. Minimizza i rischi e definisci strategie vincenti sul lungo periodo.",
+      price: "€149",
+      features: ["Analisi interna/esterna", "Riduzione rischi", "Obiettivi strategici", "Roadmap evolutiva"],
+      learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/qualita-crediti/index.html",
+      learnMoreText: "Sistema ICAS Banca d'Italia"
     },
     {
       icon: Brain,
-      title: "AI Risk Management",
-      description: "Intelligenza artificiale per analisi predittiva dei rischi e ottimizzazione delle performance aziendali.",
-      price: "Incluso",
-      features: ["PD calculation", "Scenario analysis", "Performance KPI", "Predictive modeling"],
+      title: "Consulenza Proattiva e Strategica",
+      description: "Supporto continuo con metodologia proattiva per anticipare sfide fiscali, ottimizzare la gestione aziendale e migliorare le performance.",
+      price: "€99/mese",
+      features: ["Monitoraggio continuo", "Ottimizzazione fiscale", "Supporto strategico", "Consulenza dedicata"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/",
       learnMoreText: "Sistema gestione garanzie Banca d'Italia"
+    },
+    {
+      icon: Banknote,
+      title: "Assistenza Accesso al Credito Bancario",
+      description: "Supporto completo per l'accesso al credito bancario con garanzia MCC L.662/96 e calcolo scoring creditizio secondo metodologia Banca d'Italia.",
+      price: "€249",
+      features: ["Garanzia MCC L.662/96", "Calcolo scoring", "Valutazione ICAS", "Preparazione documenti"],
+      learnMoreUrl: "https://www.fondidigaranzia.it/",
+      learnMoreText: "Info Fondo di Garanzia PMI"
     }
   ]
 
@@ -734,73 +726,118 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => {
-              const Icon = service.icon
-              const isPopular = index === 1 // Middle service is most popular
-              return (
-                <div
+          {/* Carousel Container */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button
+              onClick={() => setCurrentService((prev) => (prev === 0 ? services.length - 1 : prev - 1))}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
+              aria-label="Servizio precedente"
+            >
+              <ChevronLeft className="h-6 w-6 text-gray-700" />
+            </button>
+
+            <button
+              onClick={() => setCurrentService((prev) => (prev === services.length - 1 ? 0 : prev + 1))}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
+              aria-label="Servizio successivo"
+            >
+              <ChevronRight className="h-6 w-6 text-gray-700" />
+            </button>
+
+            {/* Services Carousel */}
+            <div className="overflow-hidden">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentService * 100}%)` }}
+              >
+                {services.map((service, index) => {
+                  const Icon = service.icon
+                  const isPopular = index === 1 // Second service is most popular
+                  return (
+                    <div
+                      key={index}
+                      className="w-full flex-shrink-0 px-4"
+                    >
+                      <div
+                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-8 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative max-w-2xl mx-auto`}
+                      >
+                        {/* Popular Badge */}
+                        {isPopular && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <div className="bg-gradient-to-r from-primary-600 to-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                              <Star className="h-3 w-3 inline mr-1" />
+                              Più Popolare
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between mb-6">
+                          <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-16 h-16 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
+                            <Icon className="h-8 w-8 text-primary-600" />
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-3xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
+                            {isPopular && (
+                              <div className="text-xs text-green-600 font-medium">Miglior Valore</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <h3 className={`text-2xl font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-4`}>{service.title}</h3>
+                        <p className="text-gray-600 mb-8 leading-relaxed text-lg">{service.description}</p>
+
+                        <div className="space-y-3 mb-8">
+                          {service.features.map((feature, featureIndex) => (
+                            <div key={featureIndex} className="flex items-center text-gray-700">
+                              <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                              <span className="text-base">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Guarantee Badge */}
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center">
+                            <Shield className="h-5 w-5 text-green-600 mr-2" />
+                            <span className="text-green-800 font-medium">
+                              {isPopular ? '60 giorni soddisfatto o rimborsato' : 'Garanzia qualità'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <a
+                          href={service.learnMoreUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center ${isPopular ? 'text-primary-700 hover:text-primary-800' : 'text-primary-600 hover:text-primary-700'} font-medium group-hover:underline`}
+                          title={service.learnMoreText}
+                        >
+                          Scopri di più
+                          <ExternalLink className="h-4 w-4 ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Dots Indicator */}
+            <div className="flex justify-center mt-8 space-x-2">
+              {services.map((_, index) => (
+                <button
                   key={index}
-                  className={`group bg-white border-2 ${isPopular ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-100'} rounded-2xl p-8 hover:border-blue-200 hover:shadow-xl transition-all duration-300 relative ${visibleSections.has('servizi') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={visibleSections.has('servizi') ? {animationDelay: `${0.4 + index * 0.15}s`} : {}}
-                >
-                  {/* Popular Badge */}
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
-                        <Star className="h-3 w-3 inline mr-1" />
-                        Più Popolare
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between mb-6">
-                    <div className={`${isPopular ? 'bg-blue-100' : 'bg-blue-50'} w-14 h-14 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors`}>
-                      <Icon className="h-7 w-7 text-blue-600" />
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-2xl font-bold ${isPopular ? 'text-blue-700' : 'text-blue-600'}`}>{service.price}</div>
-                      {isPopular && (
-                        <div className="text-xs text-green-600 font-medium">Miglior Valore</div>
-                      )}
-                    </div>
-                  </div>
-
-                  <h3 className={`text-xl font-bold ${isPopular ? 'text-blue-900' : 'text-gray-900'} mb-3`}>{service.title}</h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
-
-                  <div className="space-y-2 mb-6">
-                    {service.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center text-sm text-gray-600">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                        {feature}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Guarantee Badge */}
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center text-sm">
-                      <Shield className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-green-800 font-medium">
-                        {isPopular ? '60 giorni soddisfatto o rimborsato' : 'Garanzia qualità'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <a
-                    href={service.learnMoreUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center ${isPopular ? 'text-blue-700 hover:text-blue-800' : 'text-blue-600 hover:text-blue-700'} font-medium text-sm group-hover:underline`}
-                    title={service.learnMoreText}
-                  >
-                    Scopri di più
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </div>
-              )
-            })}
+                  onClick={() => setCurrentService(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentService
+                      ? 'w-8 bg-primary-600'
+                      : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Vai al servizio ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
