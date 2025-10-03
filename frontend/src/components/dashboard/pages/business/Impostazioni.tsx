@@ -1,6 +1,7 @@
 import { Settings, User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Receipt, Clock, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import apiService from '../../../../services/api'
+import { useToast } from '../../../../context/ToastContext'
 
 interface Session {
   id: string
@@ -15,6 +16,7 @@ interface Session {
 }
 
 export default function Impostazioni() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const [sessions, setSessions] = useState<Session[]>([])
@@ -97,7 +99,7 @@ export default function Impostazioni() {
       setSessions(response.sessions)
     } catch (error) {
       console.error('Failed to load sessions:', error)
-      alert('Errore nel caricamento delle sessioni')
+      showToast('Errore nel caricamento delle sessioni', 'error')
     } finally {
       setLoading(false)
     }
@@ -117,11 +119,11 @@ export default function Impostazioni() {
 
     try {
       await apiService.terminateSession(sessionId)
-      alert('Sessione terminata con successo')
+      showToast('Sessione terminata con successo', 'success')
       loadSessions()
     } catch (error) {
       console.error('Failed to terminate session:', error)
-      alert('Errore nella terminazione della sessione')
+      showToast('Errore nella terminazione della sessione', 'error')
     }
   }
 
@@ -130,21 +132,21 @@ export default function Impostazioni() {
 
     try {
       await apiService.terminateAllSessions()
-      alert('Tutte le altre sessioni sono state terminate')
+      showToast('Tutte le altre sessioni sono state terminate', 'success')
       loadSessions()
     } catch (error) {
       console.error('Failed to terminate all sessions:', error)
-      alert('Errore nella terminazione delle sessioni')
+      showToast('Errore nella terminazione delle sessioni', 'error')
     }
   }
 
   const handleSaveSessionTimeout = async () => {
     try {
       await apiService.updateSessionTimeout(sessionTimeout)
-      alert('Timeout sessione aggiornato con successo')
+      showToast('Timeout sessione aggiornato con successo', 'success')
     } catch (error) {
       console.error('Failed to update session timeout:', error)
-      alert('Errore nell\'aggiornamento del timeout')
+      showToast('Errore nell\'aggiornamento del timeout', 'error')
     }
   }
 
@@ -153,11 +155,11 @@ export default function Impostazioni() {
 
     try {
       const response = await apiService.cleanupSessions()
-      alert(response.message)
+      showToast(response.message, 'success')
       loadSessions()
     } catch (error) {
       console.error('Failed to cleanup sessions:', error)
-      alert('Errore nella pulizia delle sessioni')
+      showToast('Errore nella pulizia delle sessioni', 'error')
     }
   }
 
@@ -187,7 +189,7 @@ export default function Impostazioni() {
     // Qui sarebbe implementata la logica per salvare le impostazioni
     console.log(`Salvataggio impostazioni ${section}`)
     // Mostra notifica di successo
-    alert('Impostazioni salvate con successo!')
+    showToast('Impostazioni salvate con successo!', 'success')
   }
 
   const renderProfileTab = () => (

@@ -1,8 +1,10 @@
 import { Brain, TrendingUp, AlertTriangle, FileText, BarChart3, DollarSign, Eye, Upload, Download } from 'lucide-react'
 import { useState } from 'react'
 import Modal from '../../../common/Modal'
+import { useToast } from '../../../../context/ToastContext'
 
 export default function AnalisiAI() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('overview')
   const [showReportModal, setShowReportModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -615,7 +617,7 @@ export default function AnalisiAI() {
               onClick={() => {
                 setShowReportModal(false)
                 // Simulate report generation
-                alert('Report in generazione! Riceverai una notifica quando sarà pronto.')
+                showToast('Report in generazione! Riceverai una notifica quando sarà pronto.', 'info')
               }}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
@@ -795,7 +797,7 @@ export default function AnalisiAI() {
             <button
               onClick={() => {
                 setShowUploadModal(false)
-                alert('File caricati con successo! L\'analisi inizierà automaticamente.')
+                showToast('File caricati con successo! L\'analisi inizierà automaticamente.', 'success')
               }}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >

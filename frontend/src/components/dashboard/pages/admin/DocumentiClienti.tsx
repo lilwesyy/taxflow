@@ -5,9 +5,11 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import Modal from '../../../common/Modal'
+import { useToast } from '../../../../context/ToastContext'
 import dummyPdf from '../../../../assets/dummy-pdf_2.pdf'
 
 export default function DocumentiClienti() {
+  const { showToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterAnno, setFilterAnno] = useState('all')
@@ -281,7 +283,7 @@ export default function DocumentiClienti() {
 
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    alert('Documento caricato con successo!')
+    showToast('Documento caricato con successo!', 'success')
     setIsUploadModalOpen(false)
     setUploadForm({
       nome: '',

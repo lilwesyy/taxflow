@@ -1,8 +1,10 @@
 import { Target, Brain, FileText, Download, Eye, Plus, TrendingUp, DollarSign, BarChart3, Lightbulb, CheckCircle, Clock, Edit, Search, Filter } from 'lucide-react'
 import { useState } from 'react'
 import Modal from '../../../common/Modal'
+import { useToast } from '../../../../context/ToastContext'
 
 export default function BusinessPlan() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('plans')
   const [showNewPlan, setShowNewPlan] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
@@ -715,7 +717,7 @@ export default function BusinessPlan() {
               <button
                 onClick={() => {
                   setShowTemplateConfig(false)
-                  alert('Business Plan in generazione! Riceverai una notifica quando sarà pronto.')
+                  showToast('Business Plan in generazione! Riceverai una notifica quando sarà pronto.', 'info')
                 }}
                 className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
               >
