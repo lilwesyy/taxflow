@@ -61,7 +61,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     {
       badge: { text: "Valutazione Inquadramento Fiscale", icon: FileCheck },
       title: "Partita IVA Forfettaria",
-      subtitle: "Il tuo fisco con un click",
+      subtitle: "il tuo fisco con un click",
       description: "Gestione fiscale avanzata della tua partita IVA forfettaria. Attraverso la tua dashboard controlli la tua fiscalità, monitori ed ottimizzi le tue relazioni bancarie.",
       features: ["Valutazione inquadramento fiscale", "Gestione e controllo fiscalità", "Ottimizzazione relazioni bancarie"],
       image: "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
