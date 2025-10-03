@@ -88,3 +88,6 @@ Thumbs.db
 
 # Vercel
 .vercel
+# Uploads
+backend/uploads/chat/*
+!backend/uploads/chat/.gitkeep

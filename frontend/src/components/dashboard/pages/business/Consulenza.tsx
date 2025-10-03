@@ -1,31 +1,17 @@
-import { MessageSquare, Send, Paperclip, Clock, CheckCircle, Search, Filter, Star, CreditCard, DollarSign, AlertCircle, Plus } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { MessageSquare, Clock, CheckCircle, Search, Filter, Star, CreditCard, DollarSign, AlertCircle, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import chatService, { type Message, type Consultant } from '../../../../services/chat'
 import { useAuth } from '../../../../context/AuthContext'
-
-const formatMessageTimestamp = (timestamp: string) => {
-  const date = new Date(timestamp)
-  const today = new Date()
-  const isToday = date.toDateString() === today.toDateString()
-
-  if (isToday) {
-    // Show only time for today's messages
-    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
-  } else {
-    // Show date and time for older messages
-    return date.toLocaleString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-}
+import { useToast } from '../../../../context/ToastContext'
+import MessageList from '../../../chat/shared/MessageList'
+import MessageInput from '../../../chat/shared/MessageInput'
+import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
+import type { ChatMessage } from '../../../chat/shared/types'
 
 export default function Consulenza() {
   useAuth()
+  const { showToast } = useToast()
   const [activeChat, setActiveChat] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -41,11 +27,8 @@ export default function Consulenza() {
   const [viewMode, setViewMode] = useState<'conversations' | 'consultants'>('conversations')
   const [aiConversationId, setAiConversationId] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [showPreview, setShowPreview] = useState(false)
   const [previewFile, setPreviewFile] = useState<{ url: string; filename: string; mimeType: string } | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load conversations, consultants, and AI assistant on mount
   useEffect(() => {
@@ -191,25 +174,13 @@ export default function Consulenza() {
     }
   }
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files) {
-      setSelectedFiles(Array.from(files))
-    }
-  }
-
-  const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const handleSendMessage = async () => {
-    if ((!message.trim() && selectedFiles.length === 0) || !activeChat || sending) return
+  const handleSendMessage = async (files: File[]) => {
+    if ((!message.trim() && files.length === 0) || !activeChat || sending) return
 
     const messageText = message.trim()
-    const filesToSend = [...selectedFiles]
+    const filesToSend = [...files]
 
     setMessage('') // Clear input immediately
-    setSelectedFiles([]) // Clear files
 
     try {
       setSending(true)
@@ -226,7 +197,7 @@ export default function Consulenza() {
       if (activeChat === aiConversationId) {
         // AI doesn't support attachments yet
         if (attachments.length > 0) {
-          alert('L\'AI Assistant non supporta allegati')
+          showToast('L\'AI Assistant non supporta allegati', 'warning')
           setSending(false)
           return
         }
@@ -264,7 +235,7 @@ export default function Consulenza() {
         setAiLoading(false)
       } else {
         // Regular conversation
-        const newMessage = await chatService.sendMessage(activeChat, messageText || '[File allegato]', attachments)
+        const newMessage = await chatService.sendMessage(activeChat, messageText || '', attachments)
 
         // Add message to local state
         setMessaggi((prev) => ({
@@ -289,7 +260,7 @@ export default function Consulenza() {
       }
     } catch (error) {
       console.error('Error sending message:', error)
-      alert('Errore nell\'invio del messaggio')
+      showToast('Errore nell\'invio del messaggio', 'error')
       setAiLoading(false)
     } finally {
       setSending(false)
@@ -349,7 +320,7 @@ export default function Consulenza() {
       setViewMode('conversations')
     } catch (error) {
       console.error('Error creating conversation:', error)
-      alert('Errore nella creazione della conversazione')
+      showToast('Errore nella creazione della conversazione', 'error')
     }
   }
 
@@ -376,12 +347,18 @@ export default function Consulenza() {
       }
     : conversazioni.find(conv => conv.id === activeChat)
 
-  const messaggiAttivi = activeChat ? messaggi[activeChat] || [] : []
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messaggiAttivi])
+  // Transform messages to ChatMessage format
+  const chatMessages: ChatMessage[] = activeChat
+    ? (messaggi[activeChat] || []).map((msg: Message) => ({
+        id: msg.id,
+        mittente: msg.mittente,
+        nome: msg.nome,
+        testo: msg.testo,
+        timestamp: msg.timestamp,
+        stato: msg.stato || 'sent',
+        attachments: msg.attachments
+      }))
+    : []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -637,178 +614,41 @@ export default function Consulenza() {
               </div>
 
               {/* Messaggi */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {conversazioneAttiva?.status === 'pending' ? (
-                  /* Pending conversation - show waiting message */
-                  <div className="h-full flex items-center justify-center">
-                    <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
-                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Clock className="h-8 w-8 text-yellow-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta in Attesa</h3>
-                      <p className="text-gray-600 mb-2">
-                        La tua richiesta di consulenza deve essere accettata dal consulente
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium">{conversazioneAttiva.consulente.nome}</span> riceverà una notifica e potrà accettare la tua richiesta. Riceverai una notifica quando la consulenza sarà attiva.
-                      </p>
+              {conversazioneAttiva?.status === 'pending' ? (
+                <div className="flex-1 flex items-center justify-center bg-gray-50">
+                  <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
+                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Clock className="h-8 w-8 text-yellow-600" />
                     </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta in Attesa</h3>
+                    <p className="text-gray-600 mb-2">
+                      La tua richiesta di consulenza deve essere accettata dal consulente
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <span className="font-medium">{conversazioneAttiva.consulente.nome}</span> riceverà una notifica e potrà accettare la tua richiesta. Riceverai una notifica quando la consulenza sarà attiva.
+                    </p>
                   </div>
-                ) : (
-                  /* Active conversation - show messages */
-                  <>
-                    {messaggiAttivi.map((msg: any) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.mittente === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            msg.mittente === 'user'
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-white text-gray-900 border border-gray-200'
-                          }`}
-                        >
-                          {msg.mittente === 'consulente' && (
-                            <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
-                          )}
-                          <p className="text-sm">{msg.testo}</p>
-
-                          {/* Attachments */}
-                          {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="mt-2 space-y-2">
-                              {msg.attachments.map((file: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className={`flex items-center space-x-2 p-2 rounded ${
-                                    msg.mittente === 'user' ? 'bg-primary-700' : 'bg-gray-100'
-                                  }`}
-                                >
-                                  {file.mimeType.startsWith('image/') ? (
-                                    <img
-                                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${file.url}`}
-                                      alt={file.filename}
-                                      className="h-24 w-24 object-cover rounded cursor-pointer"
-                                      onClick={() => handlePreviewFile(file)}
-                                    />
-                                  ) : (
-                                    <Paperclip className="h-4 w-4" />
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs truncate">{file.filename}</p>
-                                    <p className="text-xs opacity-75">{(file.size / 1024).toFixed(1)} KB</p>
-                                  </div>
-                                  <button
-                                    onClick={() => handleDownloadFile(file.url, file.filename)}
-                                    className={`text-xs px-2 py-1 rounded ${
-                                      msg.mittente === 'user' ? 'bg-primary-800 hover:bg-primary-900' : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                  >
-                                    Scarica
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className={`flex items-center justify-between mt-1 ${
-                            msg.mittente === 'user' ? 'text-white' : 'text-gray-500'
-                          }`}>
-                            <span className="text-xs opacity-75">{formatMessageTimestamp(msg.timestamp)}</span>
-                            {msg.mittente === 'user' && (
-                              <CheckCircle className="h-3 w-3 ml-2" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* AI Loading Indicator */}
-                    {aiLoading && activeChat === aiConversationId && (
-                      <div className="flex justify-start">
-                        <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-white text-gray-900 border border-gray-200">
-                          <div className="flex items-center space-x-2">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                            </div>
-                            <span className="text-xs text-gray-500">L'AI sta pensando...</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Scroll anchor */}
-                    <div ref={messagesEndRef} />
-                  </>
-                )}
-              </div>
+                </div>
+              ) : (
+                <MessageList
+                  messages={chatMessages}
+                  userRole="business"
+                  aiLoading={aiLoading && activeChat === aiConversationId}
+                  onPreviewFile={handlePreviewFile}
+                  onDownloadFile={handleDownloadFile}
+                />
+              )}
 
               {/* Input Messaggio */}
-              <div className="p-4 border-t border-gray-200 bg-white">
-                {/* Selected Files Preview */}
-                {selectedFiles.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center space-x-2 bg-gray-100 rounded px-3 py-2">
-                        <Paperclip className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm text-gray-700">{file.name}</span>
-                        <button
-                          onClick={() => handleRemoveFile(index)}
-                          className="text-gray-500 hover:text-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-3">
-                  {/* Hidden file input */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    multiple
-                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                    className="hidden"
-                  />
-
-                  {/* Attachment button - hide for AI conversations */}
-                  {activeChat !== aiConversationId && (
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110"
-                      disabled={conversazioneAttiva?.status === 'pending'}
-                    >
-                      <Paperclip className="h-5 w-5" />
-                    </button>
-                  )}
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    placeholder={conversazioneAttiva?.status === 'pending' ? 'In attesa di accettazione...' : 'Scrivi un messaggio al consulente...'}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                    disabled={sending || conversazioneAttiva?.status === 'pending'}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={(!message.trim() && selectedFiles.length === 0) || sending || conversazioneAttiva?.status === 'pending'}
-                    className="flex-shrink-0 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                  >
-                    <Send className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+              <MessageInput
+                message={message}
+                onMessageChange={setMessage}
+                onSendMessage={handleSendMessage}
+                disabled={conversazioneAttiva?.status === 'pending'}
+                sending={sending}
+                placeholder={conversazioneAttiva?.status === 'pending' ? 'In attesa di accettazione...' : 'Scrivi un messaggio al consulente...'}
+                showAttachments={activeChat !== aiConversationId}
+              />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -1077,7 +917,7 @@ export default function Consulenza() {
               <button
                 onClick={() => {
                   // Simulate payment processing
-                  alert('Pagamento completato con successo!')
+                  showToast('Pagamento completato con successo!', 'success')
                   setShowPaymentModal(false)
                 }}
                 className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
@@ -1179,45 +1019,15 @@ export default function Consulenza() {
       )}
 
       {/* File Preview Modal */}
-      {showPreview && previewFile && (
-        <Modal
-          isOpen={showPreview}
-          onClose={() => {
-            setShowPreview(false)
-            setPreviewFile(null)
-          }}
-          title={previewFile.filename}
-        >
-          <div className="p-6">
-            {previewFile.mimeType.startsWith('image/') ? (
-              <img
-                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${previewFile.url}`}
-                alt={previewFile.filename}
-                className="max-w-full max-h-[70vh] mx-auto rounded"
-              />
-            ) : (
-              <div className="text-center py-12">
-                <Paperclip className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Anteprima non disponibile per questo tipo di file</p>
-                <button
-                  onClick={() => handleDownloadFile(previewFile.url, previewFile.filename)}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                >
-                  Scarica File
-                </button>
-              </div>
-            )}
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => handleDownloadFile(previewFile.url, previewFile.filename)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-              >
-                Scarica
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <FilePreviewModal
+        isOpen={showPreview}
+        onClose={() => {
+          setShowPreview(false)
+          setPreviewFile(null)
+        }}
+        file={previewFile}
+        onDownload={handleDownloadFile}
+      />
     </div>
   )
 }

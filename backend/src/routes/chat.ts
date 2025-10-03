@@ -234,7 +234,7 @@ router.post('/conversations/:conversationId/messages', authenticateToken, async 
       conversationId,
       senderId: userId,
       senderRole: userRole,
-      testo: testo?.trim() || (attachments && attachments.length > 0 ? '[File allegato]' : ''),
+      testo: testo?.trim() || '',
       stato: 'sent',
       attachments: attachments || []
     })

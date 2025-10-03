@@ -4,7 +4,7 @@ export interface IMessage extends mongoose.Document {
   conversationId: mongoose.Types.ObjectId
   senderId: mongoose.Types.ObjectId
   senderRole: 'business' | 'admin'
-  testo: string
+  testo?: string
   stato: 'sent' | 'delivered' | 'read'
   attachments?: {
     filename: string
@@ -35,7 +35,7 @@ const MessageSchema = new mongoose.Schema({
   },
   testo: {
     type: String,
-    required: true,
+    required: false,
     maxlength: 5000
   },
   stato: {

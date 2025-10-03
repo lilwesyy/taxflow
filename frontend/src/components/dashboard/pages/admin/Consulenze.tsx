@@ -1,33 +1,17 @@
-import { MessageSquare, Users, Search, Filter, Clock, CheckCircle, AlertTriangle, Send, Paperclip, Star, TrendingUp, Trash2, Check, X, AlertCircle } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { MessageSquare, Users, Search, Filter, Clock, CheckCircle, AlertTriangle, Star, TrendingUp, Trash2, Check, X, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import chatService, { type Message } from '../../../../services/chat'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
+import MessageList from '../../../chat/shared/MessageList'
+import MessageInput from '../../../chat/shared/MessageInput'
+import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
+import type { ChatMessage } from '../../../chat/shared/types'
 
 type TransformedMessage = Message & {
   mittente: 'consulente' | 'cliente'
   nome: string
-}
-
-const formatMessageTimestamp = (timestamp: string) => {
-  const date = new Date(timestamp)
-  const today = new Date()
-  const isToday = date.toDateString() === today.toDateString()
-
-  if (isToday) {
-    // Show only time for today's messages
-    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
-  } else {
-    // Show date and time for older messages
-    return date.toLocaleString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 }
 
 export default function Consulenze() {
@@ -45,7 +29,8 @@ export default function Consulenze() {
   const [aiLoading, setAiLoading] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingConversation, setDeletingConversation] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewFile, setPreviewFile] = useState<{ url: string; filename: string; mimeType: string } | null>(null)
 
   // Load conversations and AI assistant on mount
   useEffect(() => {
@@ -268,17 +253,48 @@ export default function Consulenze() {
     }
   }
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !activeChat || sending) return
+  const handlePreviewFile = (file: { url: string; filename: string; mimeType: string }) => {
+    setPreviewFile(file)
+    setShowPreview(true)
+  }
+
+  const handleDownloadFile = (url: string, filename: string) => {
+    const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'
+    const downloadUrl = `${apiBaseUrl}${url}`
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    link.click()
+  }
+
+  const handleSendMessage = async (files: File[]) => {
+    if ((!message.trim() && files.length === 0) || !activeChat || sending) return
 
     const messageText = message.trim()
+    const filesToSend = [...files]
+
     setMessage('') // Clear input immediately
 
     try {
       setSending(true)
 
+      let attachments: any[] = []
+
+      // Upload files first if any
+      if (filesToSend.length > 0) {
+        const uploadedFiles = await chatService.uploadFiles(filesToSend)
+        attachments = uploadedFiles
+      }
+
       // Check if sending to AI
       if (activeChat === aiConversationId) {
+        // AI doesn't support attachments yet
+        if (attachments.length > 0) {
+          showToast('L\'AI Assistant non supporta allegati', 'warning')
+          setSending(false)
+          return
+        }
+
         // Add user message immediately
         const tempUserMessage: TransformedMessage = {
           id: `temp-user-${Date.now()}`,
@@ -324,7 +340,7 @@ export default function Consulenze() {
         setAiLoading(false)
       } else {
         // Regular conversation
-        const newMessage = await chatService.sendMessage(activeChat, messageText)
+        const newMessage = await chatService.sendMessage(activeChat, messageText || '', attachments)
 
         // Transform message to match component structure
         const transformedMessage: TransformedMessage = {
@@ -359,7 +375,7 @@ export default function Consulenze() {
       }
     } catch (error) {
       console.error('Error sending message:', error)
-      alert('Errore nell\'invio del messaggio')
+      showToast('Errore nell\'invio del messaggio', 'error')
       setAiLoading(false)
     } finally {
       setSending(false)
@@ -446,12 +462,18 @@ export default function Consulenze() {
       }
     : conversazioni.find(c => c.id === activeChat)
 
-  const messaggiAttivi = activeChat ? messaggi[activeChat] || [] : []
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messaggiAttivi])
+  // Transform messages to ChatMessage format
+  const chatMessages: ChatMessage[] = activeChat
+    ? (messaggi[activeChat] || []).map((msg: TransformedMessage) => ({
+        id: msg.id,
+        mittente: msg.mittente,
+        nome: msg.nome,
+        testo: msg.testo,
+        timestamp: msg.timestamp,
+        stato: msg.stato || 'sent',
+        attachments: msg.attachments
+      }))
+    : []
 
   if (loading) {
     return (
@@ -659,93 +681,26 @@ export default function Consulenze() {
                     </div>
                   </div>
                 ) : (
-                  /* Active conversation - show messages */
-                  <>
-                    {messaggiAttivi.map((msg: any) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.mittente === 'consulente' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            msg.mittente === 'consulente'
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-white text-gray-900 border border-gray-200'
-                          }`}
-                        >
-                          {msg.mittente === 'cliente' && (
-                            <p className="text-xs font-medium mb-1 text-gray-600">{msg.nome}</p>
-                          )}
-                          <p className="text-sm">{msg.testo}</p>
-                          <div className={`flex items-center justify-between mt-1 ${
-                            msg.mittente === 'consulente' ? 'text-white' : 'text-gray-500'
-                          }`}>
-                            <span className="text-xs opacity-75">{formatMessageTimestamp(msg.timestamp)}</span>
-                            {msg.mittente === 'consulente' && (
-                              <CheckCircle className="h-3 w-3 ml-2" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* AI Loading Indicator */}
-                    {aiLoading && activeChat === aiConversationId && (
-                      <div className="flex justify-start">
-                        <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-white text-gray-900 border border-gray-200">
-                          <div className="flex items-center space-x-2">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                            </div>
-                            <span className="text-xs text-gray-500">L'AI sta pensando...</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Scroll anchor */}
-                    <div ref={messagesEndRef} />
-                  </>
+                  <MessageList
+                    messages={chatMessages}
+                    userRole="admin"
+                    aiLoading={aiLoading && activeChat === aiConversationId}
+                    onPreviewFile={handlePreviewFile}
+                    onDownloadFile={handleDownloadFile}
+                  />
                 )}
               </div>
 
               {/* Input Messaggio */}
-              <div className="p-4 border-t border-gray-200 bg-white">
-                <div className="flex items-center space-x-3">
-                  {/* Attachment button - hide for AI conversations */}
-                  {activeChat !== aiConversationId && (
-                    <button
-                      className="flex-shrink-0 p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-110"
-                      disabled={conversazioneAttiva?.status === 'pending'}
-                    >
-                      <Paperclip className="h-5 w-5" />
-                    </button>
-                  )}
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    placeholder={conversazioneAttiva?.status === 'pending' ? 'Accetta la richiesta per inviare messaggi' : 'Scrivi una risposta al cliente...'}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                    disabled={sending || conversazioneAttiva?.status === 'pending'}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!message.trim() || sending || conversazioneAttiva?.status === 'pending'}
-                    className="flex-shrink-0 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                  >
-                    <Send className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+              <MessageInput
+                message={message}
+                onMessageChange={setMessage}
+                onSendMessage={handleSendMessage}
+                disabled={conversazioneAttiva?.status === 'pending'}
+                sending={sending}
+                placeholder={conversazioneAttiva?.status === 'pending' ? 'Accetta la richiesta per inviare messaggi' : 'Scrivi una risposta al cliente...'}
+                showAttachments={activeChat !== aiConversationId}
+              />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -861,6 +816,17 @@ export default function Consulenze() {
           </div>
         </div>
       </Modal>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={showPreview}
+        onClose={() => {
+          setShowPreview(false)
+          setPreviewFile(null)
+        }}
+        file={previewFile}
+        onDownload={handleDownloadFile}
+      />
     </div>
   )
 }

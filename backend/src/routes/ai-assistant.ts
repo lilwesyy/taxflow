@@ -183,7 +183,7 @@ router.post('/conversation/messages', authenticateToken, async (req: AuthRequest
       { role: 'system', content: systemPrompt },
       ...previousMessages.slice(0, -1).map((msg): OpenAI.Chat.ChatCompletionMessageParam => ({
         role: msg.senderRole === 'admin' ? 'assistant' : 'user',
-        content: msg.testo
+        content: msg.testo || ''
       })),
       { role: 'user', content: testo.trim() }
     ]
