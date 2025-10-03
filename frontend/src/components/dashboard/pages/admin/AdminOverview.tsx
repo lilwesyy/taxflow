@@ -1,19 +1,51 @@
-import { TrendingUp, DollarSign, Users, Brain, Building2, Eye, AlertTriangle, CheckCircle, Clock, User, Mail, Phone, Building, Calendar, FileText, Euro, MessageSquare } from 'lucide-react'
-import { useState } from 'react'
+import { TrendingUp, DollarSign, Users, Brain, Building2, Eye, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { StatsGrid } from '../../shared/StatsCard'
 import QuickActions from '../../shared/QuickActions'
-import { mockClients, mockAdminRequests } from '../../../../data/mockData'
+import { mockAdminRequests } from '../../../../data/mockData'
 import type { StatItem } from '../../shared/StatsCard'
 import type { QuickAction } from '../../shared/QuickActions'
-import type { Client } from '../../../../types/dashboard'
-import Modal from '../../../common/Modal'
+import apiService from '../../../../services/api'
+import ClientDetailModal from '../../shared/ClientDetailModal'
 
 interface AdminOverviewProps {
   onSectionChange: (section: string) => void
 }
 
 export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [clientsCount, setClientsCount] = useState(0)
+  const [pivaRequestsCount, setPivaRequestsCount] = useState(0)
+  const [recentClients, setRecentClients] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      setLoading(true)
+      const [clientsResponse, pivaResponse] = await Promise.all([
+        apiService.getClients(),
+        apiService.getPivaRequests()
+      ])
+
+      if (clientsResponse.success) {
+        setClientsCount(clientsResponse.clients.length)
+        // Get the 4 most recent clients
+        setRecentClients(clientsResponse.clients.slice(0, 4))
+      }
+
+      if (pivaResponse.success) {
+        setPivaRequestsCount(pivaResponse.requests.length)
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const closeModal = () => {
     setSelectedClient(null)
@@ -24,15 +56,19 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
   }
 
   const stats: StatItem[] = [
-    { title: 'Clienti Attivi', value: '127', change: '+8%', icon: Users, color: 'text-blue-600', trend: 'up' },
+    { title: 'Clienti Attivi', value: loading ? '...' : clientsCount.toString(), change: '+8%', icon: Users, color: 'text-blue-600', trend: 'up' },
     { title: 'Fatturato Mensile', value: '€ 45.200', change: '+15%', icon: DollarSign, color: 'text-green-600', trend: 'up' },
-    { title: 'Richieste P.IVA', value: '12', change: '+25%', icon: Building2, color: 'text-purple-600', trend: 'up' },
+    { title: 'Richieste P.IVA', value: loading ? '...' : pivaRequestsCount.toString(), change: '+25%', icon: Building2, color: 'text-purple-600', trend: 'up' },
     { title: 'Analisi Completate', value: '89', change: '+12%', icon: Brain, color: 'text-accent-600', trend: 'up' }
   ]
 
-  const recentClients = mockClients.slice(0, 4) // Show first 4 clients
-
   const pendingRequests = mockAdminRequests
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return 'N/A'
+    const d = new Date(date)
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
 
 
   const quickActions: QuickAction[] = [
@@ -66,44 +102,55 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
             </div>
           </div>
           <div className="divide-y divide-gray-200">
-            {recentClients.map((client, index) => (
-              <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                        <Users className="h-4 w-4 text-primary-600" />
+            {loading ? (
+              <div className="p-12 text-center">
+                <p className="text-gray-500">Caricamento clienti...</p>
+              </div>
+            ) : recentClients.length === 0 ? (
+              <div className="p-12 text-center">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Nessun cliente trovato</p>
+              </div>
+            ) : (
+              recentClients.map((client, index) => (
+                <div key={client.id || index} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
+                          <Users className="h-4 w-4 text-primary-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{client.nome}</p>
+                          {client.company && <p className="text-sm text-gray-500">{client.company}</p>}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{client.name || client.nome}</p>
-                        <p className="text-sm text-gray-500">{client.company}</p>
+                      <div className="flex items-center mt-2 space-x-4">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          client.status === 'active' ? 'bg-green-100 text-green-600' :
+                          client.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
+                          'bg-blue-100 text-blue-600'
+                        }`}>
+                          {client.status === 'active' ? 'Attivo' : client.status === 'pending' ? 'In attesa' : 'Nuovo'}
+                        </span>
+                        <span className="text-xs text-gray-500">P.IVA: {client.piva}</span>
+                        <span className="text-xs text-gray-500">{formatDate(client.ultimaAttivita)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center mt-2 space-x-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        client.status === 'active' ? 'bg-green-100 text-green-600' :
-                        client.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-blue-100 text-blue-600'
-                      }`}>
-                        {client.status === 'active' ? 'Attivo' : client.status === 'pending' ? 'In attesa' : 'Nuovo'}
-                      </span>
-                      <span className="text-xs text-gray-500">P.IVA: {client.piva || client.partitaIva}</span>
-                      <span className="text-xs text-gray-500">{client.lastActivity || client.ultimaAttivita}</span>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">€ {client.fatturato?.toLocaleString() || '0'}</p>
+                      <button
+                        onClick={() => setSelectedClient(client)}
+                        className="text-primary-600 hover:text-primary-700 text-sm mt-1 hover:scale-110 transition-all duration-200"
+                        title="Visualizza dettagli"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">{client.revenue || `€ ${client.fatturato?.toLocaleString() || '0'}`}</p>
-                    <button
-                      onClick={() => setSelectedClient(client)}
-                      className="text-primary-600 hover:text-primary-700 text-sm mt-1 hover:scale-110 transition-all duration-200"
-                      title="Visualizza dettagli"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -146,241 +193,18 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
       </div>
 
       {/* Client Detail Modal */}
-      <Modal
+      <ClientDetailModal
+        client={selectedClient}
         isOpen={!!selectedClient}
         onClose={closeModal}
-        title={`Dettagli Cliente - ${selectedClient?.nome}`}
-        maxWidth="6xl"
-      >
-        {selectedClient && (
-          <div className="space-y-6">
-            {/* Header con avatar e info principali */}
-            <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center">
-                    <User className="h-8 w-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{selectedClient.nome}</h3>
-                    <p className="text-primary-600 font-medium">{selectedClient.company}</p>
-                    <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-1" />
-                        {selectedClient.email}
-                      </div>
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-1" />
-                        {selectedClient.telefono}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedClient.status === 'active' ? 'bg-green-100 text-green-700' :
-                    selectedClient.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    {selectedClient.status === 'active' ? 'Attivo' :
-                     selectedClient.status === 'pending' ? 'In Attesa' : 'Nuovo'}
-                  </span>
-                  <p className="text-sm text-gray-500 mt-2">Cliente dal {selectedClient.dataRegistrazione}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Statistiche principali */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{selectedClient.consulenze}</p>
-                <p className="text-sm text-gray-600">Consulenze</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-green-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                  <Euro className="h-4 w-4 text-green-600" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">€{(selectedClient.fatturato || 0).toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Fatturato Anno</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-yellow-600" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{selectedClient.documentiForniti || 15}</p>
-                <p className="text-sm text-gray-600">Documenti</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{selectedClient.pendingRequests}</p>
-                <p className="text-sm text-gray-600">Richieste Aperte</p>
-              </div>
-            </div>
-
-            {/* Contenuto principale */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-              {/* Colonna sinistra - Informazioni */}
-              <div className="space-y-6">
-
-                {/* Dati Personali */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <User className="h-5 w-5 mr-2 text-primary-600" />
-                    Dati Personali
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Codice Fiscale:</span>
-                      <span className="text-sm font-medium">{selectedClient.codiceFiscale}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Indirizzo:</span>
-                      <span className="text-sm font-medium text-right">{selectedClient.indirizzo}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dati Aziendali */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <Building className="h-5 w-5 mr-2 text-primary-600" />
-                    Dati Aziendali
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">P.IVA:</span>
-                      <span className="text-sm font-medium">{selectedClient.piva}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Codice ATECO:</span>
-                      <span className="text-sm font-medium">{selectedClient.codiceAteco}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Regime Contabile:</span>
-                      <span className="text-sm font-medium">{selectedClient.regimeContabile || 'Forfettario'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Aliquota IVA:</span>
-                      <span className="text-sm font-medium">{selectedClient.aliquotaIva || '5%'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stato Fiscale */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-primary-600" />
-                    Stato Fiscale
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-lg font-bold text-green-600">{selectedClient.fatturePagate || 8}</p>
-                      <p className="text-xs text-green-700">Fatture Pagate</p>
-                    </div>
-                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-lg font-bold text-yellow-600">{selectedClient.fattureInAttesa || 2}</p>
-                      <p className="text-xs text-yellow-700">In Attesa</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 p-3 bg-red-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-red-700">Prossima Scadenza Tasse:</span>
-                      <span className="text-sm font-bold text-red-800">{selectedClient.prossimaTasse || '30/06/2024'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Colonna destra - Attività */}
-              <div className="space-y-6">
-
-                {/* Attività Recenti */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <Clock className="h-5 w-5 mr-2 text-primary-600" />
-                    Attività Recenti
-                  </h4>
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {(selectedClient.attivitaRecenti || [
-                      { data: '15/03/2024', azione: 'Documento caricato', dettaglio: 'Fattura elettronica Q1 2024' },
-                      { data: '10/03/2024', azione: 'Consulenza completata', dettaglio: 'Revisione dichiarazione IVA' },
-                      { data: '05/03/2024', azione: 'Pagamento ricevuto', dettaglio: 'Fattura FAT-001 - €650' }
-                    ]).map((attivita: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary-200 pl-4 pb-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{attivita.azione}</p>
-                          <span className="text-xs text-gray-500">{attivita.data}</span>
-                        </div>
-                        <p className="text-sm text-gray-600">{attivita.dettaglio}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Note del Consulente */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-primary-600" />
-                    Note del Consulente
-                  </h4>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm text-gray-700">
-                      {selectedClient.note || 'Cliente affidabile, sempre puntuale nei pagamenti. Richiede assistenza principalmente per gestione IVA trimestrale.'}
-                    </p>
-                  </div>
-                  <div className="mt-3">
-                    <button className="text-sm text-primary-600 hover:text-primary-700 font-medium hover:scale-105 transition-all duration-200">
-                      + Aggiungi nota
-                    </button>
-                  </div>
-                </div>
-
-                {/* Azioni Rapide */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4">Azioni Rapide</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button className="p-3 border border-primary-200 text-primary-600 rounded-lg hover:bg-primary-50 transition-all duration-200 text-sm font-medium flex items-center justify-center hover:scale-105 hover:shadow-sm">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Chiama Cliente
-                    </button>
-                    <button
-                      onClick={handleChatClick}
-                      className="p-3 border border-green-200 text-green-600 rounded-lg hover:bg-green-50 transition-all duration-200 text-sm font-medium flex items-center justify-center hover:scale-105 hover:shadow-sm"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Invia Messaggio
-                    </button>
-                    <button className="p-3 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 text-sm font-medium flex items-center justify-center hover:scale-105 hover:shadow-sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Crea Fattura
-                    </button>
-                    <button className="p-3 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-all duration-200 text-sm font-medium flex items-center justify-center hover:scale-105 hover:shadow-sm">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Prenota Call
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer con azioni principali */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-              <button className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-all duration-200 hover:scale-105 hover:shadow-sm">
-                Modifica Cliente
-              </button>
-              <button className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                Avvia Consulenza
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        onClientUpdated={loadStats}
+        onChatClick={handleChatClick}
+        onStartConsultation={() => {
+          // Navigate to consulenze section
+          onSectionChange('consulenze')
+        }}
+        showEditButton={false}
+      />
     </div>
   )
 }

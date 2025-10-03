@@ -34,7 +34,10 @@ export default function Impostazioni() {
     professione: 'Consulente IT',
     settoreAttivita: 'Servizi informatici',
     partitaIva: 'IT12345678901',
-    regimeFiscale: 'Forfettario'
+    regimeFiscale: 'Forfettario',
+    company: 'Mario Rossi Consulting',
+    codiceAteco: '62.02.00',
+    aliquotaIva: '22%'
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -84,6 +87,11 @@ export default function Impostazioni() {
     { id: 'system', name: 'Sistema', icon: Settings }
   ]
 
+  // Load user profile on mount
+  useEffect(() => {
+    loadUserProfile()
+  }, [])
+
   // Load sessions when security tab is active
   useEffect(() => {
     if (activeTab === 'security') {
@@ -91,6 +99,34 @@ export default function Impostazioni() {
       loadSessionTimeout()
     }
   }, [activeTab])
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await apiService.getCurrentUser()
+      if (response.success && response.user) {
+        const user = response.user
+        setProfileData({
+          nome: user.name || '',
+          email: user.email || '',
+          telefono: user.phone || '',
+          codiceFiscale: user.fiscalCode || '',
+          indirizzo: user.address || '',
+          citta: '',
+          cap: '',
+          professione: user.professionalRole || '',
+          settoreAttivita: '',
+          partitaIva: user.piva || '',
+          regimeFiscale: user.regimeContabile || 'Forfettario',
+          company: user.company || '',
+          codiceAteco: user.codiceAteco || '',
+          aliquotaIva: user.aliquotaIva || '22%'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error)
+      showToast('Errore nel caricamento del profilo', 'error')
+    }
+  }
 
   const loadSessions = async () => {
     try {
@@ -185,11 +221,27 @@ export default function Impostazioni() {
     return `${days} giorn${days === 1 ? 'o' : 'i'}`
   }
 
-  const handleSave = (section: string) => {
-    // Qui sarebbe implementata la logica per salvare le impostazioni
-    console.log(`Salvataggio impostazioni ${section}`)
-    // Mostra notifica di successo
-    showToast('Impostazioni salvate con successo!', 'success')
+  const handleSave = async (section: string) => {
+    try {
+      if (section === 'profile') {
+        await apiService.updateUserProfile({
+          name: profileData.nome,
+          email: profileData.email,
+          phone: profileData.telefono,
+          fiscalCode: profileData.codiceFiscale,
+          address: profileData.indirizzo,
+          company: profileData.company,
+          piva: profileData.partitaIva,
+          codiceAteco: profileData.codiceAteco,
+          regimeContabile: profileData.regimeFiscale,
+          aliquotaIva: profileData.aliquotaIva
+        })
+      }
+      showToast('Impostazioni salvate con successo!', 'success')
+    } catch (error: any) {
+      console.error(`Error saving ${section}:`, error)
+      showToast('Errore durante il salvataggio delle impostazioni', 'error')
+    }
   }
 
   const renderProfileTab = () => (
@@ -308,10 +360,23 @@ export default function Impostazioni() {
           </div>
         </div>
 
-        {/* Informazioni Fiscali */}
+        {/* Informazioni Aziendali */}
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <h4 className="font-medium text-gray-900 mb-4">Informazioni Fiscali</h4>
+          <h4 className="font-medium text-gray-900 mb-4">Informazioni Aziendali</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ragione Sociale / Nome Azienda
+              </label>
+              <input
+                type="text"
+                value={profileData.company}
+                onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Nome azienda o tuo nome"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Partita IVA
@@ -327,7 +392,20 @@ export default function Impostazioni() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Regime Fiscale
+                Codice ATECO
+              </label>
+              <input
+                type="text"
+                value={profileData.codiceAteco}
+                onChange={(e) => setProfileData(prev => ({ ...prev, codiceAteco: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="XX.XX.XX"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Regime Contabile
               </label>
               <select
                 value={profileData.regimeFiscale}
@@ -338,6 +416,19 @@ export default function Impostazioni() {
                 <option value="Semplificato">Regime Semplificato</option>
                 <option value="Ordinario">Regime Ordinario</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Aliquota IVA
+              </label>
+              <input
+                type="text"
+                value={profileData.aliquotaIva}
+                onChange={(e) => setProfileData(prev => ({ ...prev, aliquotaIva: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="22%"
+              />
             </div>
           </div>
         </div>

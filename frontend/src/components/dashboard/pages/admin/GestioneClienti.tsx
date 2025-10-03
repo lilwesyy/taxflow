@@ -1,8 +1,8 @@
-import { Users, Search, Filter, Eye, MessageSquare, Phone, MoreVertical, Building2, Calendar, DollarSign, ChevronLeft, ChevronRight, FileText, Euro, Clock, AlertTriangle, Building, Mail, User, UserPlus } from 'lucide-react'
+import { Users, Search, Filter, Eye, MessageSquare, Phone, MoreVertical, Building2, Calendar, DollarSign, ChevronLeft, ChevronRight, AlertTriangle, UserPlus } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import Modal from '../../../common/Modal'
 import PendingRegistrations from './PendingRegistrations'
 import apiService from '../../../../services/api'
+import ClientDetailModal from '../../shared/ClientDetailModal'
 
 interface GestioneClientiProps {
   onSectionChange?: (section: string) => void
@@ -29,6 +29,24 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
   const handleChatClick = () => {
     if (onSectionChange) {
       onSectionChange('consulenze')
+    }
+  }
+
+  const reloadClients = async () => {
+    try {
+      const response = await apiService.getClients()
+      if (response.success) {
+        setClienti(response.clients)
+        // Update selected client with new data if modal is open
+        if (selectedClient) {
+          const updatedClient = response.clients.find((c: any) => c.id === selectedClient.id)
+          if (updatedClient) {
+            setSelectedClient(updatedClient)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error reloading clients:', error)
     }
   }
 
@@ -495,217 +513,20 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
       )}
 
       {/* Client Detail Modal */}
-      <Modal
+      <ClientDetailModal
+        client={selectedClient}
         isOpen={!!selectedClient}
         onClose={closeModal}
-        title={selectedClient ? `Dettagli Cliente - ${selectedClient.nome}` : ""}
-        maxWidth="6xl"
-      >
-        {selectedClient && (
-          <div className="space-y-6">
-            {/* Header with Client Info */}
-            <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                      <User className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{selectedClient.nome}</h2>
-                      <p className="text-blue-100 mt-1">{selectedClient.email}</p>
-                      {selectedClient.telefono && (
-                        <p className="text-blue-100 text-sm mt-0.5">+39 {selectedClient.telefono}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-end space-y-2">
-                    <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl ${
-                      selectedClient.status === 'active'
-                        ? 'bg-green-500/20 text-green-100 border border-green-400/30'
-                        : selectedClient.status === 'pending'
-                        ? 'bg-yellow-500/20 text-yellow-100 border border-yellow-400/30'
-                        : 'bg-red-500/20 text-red-100 border border-red-400/30'
-                    }`}>
-                      <span className="ml-2">{selectedClient.status === 'active' ? 'Attivo' : selectedClient.status === 'pending' ? 'In Attesa' : 'Inattivo'}</span>
-                    </span>
-                    <div className="text-sm text-blue-100">
-                      <span>Cliente dal: {selectedClient.dataRegistrazione}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Consulenze</p>
-                    <p className="text-white font-semibold mt-1">{selectedClient.consulenze}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Fatturato Anno</p>
-                    <p className="text-white font-semibold mt-1">€ {selectedClient.fatturato.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Documenti</p>
-                    <p className="text-white font-semibold mt-1">{selectedClient.documentiForniti || 15}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Richieste Aperte</p>
-                    <p className="text-white font-semibold mt-1">{selectedClient.pendingRequests}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Dati Personali Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Dati Personali</h4>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Codice Fiscale</label>
-                    <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.codiceFiscale || 'Non disponibile'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Indirizzo</label>
-                    <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.indirizzo || 'Non disponibile'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dati Aziendali Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                    <Building className="h-5 w-5 text-green-600" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Dati Aziendali</h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">P.IVA</label>
-                      <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.piva}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Codice ATECO</label>
-                      <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.codiceAteco || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Regime Contabile</label>
-                      <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.regimeContabile || 'Forfettario'}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Aliquota IVA</label>
-                      <p className="mt-1 text-sm font-medium text-gray-900">{selectedClient.aliquotaIva || '5%'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stato Fiscale Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Stato Fiscale</h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-lg font-bold text-green-600">{selectedClient.fatturePagate || 0}</p>
-                      <p className="text-xs text-green-700">Fatture Pagate</p>
-                    </div>
-                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-lg font-bold text-yellow-600">{selectedClient.fattureInAttesa || 0}</p>
-                      <p className="text-xs text-yellow-700">In Attesa</p>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <label className="text-xs font-medium text-red-700 uppercase tracking-wider">Prossima Scadenza Tasse</label>
-                    <p className="mt-1 text-sm font-bold text-red-800">{selectedClient.prossimaTasse ? formatDate(selectedClient.prossimaTasse) : 'Non impostata'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attività Recenti Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Attività Recenti</h4>
-                </div>
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  {(selectedClient.attivitaRecenti && selectedClient.attivitaRecenti.length > 0) ? (
-                    selectedClient.attivitaRecenti.slice(0, 3).map((attivita: any, index: number) => (
-                      <div key={index} className="border-l-2 border-orange-200 pl-3 pb-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{attivita.action}</p>
-                          <span className="text-xs text-gray-500">{formatDate(attivita.date)}</span>
-                        </div>
-                        <p className="text-xs text-gray-600">{attivita.detail}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">Nessuna attività recente</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Note Section */}
-            {selectedClient.note && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                <div className="flex items-center space-x-2 mb-3">
-                  <FileText className="h-5 w-5 text-amber-600" />
-                  <h4 className="font-semibold text-gray-900">Note del Consulente</h4>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed">{selectedClient.note}</p>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-              <div className="flex space-x-3">
-                <button className="px-4 py-2 border border-primary-200 text-primary-600 rounded-xl hover:bg-primary-50 transition-all">
-                  <Phone className="h-4 w-4 inline mr-2" />
-                  Chiama
-                </button>
-                <button onClick={handleChatClick} className="px-4 py-2 border border-green-200 text-green-600 rounded-xl hover:bg-green-50 transition-all">
-                  <MessageSquare className="h-4 w-4 inline mr-2" />
-                  Messaggio
-                </button>
-                <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 transition-all">
-                  <FileText className="h-4 w-4 inline mr-2" />
-                  Fattura
-                </button>
-              </div>
-              <div className="flex space-x-3">
-                <button className="px-6 py-2.5 border border-primary-600 text-primary-600 font-medium rounded-xl hover:bg-primary-50 transition-all">
-                  Modifica Cliente
-                </button>
-                <button className="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-all shadow-sm hover:shadow-md">
-                  Avvia Consulenza
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
+        onClientUpdated={reloadClients}
+        onChatClick={handleChatClick}
+        onStartConsultation={() => {
+          // Navigate to consulenze section
+          if (onSectionChange) {
+            onSectionChange('consulenze')
+          }
+        }}
+        showEditButton={true}
+      />
       </>
       )}
     </div>

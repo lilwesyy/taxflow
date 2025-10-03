@@ -334,25 +334,46 @@ router.post('/conversations', authenticateToken, async (req: AuthRequest, res) =
     const userId = req.user!.userId
     const userRole = req.user!.role
 
-    if (userRole !== 'business') {
-      return res.status(403).json({ error: 'Solo i clienti possono creare nuove conversazioni' })
-    }
+    let businessUserId: string
+    let conversationAdminUserId: string | undefined
 
-    // Verify admin exists if adminUserId is provided
-    if (adminUserId) {
-      const admin = await User.findById(adminUserId)
-      if (!admin || admin.role !== 'admin') {
-        return res.status(400).json({ error: 'Consulente non valido' })
+    if (userRole === 'business') {
+      // Business user creating a conversation
+      businessUserId = userId
+      conversationAdminUserId = adminUserId || undefined
+
+      // Verify admin exists if adminUserId is provided
+      if (adminUserId) {
+        const admin = await User.findById(adminUserId)
+        if (!admin || admin.role !== 'admin') {
+          return res.status(400).json({ error: 'Consulente non valido' })
+        }
       }
+    } else if (userRole === 'admin') {
+      // Admin creating a conversation for a client
+      if (!adminUserId) {
+        return res.status(400).json({ error: 'businessUserId è richiesto quando un admin crea una conversazione' })
+      }
+
+      // Verify business user exists
+      const businessUser = await User.findById(adminUserId)
+      if (!businessUser || businessUser.role !== 'business') {
+        return res.status(400).json({ error: 'Cliente non valido' })
+      }
+
+      businessUserId = adminUserId
+      conversationAdminUserId = userId // Admin is the consultant
+    } else {
+      return res.status(403).json({ error: 'Non autorizzato a creare conversazioni' })
     }
 
     const conversation = new Conversation({
-      businessUserId: userId,
-      adminUserId: adminUserId || undefined,
+      businessUserId,
+      adminUserId: conversationAdminUserId,
       argomento,
       tipo: tipo || 'consulenza_generale',
       importo: importo || 0,
-      status: 'pending', // Always pending, admin must accept
+      status: userRole === 'admin' ? 'active' : 'pending', // Auto-accept if admin creates it
       priority: 'medium'
     })
 

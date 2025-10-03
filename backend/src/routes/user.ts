@@ -55,7 +55,7 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
       return res.status(404).json({ error: 'Utente non trovato' })
     }
 
-    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings, pivaRequestData, pivaFormSubmitted, pivaApprovalStatus } = req.body
+    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings, pivaRequestData, pivaFormSubmitted, pivaApprovalStatus, company, piva, codiceAteco, regimeContabile, aliquotaIva } = req.body
 
     // Update basic fields
     if (name !== undefined) user.name = name.trim()
@@ -66,6 +66,11 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     if (address !== undefined) user.address = address?.trim() || undefined
     if (fiscalCode !== undefined) user.fiscalCode = fiscalCode?.trim().toUpperCase() || undefined
     if (registrationNumber !== undefined) user.registrationNumber = registrationNumber?.trim() || undefined
+    if (company !== undefined) user.company = company?.trim() || undefined
+    if (piva !== undefined) user.piva = piva?.trim() || undefined
+    if (codiceAteco !== undefined) user.codiceAteco = codiceAteco?.trim() || undefined
+    if (regimeContabile !== undefined) user.regimeContabile = regimeContabile?.trim() || undefined
+    if (aliquotaIva !== undefined) user.aliquotaIva = aliquotaIva?.trim() || undefined
 
     // Update notification settings
     if (notificationSettings !== undefined) {

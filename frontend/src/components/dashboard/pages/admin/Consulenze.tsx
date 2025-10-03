@@ -163,6 +163,15 @@ export default function Consulenze() {
         ...prev,
         [conversationId]: transformed
       }))
+
+      // Update conversation list to reflect read messages (badge removal)
+      setConversazioni((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId
+            ? { ...conv, messaggiNonLetti: 0 }
+            : conv
+        )
+      )
     } catch (error) {
       console.error('Error loading messages:', error)
     }
