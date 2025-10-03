@@ -218,17 +218,17 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: TrendingUp,
       title: "Business Plan Predittivo VisionFlow",
       description: "Sistema di pianificazione strategica con analisi predittiva conforme al D.Lgs. 14/2019 per anticipare le dinamiche di mercato e garantire la crescita sostenibile.",
-      price: "€299",
-      features: ["Analisi predittiva", "Cash flow forecasting", "Scenario planning", "Alert automatici"],
+      price: "da €998",
+      features: ["Executive Summary + Obiettivo", "Analisi di mercato", "Time Series Forecasting", "Simulazione budget + Alert"],
       learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
       learnMoreText: "Leggi il D.Lgs. 14/2019 - Codice della Crisi"
     },
     {
       icon: Target,
-      title: "Analisi SWOT Evolution",
+      title: "Analisi SWOT Evolutio",
       description: "Matrice strategica avanzata per valutare punti di forza, debolezze, opportunità e minacce. Minimizza i rischi e definisci strategie vincenti sul lungo periodo.",
-      price: "€149",
-      features: ["Analisi interna/esterna", "Riduzione rischi", "Obiettivi strategici", "Roadmap evolutiva"],
+      price: "da €998",
+      features: ["Matrice 4 quadranti dinamica", "Analisi Strengths/Weaknesses", "Opportunità e Minacce", "Sintesi strategica + Azioni"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/qualita-crediti/index.html",
       learnMoreText: "Sistema ICAS Banca d'Italia"
     },
@@ -236,7 +236,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: Brain,
       title: "Consulenza Proattiva e Strategica",
       description: "Supporto continuo con metodologia proattiva per anticipare sfide fiscali, ottimizzare la gestione aziendale e migliorare le performance.",
-      price: "€99/mese",
+      price: "€170/mese",
       features: ["Monitoraggio continuo", "Ottimizzazione fiscale", "Supporto strategico", "Consulenza dedicata"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/",
       learnMoreText: "Sistema gestione garanzie Banca d'Italia"
@@ -245,8 +245,8 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: Banknote,
       title: "Assistenza Accesso al Credito Bancario",
       description: "Supporto completo per l'accesso al credito bancario con garanzia MCC L.662/96 e calcolo scoring creditizio secondo metodologia Banca d'Italia.",
-      price: "€249",
-      features: ["Garanzia MCC L.662/96", "Calcolo scoring", "Valutazione ICAS", "Preparazione documenti"],
+      price: "da €998",
+      features: ["Consulenza finanziamento ottimale", "Business plan con scoring", "Garanzia MCC L.662/96", "Conformità Banca d'Italia"],
       learnMoreUrl: "https://www.fondidigaranzia.it/",
       learnMoreText: "Info Fondo di Garanzia PMI"
     }
