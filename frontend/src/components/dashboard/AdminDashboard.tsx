@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import AdminOverview from './pages/admin/AdminOverview'
 import GestioneClienti from './pages/admin/GestioneClienti'
-import RichiestePiva from './pages/admin/RichiestePiva'
+import RichiestePivaReal from './pages/admin/RichiestePivaReal'
 import AnalisiAI from './pages/admin/AnalisiAI'
 import BusinessPlans from './pages/admin/BusinessPlans'
 import Consulenze from './pages/admin/Consulenze'
@@ -108,7 +108,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
         return <GestioneClienti onSectionChange={setActiveSection} />
 
       case 'richieste-piva':
-        return <RichiestePiva />
+        return <RichiestePivaReal />
 
       case 'analisi-ai':
         return <AnalisiAI />

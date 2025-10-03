@@ -209,7 +209,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: Building,
       title: "P.IVA Forfettari",
       description: "Apertura e gestione partita IVA forfettaria ottimizzata per massimizzare i vantaggi fiscali e prepararti all'accesso al credito bancario.",
-      price: "€199",
+      price: "€169,90",
       features: ["Setup creditizio", "Regime forfettario", "Rating optimization", "Adempimenti fiscali"],
       learnMoreUrl: "https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/dichiarazione-di-inizio-attivita-iva/infogen-dichiarazione-inizio-attivita",
       learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria"
@@ -236,7 +236,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       icon: Brain,
       title: "Consulenza Proattiva e Strategica",
       description: "Supporto continuo con metodologia proattiva per anticipare sfide fiscali, ottimizzare la gestione aziendale e migliorare le performance.",
-      price: "€170/mese",
+      price: "€170/ora",
       features: ["Monitoraggio continuo", "Ottimizzazione fiscale", "Supporto strategico", "Consulenza dedicata"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/",
       learnMoreText: "Sistema gestione garanzie Banca d'Italia"
@@ -736,7 +736,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
               I nostri servizi
             </h2>
             <p className={`text-xl text-gray-600 max-w-3xl mx-auto ${visibleSections.has('servizi') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('servizi') ? {animationDelay: '0.2s'} : {}}>
-              Tutto quello che ti serve per gestire la tua partita IVA forfettaria con standard bancari professionali
+              Tutto quello che ti serve per gestire la tua partita IVA con standard bancari professionali
             </p>
           </div>
 

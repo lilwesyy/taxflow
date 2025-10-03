@@ -33,6 +33,10 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
           pushNotifications: true,
           weeklyReport: true
         },
+        pivaRequestData: user.pivaRequestData,
+        pivaFormSubmitted: user.pivaFormSubmitted,
+        pivaApprovalStatus: user.pivaApprovalStatus,
+        registrationApprovalStatus: user.registrationApprovalStatus,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
@@ -51,7 +55,7 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
       return res.status(404).json({ error: 'Utente non trovato' })
     }
 
-    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings } = req.body
+    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings, pivaRequestData, pivaFormSubmitted, pivaApprovalStatus } = req.body
 
     // Update basic fields
     if (name !== undefined) user.name = name.trim()
@@ -67,6 +71,18 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     if (notificationSettings !== undefined) {
       user.set('notificationSettings', notificationSettings)
       user.markModified('notificationSettings')
+    }
+
+    // Update P.IVA related fields
+    if (pivaRequestData !== undefined) {
+      user.set('pivaRequestData', pivaRequestData)
+      user.markModified('pivaRequestData')
+    }
+    if (pivaFormSubmitted !== undefined) {
+      user.pivaFormSubmitted = pivaFormSubmitted
+    }
+    if (pivaApprovalStatus !== undefined) {
+      user.pivaApprovalStatus = pivaApprovalStatus
     }
 
     // Update password
@@ -110,11 +126,156 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
         fiscalCode: savedUser.fiscalCode,
         registrationNumber: savedUser.registrationNumber,
         notificationSettings: savedUser.notificationSettings,
+        pivaRequestData: savedUser.pivaRequestData,
+        pivaFormSubmitted: savedUser.pivaFormSubmitted,
+        pivaApprovalStatus: savedUser.pivaApprovalStatus,
+        registrationApprovalStatus: savedUser.registrationApprovalStatus,
         updatedAt: savedUser.updatedAt
       }
     })
   } catch (error) {
     console.error('Update user error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Get pending registration approvals (admin only)
+router.get('/pending-registrations', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    const pendingUsers = await User.find({
+      registrationApprovalStatus: 'pending',
+      role: 'business'
+    }).select('-password').sort({ createdAt: -1 })
+
+    res.json({
+      success: true,
+      users: pendingUsers
+    })
+  } catch (error) {
+    console.error('Get pending registrations error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Approve/reject registration (admin only)
+router.post('/pending-registrations/:userId/approve', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const adminUser = await User.findById(req.userId)
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    const { approved, note } = req.body
+    const targetUser = await User.findById(req.params.userId)
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    targetUser.registrationApprovalStatus = approved ? 'approved' : 'rejected'
+    if (note) {
+      targetUser.note = note
+    }
+
+    await targetUser.save()
+
+    res.json({
+      success: true,
+      message: approved ? 'Registrazione approvata. L\'utente può ora effettuare il login.' : 'Registrazione respinta',
+      user: {
+        id: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        registrationApprovalStatus: targetUser.registrationApprovalStatus
+      }
+    })
+  } catch (error) {
+    console.error('Approve registration error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Get pending P.IVA requests (admin only) - only users who submitted the form
+router.get('/piva-requests', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    const pendingUsers = await User.find({
+      pivaFormSubmitted: true,
+      pivaApprovalStatus: { $in: ['pending', null] },
+      role: 'business'
+    }).select('-password').sort({ updatedAt: -1 })
+
+    res.json({
+      success: true,
+      requests: pendingUsers
+    })
+  } catch (error) {
+    console.error('Get P.IVA requests error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Approve/reject P.IVA request (admin only)
+router.post('/piva-requests/:userId/approve', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const adminUser = await User.findById(req.userId)
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    const { approved, note } = req.body
+    const targetUser = await User.findById(req.params.userId)
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    targetUser.pivaApprovalStatus = approved ? 'approved' : 'rejected'
+    if (note) {
+      targetUser.note = note
+    }
+
+    // If approved, copy data from pivaRequestData to main user fields
+    if (approved && targetUser.pivaRequestData) {
+      const pivaData = targetUser.pivaRequestData as any
+
+      // Update main user fields from P.IVA request data
+      if (pivaData.fiscalCode) targetUser.fiscalCode = pivaData.fiscalCode
+      if (pivaData.residenceAddress) {
+        // Combine full address
+        targetUser.address = `${pivaData.residenceAddress}, ${pivaData.residenceCity} ${pivaData.residenceCAP} (${pivaData.residenceProvince})`
+      }
+      if (pivaData.codiceAteco) targetUser.codiceAteco = pivaData.codiceAteco
+      if (pivaData.businessName) targetUser.company = pivaData.businessName
+      if (pivaData.existingPivaNumber) targetUser.piva = pivaData.existingPivaNumber
+
+      // Set status to active when approved
+      targetUser.status = 'active'
+    }
+
+    await targetUser.save()
+
+    res.json({
+      success: true,
+      message: approved ? 'Richiesta P.IVA approvata. L\'utente ha ora accesso completo.' : 'Richiesta P.IVA respinta',
+      user: {
+        id: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        pivaApprovalStatus: targetUser.pivaApprovalStatus
+      }
+    })
+  } catch (error) {
+    console.error('Approve P.IVA request error:', error)
     res.status(500).json({ error: 'Errore interno del server' })
   }
 })

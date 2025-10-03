@@ -78,6 +78,9 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenziali non valide' })
     }
 
+    // Allow login for business users even if not approved yet
+    // They will see the pending screen in the frontend
+
     // Check if 2FA is enabled
     if (user.twoFactorEnabled) {
       // Return a temporary response indicating 2FA is required
@@ -121,7 +124,10 @@ router.post('/login', async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        registrationApprovalStatus: user.registrationApprovalStatus,
+        pivaFormSubmitted: user.pivaFormSubmitted,
+        pivaApprovalStatus: user.pivaApprovalStatus
       }
     })
   } catch (error) {
@@ -192,7 +198,10 @@ router.post('/login/verify-2fa', async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        registrationApprovalStatus: user.registrationApprovalStatus,
+        pivaFormSubmitted: user.pivaFormSubmitted,
+        pivaApprovalStatus: user.pivaApprovalStatus
       }
     })
   } catch (error) {
@@ -204,10 +213,14 @@ router.post('/login/verify-2fa', async (req: Request, res: Response) => {
 // Register
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, name, role = 'business' } = req.body
+    const { email, password, name, phone, role = 'business' } = req.body
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password e nome sono obbligatori' })
+    }
+
+    if (role === 'business' && !phone) {
+      return res.status(400).json({ error: 'Il numero di telefono è obbligatorio' })
     }
 
     const normalizedEmail = email.trim().toLowerCase()
@@ -235,6 +248,7 @@ router.post('/register', async (req: Request, res: Response) => {
       email: normalizedEmail,
       password,
       name: nameValidation.sanitized,
+      phone: phone?.trim() || undefined,
       role
     })
 
@@ -249,7 +263,10 @@ router.post('/register', async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        registrationApprovalStatus: user.registrationApprovalStatus,
+        pivaFormSubmitted: user.pivaFormSubmitted,
+        pivaApprovalStatus: user.pivaApprovalStatus
       }
     })
   } catch (error: any) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import LandingPage from './components/LandingPage'
 import LoginRegister from './components/LoginRegister'
+import RegistrationSuccess from './components/RegistrationSuccess'
 import Dashboard from './components/Dashboard'
 import { useAuth } from './context/AuthContext'
 
@@ -9,6 +10,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('landing')
   const [loginMode, setLoginMode] = useState(true)
   const [showLoading, setShowLoading] = useState(true)
+  const [registeredEmail, setRegisteredEmail] = useState('')
 
   // Recupera lo stato di login dal AuthContext
   useEffect(() => {
@@ -40,6 +42,11 @@ function App() {
   const showRegisterPage = () => {
     setLoginMode(false)
     setCurrentPage('login')
+  }
+
+  const showRegistrationSuccess = (email: string) => {
+    setRegisteredEmail(email)
+    setCurrentPage('registration-success')
   }
 
   const showLandingPage = () => {
@@ -77,7 +84,11 @@ function App() {
   }
 
   if (currentPage === 'login') {
-    return <LoginRegister onBack={showLandingPage} onLogin={handleLogin} initialMode={loginMode} />
+    return <LoginRegister onBack={showLandingPage} onLogin={handleLogin} onRegistrationSuccess={showRegistrationSuccess} initialMode={loginMode} />
+  }
+
+  if (currentPage === 'registration-success') {
+    return <RegistrationSuccess userEmail={registeredEmail} onBackToLogin={showLoginPage} />
   }
 
   return <LandingPage onShowLogin={showLoginPage} onShowRegister={showRegisterPage} />

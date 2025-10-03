@@ -7,10 +7,11 @@ import { useToast } from '../context/ToastContext'
 interface LoginRegisterProps {
   onBack: () => void
   onLogin: () => void
+  onRegistrationSuccess?: (email: string) => void
   initialMode?: boolean
 }
 
-export default function LoginRegister({ onBack, onLogin, initialMode = true }: LoginRegisterProps) {
+export default function LoginRegister({ onBack, onLogin, onRegistrationSuccess, initialMode = true }: LoginRegisterProps) {
   const { login } = useAuth()
   const { showToast } = useToast()
   const [isLogin, setIsLogin] = useState(initialMode)
@@ -25,7 +26,7 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    company: ''
+    phone: ''
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +111,7 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
             email: formData.email,
             password: formData.password,
             name: `${formData.firstName} ${formData.lastName}`.trim(),
+            phone: formData.phone,
             role: 'business'
           })
         })
@@ -119,10 +121,13 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
           throw new Error(error.error || 'Registration failed')
         }
 
-        // Dopo la registrazione, fai il login
-        await login(formData.email, formData.password)
-        showToast('Registrazione completata con successo', 'success')
-        onLogin()
+        // Reindirizza alla pagina di successo
+        if (onRegistrationSuccess) {
+          onRegistrationSuccess(formData.email)
+        } else {
+          showToast('Registrazione completata! Verrai contattato da un consulente entro 24-48 ore.', 'success')
+          setIsLogin(true)
+        }
       }
     } catch (error: any) {
       showToast(error.message || 'Si è verificato un errore', 'error')
@@ -261,27 +266,10 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
               </div>
             )}
 
-            {!isLogin && (
-              <div className="animate-fade-in-up" style={{animationDelay: '0.1s'}}>
-                <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
-                  Azienda (opzionale)
-                </label>
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  value={formData.company}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
-                  placeholder="La mia azienda"
-                />
-              </div>
-            )}
-
             {/* Email field */}
-            <div className="animate-fade-in-up" style={{animationDelay: isLogin ? '0s' : '0.2s'}}>
+            <div className="animate-fade-in-up" style={{animationDelay: isLogin ? '0s' : '0.1s'}}>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                Email *
               </label>
               <input
                 id="email"
@@ -294,6 +282,25 @@ export default function LoginRegister({ onBack, onLogin, initialMode = true }: L
                 placeholder="mario.rossi@email.com"
               />
             </div>
+
+            {/* Phone field (only for registration) */}
+            {!isLogin && (
+              <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Numero di Telefono *
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required={!isLogin}
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                  placeholder="+39 123 456 7890"
+                />
+              </div>
+            )}
 
             {/* Password field */}
             <div className="animate-fade-in-up" style={{animationDelay: isLogin ? '0.1s' : '0.3s'}}>

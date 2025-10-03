@@ -5,6 +5,10 @@ interface User {
   email: string
   name: string
   role: 'business' | 'admin'
+  registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'
+  pivaFormSubmitted?: boolean
+  pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'
+  pivaRequestData?: any
 }
 
 interface LoginResponse {

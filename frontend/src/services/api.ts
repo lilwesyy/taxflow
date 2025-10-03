@@ -438,6 +438,81 @@ class ApiService {
 
     return response.json()
   }
+
+  // Registration Approvals
+  async getPendingRegistrations() {
+    const response = await fetch(`${API_BASE_URL}/user/pending-registrations`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get pending registrations')
+    }
+
+    return response.json()
+  }
+
+  async approveRegistration(userId: string, approved: boolean, note?: string) {
+    const response = await fetch(`${API_BASE_URL}/user/pending-registrations/${userId}/approve`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ approved, note })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to approve registration')
+    }
+
+    return response.json()
+  }
+
+  // P.IVA Requests
+  async getPivaRequests() {
+    const response = await fetch(`${API_BASE_URL}/user/piva-requests`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get P.IVA requests')
+    }
+
+    return response.json()
+  }
+
+  async approvePivaRequest(userId: string, approved: boolean, note?: string) {
+    const response = await fetch(`${API_BASE_URL}/user/piva-requests/${userId}/approve`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ approved, note })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to approve request')
+    }
+
+    return response.json()
+  }
+
+  async updateUserProfile(data: any) {
+    const response = await fetch(`${API_BASE_URL}/user/update`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update profile')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()

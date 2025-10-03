@@ -21,7 +21,11 @@ const adminMiddleware = async (req: AuthRequest, res: Response, next: Function) 
 // Get all clients (business users) - Admin only
 router.get('/list', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const clients = await User.find({ role: 'business' })
+    const clients = await User.find({
+      role: 'business',
+      registrationApprovalStatus: 'approved',
+      pivaApprovalStatus: 'approved'
+    })
       .select('-password -twoFactorSecret')
       .sort({ createdAt: -1 })
 

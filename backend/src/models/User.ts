@@ -26,7 +26,49 @@ interface IUser extends mongoose.Document {
   regimeContabile?: 'Forfettario' | 'Ordinario' | 'Semplificato'
   aliquotaIva?: string
   fatturato?: number
-  status?: 'active' | 'pending' | 'new' | 'inactive'
+  status?: 'active' | 'pending' | 'new' | 'inactive' | 'rejected'
+
+  // Two-step approval process
+  registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'  // First approval: can login
+  pivaFormSubmitted?: boolean  // Has submitted P.IVA form
+  pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'  // Second approval: full access
+
+  // P.IVA Request Data
+  pivaRequestData?: {
+    // Dati Anagrafici
+    firstName: string
+    lastName: string
+    dateOfBirth: string
+    placeOfBirth: string
+    fiscalCode: string
+    residenceAddress: string
+    residenceCity: string
+    residenceCAP: string
+    residenceProvince: string
+
+    // Dati Attività
+    businessActivity: string
+    codiceAteco: string
+    businessName?: string
+    businessAddress?: string
+    businessCity?: string
+    businessCAP?: string
+    businessProvince?: string
+
+    // Regime Fiscale
+    expectedRevenue: number
+    hasOtherIncome: boolean
+    otherIncomeDetails?: string
+
+    // Documenti
+    hasIdentityDocument: boolean
+    hasFiscalCode: boolean
+
+    // Note aggiuntive
+    additionalNotes?: string
+
+    submittedAt: Date
+  }
   pendingRequests?: number
   consulenze?: number
   fatturePagate?: number
@@ -74,6 +116,40 @@ const UserSchema = new mongoose.Schema({
   aliquotaIva: { type: String, default: '5%' },
   fatturato: { type: Number, default: 0 },
   status: { type: String, enum: ['active', 'pending', 'new', 'inactive'], default: 'new' },
+
+  // Two-step approval process
+  registrationApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  pivaFormSubmitted: { type: Boolean, default: false },
+  pivaApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'] },
+
+  // P.IVA Request Data
+  pivaRequestData: {
+    hasExistingPiva: Boolean,
+    existingPivaNumber: String,
+    firstName: String,
+    lastName: String,
+    dateOfBirth: String,
+    placeOfBirth: String,
+    fiscalCode: String,
+    residenceAddress: String,
+    residenceCity: String,
+    residenceCAP: String,
+    residenceProvince: String,
+    businessActivity: String,
+    codiceAteco: String,
+    businessName: String,
+    businessAddress: String,
+    businessCity: String,
+    businessCAP: String,
+    businessProvince: String,
+    expectedRevenue: Number,
+    hasOtherIncome: Boolean,
+    otherIncomeDetails: String,
+    hasIdentityDocument: Boolean,
+    hasFiscalCode: Boolean,
+    additionalNotes: String,
+    submittedAt: Date
+  },
   pendingRequests: { type: Number, default: 0 },
   consulenze: { type: Number, default: 0 },
   fatturePagate: { type: Number, default: 0 },
