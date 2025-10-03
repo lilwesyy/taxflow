@@ -726,82 +726,84 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             </p>
           </div>
 
-          {/* Carousel Container */}
+          {/* Infinite Carousel Container */}
           <div className="relative">
             {/* Navigation Buttons */}
             <button
-              onClick={() => setCurrentService((prev) => (prev === 0 ? services.length - 1 : prev - 1))}
+              onClick={() => setCurrentService((prev) => prev - 1)}
               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
-              aria-label="Servizio precedente"
+              aria-label="Scorri a sinistra"
             >
               <ChevronLeft className="h-6 w-6 text-gray-700" />
             </button>
 
             <button
-              onClick={() => setCurrentService((prev) => (prev === services.length - 1 ? 0 : prev + 1))}
+              onClick={() => setCurrentService((prev) => prev + 1)}
               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
-              aria-label="Servizio successivo"
+              aria-label="Scorri a destra"
             >
               <ChevronRight className="h-6 w-6 text-gray-700" />
             </button>
 
-            {/* Services Carousel */}
+            {/* Infinite Scrolling Services */}
             <div className="overflow-hidden">
               <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentService * 100}%)` }}
+                className="flex transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(calc(-${(currentService % services.length) * (100 / 3)}% - ${currentService * 2}rem))` }}
               >
-                {services.map((service, index) => {
+                {/* Render services 3 times for infinite effect */}
+                {[...services, ...services, ...services].map((service, index) => {
                   const Icon = service.icon
-                  const isPopular = index === 1 // Second service is most popular
+                  const actualIndex = index % services.length
+                  const isPopular = actualIndex === 1 // Second service is most popular
                   return (
                     <div
                       key={index}
-                      className="w-full flex-shrink-0 px-4"
+                      className="w-full md:w-1/3 flex-shrink-0 px-4"
                     >
                       <div
-                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-8 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative max-w-2xl mx-auto`}
+                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-6 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative h-full`}
                       >
                         {/* Popular Badge */}
                         {isPopular && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-gradient-to-r from-primary-600 to-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                            <div className="bg-gradient-to-r from-primary-600 to-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
                               <Star className="h-3 w-3 inline mr-1" />
                               Più Popolare
                             </div>
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between mb-6">
-                          <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-16 h-16 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
-                            <Icon className="h-8 w-8 text-primary-600" />
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-12 h-12 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
+                            <Icon className="h-6 w-6 text-primary-600" />
                           </div>
                           <div className="text-right">
-                            <div className={`text-3xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
+                            <div className={`text-xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
                             {isPopular && (
-                              <div className="text-xs text-green-600 font-medium">Miglior Valore</div>
+                              <div className="text-xs text-green-600 font-medium">Best Value</div>
                             )}
                           </div>
                         </div>
 
-                        <h3 className={`text-2xl font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-4`}>{service.title}</h3>
-                        <p className="text-gray-600 mb-8 leading-relaxed text-lg">{service.description}</p>
+                        <h3 className={`text-lg font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-3`}>{service.title}</h3>
+                        <p className="text-gray-600 mb-4 leading-relaxed text-sm">{service.description}</p>
 
-                        <div className="space-y-3 mb-8">
+                        <div className="space-y-2 mb-4">
                           {service.features.map((feature, featureIndex) => (
                             <div key={featureIndex} className="flex items-center text-gray-700">
-                              <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                              <span className="text-base">{feature}</span>
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                              <span className="text-sm">{feature}</span>
                             </div>
                           ))}
                         </div>
 
                         {/* Guarantee Badge */}
-                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                           <div className="flex items-center">
-                            <Shield className="h-5 w-5 text-green-600 mr-2" />
-                            <span className="text-green-800 font-medium">
-                              {isPopular ? '60 giorni soddisfatto o rimborsato' : 'Garanzia qualità'}
+                            <Shield className="h-4 w-4 text-green-600 mr-2" />
+                            <span className="text-green-800 font-medium text-xs">
+                              {isPopular ? '60gg soddisfatto o rimborsato' : 'Garanzia qualità'}
                             </span>
                           </div>
                         </div>
@@ -810,11 +812,11 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                           href={service.learnMoreUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`inline-flex items-center ${isPopular ? 'text-primary-700 hover:text-primary-800' : 'text-primary-600 hover:text-primary-700'} font-medium group-hover:underline`}
+                          className={`inline-flex items-center ${isPopular ? 'text-primary-700 hover:text-primary-800' : 'text-primary-600 hover:text-primary-700'} font-medium text-sm group-hover:underline`}
                           title={service.learnMoreText}
                         >
                           Scopri di più
-                          <ExternalLink className="h-4 w-4 ml-1" />
+                          <ExternalLink className="h-3 w-3 ml-1" />
                         </a>
                       </div>
                     </div>
@@ -823,14 +825,14 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
               </div>
             </div>
 
-            {/* Dots Indicator */}
-            <div className="flex justify-center mt-8 space-x-2">
+            {/* Progress Indicator */}
+            <div className="flex justify-center mt-6 space-x-2">
               {services.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentService(index)}
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    index === currentService
+                    (currentService % services.length) === index
                       ? 'w-8 bg-primary-600'
                       : 'w-2 bg-gray-300 hover:bg-gray-400'
                   }`}
