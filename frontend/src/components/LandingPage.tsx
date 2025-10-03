@@ -61,7 +61,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     {
       badge: { text: "Valutazione Inquadramento Fiscale", icon: FileCheck },
       title: "Partita IVA Forfettaria",
-      subtitle: "il tuo fisco con un click",
+      subtitle: "il tuo | fisco con un click",
       description: "Gestione fiscale avanzata della tua partita IVA forfettaria. Attraverso la tua dashboard controlli la tua fiscalità, monitori ed ottimizzi le tue relazioni bancarie.",
       features: ["Valutazione inquadramento fiscale", "Gestione e controllo fiscalità", "Ottimizzazione relazioni bancarie"],
       image: "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -472,11 +472,23 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                           {banner.title}
                           <br />
-                          <span className="text-blue-600">{banner.subtitle.split(' ')[0]}</span>
-                          <br />
-                          <span className="text-gray-600 text-2xl md:text-3xl lg:text-4xl">
-                            {banner.subtitle.split(' ').slice(1).join(' ')}
-                          </span>
+                          {banner.subtitle.includes('|') ? (
+                            <>
+                              <span className="text-blue-600">{banner.subtitle.split('|')[0].trim()}</span>
+                              <br />
+                              <span className="text-gray-600 text-2xl md:text-3xl lg:text-4xl">
+                                {banner.subtitle.split('|')[1].trim()}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-blue-600">{banner.subtitle.split(' ')[0]}</span>
+                              <br />
+                              <span className="text-gray-600 text-2xl md:text-3xl lg:text-4xl">
+                                {banner.subtitle.split(' ').slice(1).join(' ')}
+                              </span>
+                            </>
+                          )}
                         </h1>
 
                         <p className="text-lg text-gray-600 mb-6 leading-relaxed max-w-2xl mx-auto lg:mx-0">
