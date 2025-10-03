@@ -59,15 +59,15 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
   // Banner data for carousel
   const banners = [
     {
-      badge: { text: "Metodologia Polyvis", icon: Award },
+      badge: { text: "Valutazione Inquadramento Fiscale", icon: FileCheck },
       title: "Partita IVA Forfettaria",
-      subtitle: "che migliora il tuo rating",
-      description: "Gestione fiscale avanzata con conformità normativa D.Lgs. 14/2019 e preparazione al credito bancario. Metodologia Banca d'Italia per ottimizzare le tue relazioni bancarie.",
-      features: ["Setup creditizio", "Basel III compliant", "Rating optimization"],
+      subtitle: "Il tuo fisco con un click",
+      description: "Gestione fiscale avanzata della tua partita IVA forfettaria. Attraverso la tua dashboard controlli la tua fiscalità, monitori ed ottimizzi le tue relazioni bancarie.",
+      features: ["Valutazione inquadramento fiscale", "Gestione e controllo fiscalità", "Ottimizzazione relazioni bancarie"],
       image: "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
       floatingCards: {
-        top: { icon: TrendingUp, title: "Rating +15%", subtitle: "Media clienti", color: "green" },
-        bottom: { icon: Shield, title: "Basel III", subtitle: "Compliant", color: "blue" }
+        top: { icon: FileCheck, title: "Fiscalità", subtitle: "Sotto controllo", color: "green" },
+        bottom: { icon: BarChart3, title: "Relazioni", subtitle: "Bancarie ottimizzate", color: "blue" }
       }
     },
     {
