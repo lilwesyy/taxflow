@@ -714,9 +714,9 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       <section
         id="servizi"
         ref={setSectionRef('servizi')}
-        className="py-20 bg-white"
+        className="py-20 bg-white overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-4xl font-bold text-gray-900 mb-4 ${visibleSections.has('servizi') ? 'animate-fade-in-up' : 'opacity-0'}`}>
               I nostri servizi
@@ -727,11 +727,11 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
           </div>
 
           {/* Infinite Carousel Container */}
-          <div className="relative">
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
             {/* Navigation Buttons */}
             <button
               onClick={() => setCurrentService((prev) => prev - 1)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
               aria-label="Scorri a sinistra"
             >
               <ChevronLeft className="h-6 w-6 text-gray-700" />
@@ -739,17 +739,17 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
 
             <button
               onClick={() => setCurrentService((prev) => prev + 1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
               aria-label="Scorri a destra"
             >
               <ChevronRight className="h-6 w-6 text-gray-700" />
             </button>
 
             {/* Infinite Scrolling Services */}
-            <div className="overflow-hidden">
+            <div className="overflow-hidden px-4 sm:px-6 lg:px-8">
               <div
                 className="flex transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(calc(-${(currentService % services.length) * (100 / 3)}% - ${currentService * 2}rem))` }}
+                style={{ transform: `translateX(calc(-${(currentService % services.length) * (100 / 3)}% - ${currentService * 1.5}rem))` }}
               >
                 {/* Render services 3 times for infinite effect */}
                 {[...services, ...services, ...services].map((service, index) => {
@@ -759,7 +759,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                   return (
                     <div
                       key={index}
-                      className="w-full md:w-1/3 flex-shrink-0 px-4"
+                      className="w-full md:w-1/3 flex-shrink-0 px-2 md:px-3"
                     >
                       <div
                         className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-6 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative h-full`}
