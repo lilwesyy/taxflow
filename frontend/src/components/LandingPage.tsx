@@ -208,9 +208,20 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     {
       icon: Building,
       title: "P.IVA Forfettari",
-      description: "Apertura e gestione partita IVA forfettaria ottimizzata per massimizzare i vantaggi fiscali e prepararti all'accesso al credito bancario.",
-      price: "€169,90",
-      features: ["Setup creditizio", "Regime forfettario", "Rating optimization", "Adempimenti fiscali"],
+      description: "Apertura e gestione partita IVA forfettaria. Dashboard integrata con il tuo cassetto fiscale e previdenziale (INPS-INAIL) gratis.",
+      price: "€129,90",
+      originalPrice: "€169,90",
+      discount: "Offerta lancio fino al 31/12/2025",
+      features: [
+        "Setup creditizio",
+        "Regime forfettario",
+        "Rating optimization",
+        "Adempimenti fiscali"
+      ],
+      paymentOptions: [
+        "Abbonamento annuale €368,90 (pagamento unico)",
+        "Oppure €35/mese (pagamento mensile automatico)"
+      ],
       learnMoreUrl: "https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/dichiarazione-di-inizio-attivita-iva/infogen-dichiarazione-inizio-attivita",
       learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria"
     },
@@ -776,7 +787,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                       className="w-full md:w-1/3 flex-shrink-0 px-2 md:px-3"
                     >
                       <div
-                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-6 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative h-full`}
+                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-6 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative h-full flex flex-col`}
                       >
                         {/* Popular Badge */}
                         {isPopular && (
@@ -788,28 +799,57 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-12 h-12 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
-                            <Icon className="h-6 w-6 text-primary-600" />
-                          </div>
-                          <div className="text-right">
-                            <div className={`text-xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
-                            {isPopular && (
-                              <div className="text-xs text-green-600 font-medium">Best Value</div>
-                            )}
-                          </div>
-                        </div>
-
-                        <h3 className={`text-lg font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-3`}>{service.title}</h3>
-                        <p className="text-gray-600 mb-4 leading-relaxed text-sm">{service.description}</p>
-
-                        <div className="space-y-2 mb-4">
-                          {service.features.map((feature, featureIndex) => (
-                            <div key={featureIndex} className="flex items-center text-gray-700">
-                              <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                              <span className="text-sm">{feature}</span>
+                        <div className="flex-grow">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-12 h-12 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
+                              <Icon className="h-6 w-6 text-primary-600" />
                             </div>
-                          ))}
+                            <div className="text-right">
+                              {service.originalPrice && (
+                                <div className="text-sm text-gray-400 line-through">{service.originalPrice}</div>
+                              )}
+                              <div className={`text-xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
+                              {service.discount && (
+                                <div className="text-xs text-red-600 font-medium">{service.discount}</div>
+                              )}
+                              {isPopular && !service.discount && (
+                                <div className="text-xs text-green-600 font-medium">Best Value</div>
+                              )}
+                            </div>
+                          </div>
+
+                          <h3 className={`text-lg font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-3`}>{service.title}</h3>
+                          <p className="text-gray-600 mb-4 leading-relaxed text-sm">{service.description}</p>
+
+                          {service.title === "P.IVA Forfettari" && (
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <p className="text-blue-800 font-medium text-xs">
+                                Se ti abboni oggi pagherai il secondo anno al 31/12/2026
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="space-y-2 mb-4">
+                            {service.features.map((feature, featureIndex) => (
+                              <div key={featureIndex} className="flex items-center text-gray-700">
+                                <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                <span className="text-sm">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Payment Options */}
+                          {service.paymentOptions && (
+                            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <div className="space-y-1">
+                                {service.paymentOptions.map((option, idx) => (
+                                  <p key={idx} className="text-amber-900 text-xs font-medium">
+                                    {option}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Guarantee Badge */}
@@ -817,7 +857,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                           <div className="flex items-center">
                             <Shield className="h-4 w-4 text-green-600 mr-2" />
                             <span className="text-green-800 font-medium text-xs">
-                              {isPopular ? '60gg soddisfatto o rimborsato' : 'Garanzia qualità'}
+                              60gg soddisfatto o rimborsato
                             </span>
                           </div>
                         </div>
@@ -826,7 +866,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                           href={service.learnMoreUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`inline-flex items-center ${isPopular ? 'text-primary-700 hover:text-primary-800' : 'text-primary-600 hover:text-primary-700'} font-medium text-sm group-hover:underline`}
+                          className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm group-hover:underline"
                           title={service.learnMoreText}
                         >
                           Scopri di più
