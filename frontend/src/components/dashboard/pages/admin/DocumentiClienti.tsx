@@ -3,10 +3,10 @@ import {
   Trash2, FolderOpen, Building, Receipt, DollarSign, FileCheck, BookOpen,
   Eye, Upload, Users, TrendingUp, Maximize2
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
-import dummyPdf from '../../../../assets/dummy-pdf_2.pdf'
+import api from '../../../../services/api'
 
 export default function DocumentiClienti() {
   const { showToast } = useToast()
@@ -19,294 +19,237 @@ export default function DocumentiClienti() {
   const [selectedCliente, setSelectedCliente] = useState('all')
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false)
   const [pdfUrl, setPdfUrl] = useState('')
+  const [currentPdfDocument, setCurrentPdfDocument] = useState<any>(null)
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [documentsFromApi, setDocumentsFromApi] = useState<any[]>([])
+  const [clientsFromApi, setClientsFromApi] = useState<any[]>([])
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null)
 
   const [uploadForm, setUploadForm] = useState({
     nome: '',
     tipo: 'modello_redditi',
     descrizione: '',
     categoria: 'dichiarazioni',
+    anno: new Date().getFullYear().toString(),
+    protocollo: '',
+    importo: '',
+    note: '',
     cliente: '',
     file: null as File | null
   })
 
-  // Lista clienti
-  const clienti = [
+  // Load data from API
+  useEffect(() => {
+    loadClients()
+    loadDocuments()
+  }, [])
+
+  useEffect(() => {
+    // Reload documents when client filter changes
+    loadDocuments()
+  }, [selectedCliente])
+
+  const loadClients = async () => {
+    try {
+      const response = await api.getClients()
+      const clients = response.clients || []
+      setClientsFromApi(clients.map((c: any) => ({
+        id: c.id,
+        nome: c.nome,
+        azienda: c.company || 'N/A',
+        piva: c.piva || 'N/A',
+        email: c.email
+      })))
+    } catch (error: any) {
+      console.error('Error loading clients:', error)
+      showToast(error.message || 'Errore nel caricamento dei clienti', 'error')
+    }
+  }
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true)
+      const filters: any = {}
+      if (selectedCliente !== 'all') {
+        filters.clientId = selectedCliente
+      }
+      const response = await api.getDocuments(filters)
+      setDocumentsFromApi(response.documents || [])
+    } catch (error: any) {
+      console.error('Error loading documents:', error)
+      showToast(error.message || 'Errore nel caricamento dei documenti', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOpenUploadModal = () => {
+    // Genera nome documento basato sulla categoria e data
+    const categoryName = tabs.find(t => t.id === activeTab)?.name || 'Documento'
+    const today = new Date()
+    const formattedDate = today.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const documentName = `${categoryName} - ${formattedDate}`
+
+    // Precompila il form con cliente selezionato e categoria attiva
+    setUploadForm({
+      nome: documentName,
+      tipo: 'modello_redditi',
+      descrizione: '',
+      categoria: activeTab, // Precompila con la tab attiva
+      anno: new Date().getFullYear().toString(),
+      protocollo: '',
+      importo: '',
+      note: '',
+      cliente: selectedCliente !== 'all' ? selectedCliente : '', // Precompila con il cliente selezionato
+      file: null
+    })
+    setIsUploadModalOpen(true)
+  }
+
+  // Lista clienti - dummy fallback
+  const clientiDummy = [
     { id: '1', nome: 'Mario Rossi', azienda: 'Rossi Consulting', piva: '12345678901' },
     { id: '2', nome: 'Laura Bianchi', azienda: 'Bianchi Design', piva: '23456789012' },
     { id: '3', nome: 'Giuseppe Verdi', azienda: 'Verdi Solutions', piva: '34567890123' },
     { id: '4', nome: 'Anna Neri', azienda: 'Neri Marketing', piva: '45678901234' }
   ]
 
-  // Documenti organizzati per categoria (Cassetto Fiscale AdE) - per tutti i clienti
-  const documentiTotali = {
-    dichiarazioni: [
-      {
-        id: 'dich-001',
-        nome: 'Modello Redditi PF 2025',
+  const clienti = clientsFromApi.length > 0 ? clientsFromApi : clientiDummy
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!uploadForm.file) {
+      showToast('Seleziona un file da caricare', 'error')
+      return
+    }
+
+    if (!uploadForm.cliente) {
+      showToast('Seleziona un cliente', 'error')
+      return
+    }
+
+    try {
+      setUploading(true)
+
+      const formData = new FormData()
+      formData.append('file', uploadForm.file)
+      formData.append('nome', uploadForm.nome)
+      formData.append('tipo', uploadForm.tipo)
+      formData.append('categoria', uploadForm.categoria)
+      formData.append('anno', uploadForm.anno)
+      formData.append('clientId', uploadForm.cliente) // Admin uploads for specific client
+      if (uploadForm.descrizione) formData.append('descrizione', uploadForm.descrizione)
+      if (uploadForm.protocollo) formData.append('protocollo', uploadForm.protocollo)
+      if (uploadForm.importo) formData.append('importo', uploadForm.importo)
+      if (uploadForm.note) formData.append('note', uploadForm.note)
+
+      await api.uploadDocument(formData)
+      showToast('Documento caricato con successo!', 'success')
+      setIsUploadModalOpen(false)
+      setUploadForm({
+        nome: '',
         tipo: 'modello_redditi',
-        formato: 'PDF',
-        dimensione: '2.4 MB',
-        anno: '2025',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '15/03/2025',
-        status: 'elaborato',
-        descrizione: 'Dichiarazione dei redditi persone fisiche anno 2025',
-        protocollo: 'DR202500123456',
-        fileUrl: dummyPdf,
-        note: 'Presentata telematicamente all\'Agenzia delle Entrate',
-        cronologia: [
-          { data: '15/03/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' },
-          { data: '16/03/2025', azione: 'Ricevuta protocollata', utente: 'Agenzia Entrate' }
-        ]
-      },
-      {
-        id: 'dich-002',
-        nome: 'Modello Redditi PF 2025',
-        tipo: 'modello_redditi',
-        formato: 'PDF',
-        dimensione: '2.1 MB',
-        anno: '2025',
-        clienteId: '2',
-        cliente: { nome: 'Laura Bianchi', azienda: 'Bianchi Design' },
-        dataCaricamento: '18/03/2025',
-        status: 'in_elaborazione',
-        descrizione: 'Dichiarazione dei redditi persone fisiche anno 2025',
-        protocollo: null,
-        note: 'In fase di compilazione',
-        cronologia: [
-          { data: '18/03/2025', azione: 'Bozza creata', utente: 'Dr. Marco Bianchi' }
-        ]
-      },
-      {
-        id: 'dich-003',
-        nome: 'Dichiarazione IVA Annuale 2024',
-        tipo: 'dichiarazione_iva',
-        formato: 'PDF',
-        dimensione: '1.5 MB',
-        anno: '2024',
-        clienteId: '3',
-        cliente: { nome: 'Giuseppe Verdi', azienda: 'Verdi Solutions' },
-        dataCaricamento: '25/02/2025',
-        status: 'elaborato',
-        descrizione: 'Dichiarazione IVA annuale anno 2024',
-        protocollo: 'IVA202400567890',
-        note: 'Regime forfettario - esente IVA',
-        cronologia: [
-          { data: '25/02/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' }
-        ]
-      }
-    ],
-    fatturazione: [
-      {
-        id: 'fatt-001',
-        nome: 'Fattura Elettronica FE0012025',
-        tipo: 'fattura_elettronica',
-        formato: 'XML',
-        dimensione: '24 KB',
-        anno: '2025',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Fattura n. 001/2025 - Cliente XYZ SRL',
-        protocollo: 'SDI2025001234567',
-        importo: '€ 1.500,00',
-        note: 'Inviata tramite Sistema di Interscambio',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Fattura emessa', utente: 'Mario Rossi' },
-          { data: '10/01/2025', azione: 'Inviata a SDI', utente: 'Sistema' }
-        ]
-      },
-      {
-        id: 'fatt-002',
-        nome: 'Fattura Elettronica FE0052025',
-        tipo: 'fattura_elettronica',
-        formato: 'XML',
-        dimensione: '22 KB',
-        anno: '2025',
-        clienteId: '2',
-        cliente: { nome: 'Laura Bianchi', azienda: 'Bianchi Design' },
-        dataCaricamento: '15/01/2025',
-        status: 'elaborato',
-        descrizione: 'Fattura n. 005/2025 - Cliente ABC SRL',
-        protocollo: 'SDI2025005678901',
-        importo: '€ 2.300,00',
-        note: 'Inviata tramite SDI',
-        cronologia: [
-          { data: '15/01/2025', azione: 'Fattura emessa', utente: 'Laura Bianchi' }
-        ]
-      },
-      {
-        id: 'fatt-003',
-        nome: 'Corrispettivi Gennaio 2025',
-        tipo: 'corrispettivi',
-        formato: 'XML',
-        dimensione: '45 KB',
-        anno: '2025',
-        clienteId: '4',
-        cliente: { nome: 'Anna Neri', azienda: 'Neri Marketing' },
-        dataCaricamento: '31/01/2025',
-        status: 'elaborato',
-        descrizione: 'Documento commerciale riepilogativo gennaio',
-        protocollo: 'CORR202501',
-        importo: '€ 5.400,00',
-        note: 'Trasmesso telematicamente',
-        cronologia: [
-          { data: '31/01/2025', azione: 'Corrispettivi trasmessi', utente: 'Sistema' }
-        ]
-      }
-    ],
-    comunicazioni: [
-      {
-        id: 'com-001',
-        nome: 'Comunicazione Liquidazioni IVA Q1 2025',
-        tipo: 'lipe',
-        formato: 'PDF',
-        dimensione: '0.8 MB',
-        anno: '2025',
-        clienteId: '3',
-        cliente: { nome: 'Giuseppe Verdi', azienda: 'Verdi Solutions' },
-        dataCaricamento: '05/02/2025',
-        status: 'elaborato',
-        descrizione: 'LIPE - Liquidazione periodica IVA 1° trimestre',
-        protocollo: 'LIPE202501Q1',
-        note: 'Regime forfettario - esente',
-        cronologia: [
-          { data: '05/02/2025', azione: 'Comunicazione inviata', utente: 'Sistema' }
-        ]
-      }
-    ],
-    versamenti: [
-      {
-        id: 'vers-001',
-        nome: 'F24 Acconto IRPEF 2025',
-        tipo: 'f24',
-        formato: 'PDF',
-        dimensione: '0.3 MB',
-        anno: '2025',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '30/06/2025',
-        status: 'elaborato',
-        descrizione: 'Primo acconto IRPEF anno 2025',
-        protocollo: 'F24202506001',
-        importo: '€ 2.400,00',
-        note: 'Pagato tramite home banking',
-        cronologia: [
-          { data: '30/06/2025', azione: 'F24 generato', utente: 'Sistema' },
-          { data: '30/06/2025', azione: 'Pagamento eseguito', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'vers-002',
-        nome: 'F24 Contributi INPS Gennaio 2025',
-        tipo: 'f24_inps',
-        formato: 'PDF',
-        dimensione: '0.2 MB',
-        anno: '2025',
-        clienteId: '2',
-        cliente: { nome: 'Laura Bianchi', azienda: 'Bianchi Design' },
-        dataCaricamento: '16/02/2025',
-        status: 'elaborato',
-        descrizione: 'Contributi INPS gestione separata',
-        protocollo: 'F24202502INPS',
-        importo: '€ 780,00',
-        note: 'Pagamento regolare',
-        cronologia: [
-          { data: '16/02/2025', azione: 'Versamento effettuato', utente: 'Laura Bianchi' }
-        ]
-      }
-    ],
-    consultazione: [
-      {
-        id: 'cons-001',
-        nome: 'Estratto Conto Fiscale 2024',
-        tipo: 'estratto_conto',
-        formato: 'PDF',
-        dimensione: '1.1 MB',
-        anno: '2024',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Situazione debitoria/creditoria con Fisco',
-        protocollo: 'ECF202401',
-        note: 'Nessun debito pendente',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Estratto scaricato', utente: 'Dr. Marco Bianchi' }
-        ]
-      }
-    ],
-    registri: [
-      {
-        id: 'reg-001',
-        nome: 'Registro Incassi 2025',
-        tipo: 'registro_incassi',
-        formato: 'XLSX',
-        dimensione: '0.8 MB',
-        anno: '2025',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '31/01/2025',
-        status: 'elaborato',
-        descrizione: 'Registro cronologico incassi regime forfettario',
-        protocollo: 'REG-INC-2025',
-        note: 'Aggiornato mensilmente',
-        cronologia: [
-          { data: '31/01/2025', azione: 'Registro creato', utente: 'Mario Rossi' }
-        ]
-      }
-    ],
-    altri_documenti: [
-      {
-        id: 'alt-001',
-        nome: 'Contratto Locazione Ufficio',
-        tipo: 'contratto',
-        formato: 'PDF',
-        dimensione: '1.2 MB',
-        anno: '2025',
-        clienteId: '1',
-        cliente: { nome: 'Mario Rossi', azienda: 'Rossi Consulting' },
-        dataCaricamento: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Contratto affitto sede operativa',
-        protocollo: null,
-        note: 'Registrato all\'Agenzia Entrate',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Contratto caricato', utente: 'Dr. Marco Bianchi' }
-        ]
-      }
-    ]
+        descrizione: '',
+        categoria: 'dichiarazioni',
+        anno: new Date().getFullYear().toString(),
+        protocollo: '',
+        importo: '',
+        note: '',
+        cliente: '',
+        file: null
+      })
+
+      // Reload documents
+      await loadDocuments()
+    } catch (error: any) {
+      console.error('Error uploading document:', error)
+      showToast(error.message || 'Errore durante il caricamento del documento', 'error')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    showToast('Documento caricato con successo!', 'success')
-    setIsUploadModalOpen(false)
-    setUploadForm({
-      nome: '',
-      tipo: 'modello_redditi',
-      descrizione: '',
-      categoria: 'dichiarazioni',
-      cliente: '',
-      file: null
-    })
-  }
 
   const getFilteredDocuments = () => {
-    const docs = documentiTotali[activeTab as keyof typeof documentiTotali] || []
+    // Always use API documents (empty array if no documents loaded yet)
+    const allDocs = documentsFromApi
+
+    // Filter by active tab
+    const docs = allDocs.filter(doc => doc.categoria === activeTab)
+
     return docs.filter(doc => {
+      const clienteNome = doc.cliente?.nome || ''
+      const clienteAzienda = doc.cliente?.azienda || ''
+
       const matchesSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           doc.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           doc.cliente.azienda.toLowerCase().includes(searchTerm.toLowerCase())
+                           (doc.descrizione && doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                           clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           clienteAzienda.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = filterStatus === 'all' || doc.status === filterStatus
-      const matchesCliente = selectedCliente === 'all' || doc.clienteId === selectedCliente
       const matchesAnno = filterAnno === 'all' || doc.anno === filterAnno
-      return matchesSearch && matchesStatus && matchesCliente && matchesAnno
+      // Client filter already applied in loadDocuments for API data
+      return matchesSearch && matchesStatus && matchesAnno
     })
+  }
+
+  const handleOpenDeleteModal = (documento: any) => {
+    setDocumentToDelete(documento)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!documentToDelete) return
+
+    try {
+      await api.deleteDocument(documentToDelete.id)
+      showToast('Documento eliminato definitivamente', 'success')
+      setIsDeleteModalOpen(false)
+      setDocumentToDelete(null)
+      await loadDocuments()
+    } catch (error: any) {
+      console.error('Error deleting document:', error)
+      showToast(error.message || 'Errore durante l\'eliminazione del documento', 'error')
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false)
+    setDocumentToDelete(null)
+  }
+
+  const handleOpenPdfViewerApi = (documento: any) => {
+    if (documento.formato === 'PDF' && documento.fileUrl) {
+      const fullUrl = api.getDocumentUrl(documento.fileUrl)
+      setPdfUrl(fullUrl)
+      setCurrentPdfDocument(documento)
+      setIsPdfViewerOpen(true)
+      setIsPdfFullscreen(false)
+    } else {
+      setSelectedDocument(documento)
+    }
+  }
+
+  const handleChangeDocumentStatus = async (documentId: string, newStatus: string) => {
+    try {
+      await api.updateDocument(documentId, { status: newStatus })
+      showToast(`Documento aggiornato a: ${newStatus === 'elaborato' ? 'Elaborato' : 'In elaborazione'}`, 'success')
+
+      // Chiudi il modale PDF
+      setIsPdfViewerOpen(false)
+      setIsPdfFullscreen(false)
+      setPdfUrl('')
+      setCurrentPdfDocument(null)
+
+      // Ricarica la lista documenti
+      await loadDocuments()
+    } catch (error: any) {
+      console.error('Error updating document status:', error)
+      showToast(error.message || 'Errore durante l\'aggiornamento dello status', 'error')
+    }
   }
 
   // Estrai tutti gli anni disponibili dai documenti
@@ -332,16 +275,6 @@ export default function DocumentiClienti() {
       case 'in_attesa': return 'In attesa'
       case 'rifiutato': return 'Rifiutato'
       default: return 'Sconosciuto'
-    }
-  }
-
-  const handleOpenPdfViewer = (documento: any) => {
-    if (documento.formato === 'PDF' && documento.fileUrl) {
-      setPdfUrl(documento.fileUrl)
-      setIsPdfViewerOpen(true)
-      setIsPdfFullscreen(false)
-    } else {
-      setSelectedDocument(documento)
     }
   }
 
@@ -377,7 +310,7 @@ export default function DocumentiClienti() {
     { id: 'altri_documenti', name: 'Altri Documenti', icon: FolderOpen, description: 'Contratti, visure, assicurazioni' }
   ]
 
-  const allDocuments = Object.values(documentiTotali).flat()
+  const allDocuments = documentsFromApi
   const currentTabData = tabs.find(t => t.id === activeTab)
   const filteredDocuments = getFilteredDocuments()
   const availableYears = getAvailableYears()
@@ -581,7 +514,7 @@ export default function DocumentiClienti() {
             </select>
           </div>
           <button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleOpenUploadModal}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg flex items-center whitespace-nowrap"
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -603,7 +536,16 @@ export default function DocumentiClienti() {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Caricamento documenti...</p>
+        </div>
+      )}
+
       {/* Documents Grid */}
+      {!loading && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDocuments.map((documento) => (
           <div key={documento.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
@@ -658,17 +600,28 @@ export default function DocumentiClienti() {
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-100">
               <button
-                onClick={() => handleOpenPdfViewer(documento)}
+                onClick={() => handleOpenPdfViewerApi(documento)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
               >
                 <Eye className="h-4 w-4 mr-1" />
                 Visualizza
               </button>
               <div className="flex items-center space-x-2">
-                <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50" title="Download">
-                  <Download className="h-4 w-4" />
-                </button>
-                <button className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50" title="Elimina">
+                {documento.fileUrl && (
+                  <a
+                    href={api.getDocumentUrl(documento.fileUrl)}
+                    download
+                    className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50"
+                    title="Download"
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                )}
+                <button
+                  onClick={() => handleOpenDeleteModal(documento)}
+                  className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                  title="Elimina"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -676,9 +629,10 @@ export default function DocumentiClienti() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Empty State */}
-      {filteredDocuments.length === 0 && (
+      {!loading && filteredDocuments.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
           <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun documento trovato</h3>
@@ -686,7 +640,7 @@ export default function DocumentiClienti() {
             Non ci sono documenti in questa categoria o che corrispondono ai filtri selezionati.
           </p>
           <button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleOpenUploadModal}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 inline-flex items-center"
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -769,14 +723,59 @@ export default function DocumentiClienti() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Anno *</label>
+              <input
+                type="text"
+                value={uploadForm.anno}
+                onChange={(e) => setUploadForm({...uploadForm, anno: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="2025"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Protocollo</label>
+              <input
+                type="text"
+                value={uploadForm.protocollo}
+                onChange={(e) => setUploadForm({...uploadForm, protocollo: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="DR202500123456"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Importo</label>
+              <input
+                type="text"
+                value={uploadForm.importo}
+                onChange={(e) => setUploadForm({...uploadForm, importo: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="€ 1.500,00"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Descrizione</label>
             <textarea
               value={uploadForm.descrizione}
               onChange={(e) => setUploadForm({...uploadForm, descrizione: e.target.value})}
-              rows={3}
+              rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Descrizione opzionale del documento..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Note</label>
+            <textarea
+              value={uploadForm.note}
+              onChange={(e) => setUploadForm({...uploadForm, note: e.target.value})}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Note aggiuntive..."
             />
           </div>
 
@@ -816,9 +815,17 @@ export default function DocumentiClienti() {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+              disabled={uploading}
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Carica Documento
+              {uploading ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Caricamento...
+                </>
+              ) : (
+                'Carica Documento'
+              )}
             </button>
           </div>
         </form>
@@ -939,17 +946,40 @@ export default function DocumentiClienti() {
 
             {/* Actions */}
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <button
-                onClick={togglePdfFullscreen}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Maximize2 className="h-4 w-4 mr-2" />
-                Schermo intero
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={togglePdfFullscreen}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <Maximize2 className="h-4 w-4 mr-2" />
+                  Schermo intero
+                </button>
+                {currentPdfDocument && (
+                  <>
+                    {currentPdfDocument.status === 'in_elaborazione' ? (
+                      <button
+                        onClick={() => handleChangeDocumentStatus(currentPdfDocument.id, 'elaborato')}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Segna come Elaborato
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleChangeDocumentStatus(currentPdfDocument.id, 'in_elaborazione')}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center"
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        Segna in Elaborazione
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
               <a
                 href={pdfUrl}
                 download
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Scarica
@@ -969,10 +999,31 @@ export default function DocumentiClienti() {
               <h2 className="text-base font-semibold">Visualizzatore PDF - Schermo Intero</h2>
             </div>
             <div className="flex items-center space-x-3">
+              {currentPdfDocument && (
+                <>
+                  {currentPdfDocument.status === 'in_elaborazione' ? (
+                    <button
+                      onClick={() => handleChangeDocumentStatus(currentPdfDocument.id, 'elaborato')}
+                      className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Segna come Elaborato
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleChangeDocumentStatus(currentPdfDocument.id, 'in_elaborazione')}
+                      className="px-3 py-1.5 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors flex items-center"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Segna in Elaborazione
+                    </button>
+                  )}
+                </>
+              )}
               <a
                 href={pdfUrl}
                 download
-                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors flex items-center"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Scarica
@@ -995,6 +1046,68 @@ export default function DocumentiClienti() {
             />
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && documentToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCancelDelete}
+          title="Conferma eliminazione"
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Eliminare definitivamente questo documento?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Stai per eliminare <span className="font-semibold">"{documentToDelete.nome}"</span>.
+                  Questa azione è <span className="font-semibold text-red-600">irreversibile</span> e il file verrà rimosso permanentemente dal sistema.
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Categoria:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.categoria}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Formato:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.formato}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Dimensione:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.dimensione}</span>
+                  </div>
+                  {documentToDelete.cliente && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Cliente:</span>
+                      <span className="font-medium text-gray-900">{documentToDelete.cliente.nome}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Elimina definitivamente
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

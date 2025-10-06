@@ -3,10 +3,10 @@ import {
   Trash2, FolderOpen, Building, Receipt, DollarSign, FileCheck, BookOpen,
   TrendingUp, Maximize2
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
-import dummyPdf from '../../../../assets/dummy-pdf_2.pdf'
+import api from '../../../../services/api'
 
 export default function Documenti() {
   const { showToast } = useToast()
@@ -19,423 +19,129 @@ export default function Documenti() {
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false)
   const [pdfUrl, setPdfUrl] = useState('')
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [documentsFromApi, setDocumentsFromApi] = useState<any[]>([])
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null)
 
   const [uploadForm, setUploadForm] = useState({
     nome: '',
     tipo: 'modello_redditi',
     descrizione: '',
     categoria: 'dichiarazioni',
+    anno: new Date().getFullYear().toString(),
+    protocollo: '',
+    importo: '',
+    note: '',
     file: null as File | null
   })
 
-  // Documenti organizzati per categoria (Cassetto Fiscale AdE)
-  const documenti = {
-    dichiarazioni: [
-      {
-        id: 'dich-001',
-        nome: 'Modello Redditi PF 2025',
-        tipo: 'modello_redditi',
-        formato: 'PDF',
-        dimensione: '2.4 MB',
-        anno: '2025',
-        dataCaricamento: '15/03/2025',
-        dataModifica: '15/03/2025',
-        status: 'elaborato',
-        descrizione: 'Dichiarazione dei redditi persone fisiche anno 2025',
-        protocollo: 'DR202500123456',
-        fileUrl: dummyPdf,
-        note: 'Presentata telematicamente all\'Agenzia delle Entrate',
-        cronologia: [
-          { data: '15/03/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' },
-          { data: '16/03/2025', azione: 'Ricevuta protocollata', utente: 'Agenzia Entrate' }
-        ]
-      },
-      {
-        id: 'dich-002',
-        nome: 'Dichiarazione IVA Annuale 2023',
-        tipo: 'dichiarazione_iva',
-        formato: 'PDF',
-        dimensione: '1.8 MB',
-        anno: '2023',
-        dataCaricamento: '28/02/2025',
-        dataModifica: '28/02/2025',
-        status: 'elaborato',
-        descrizione: 'Dichiarazione IVA annuale anno 2023',
-        protocollo: 'IVA202300987654',
-        fileUrl: dummyPdf,
-        note: 'Regime forfettario - esente IVA',
-        cronologia: [
-          { data: '28/02/2025', azione: 'Dichiarazione presentata', utente: 'Sistema AdE' }
-        ]
-      },
-      {
-        id: 'dich-003',
-        nome: 'Modello 730/2025 Precompilato',
-        tipo: 'modello_730',
-        formato: 'PDF',
-        dimensione: '1.2 MB',
-        anno: '2025',
-        dataCaricamento: '15/04/2025',
-        dataModifica: '15/04/2025',
-        status: 'in_elaborazione',
-        descrizione: 'Dichiarazione 730 precompilata',
-        protocollo: null,
-        fileUrl: dummyPdf,
-        note: 'In fase di controllo',
-        cronologia: [
-          { data: '15/04/2025', azione: 'Documento scaricato da AdE', utente: 'Mario Rossi' }
-        ]
-      }
-    ],
-    fatturazione: [
-      {
-        id: 'fatt-001',
-        nome: 'Fattura Elettronica FE0012025',
-        tipo: 'fattura_elettronica',
-        formato: 'XML',
-        dimensione: '24 KB',
-        anno: '2025',
-        dataCaricamento: '10/01/2025',
-        dataModifica: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Fattura n. 001/2025 - Cliente XYZ SRL',
-        protocollo: 'SDI2025001234567',
-        importo: '€ 1.500,00',
-        note: 'Inviata tramite Sistema di Interscambio',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Fattura emessa', utente: 'Mario Rossi' },
-          { data: '10/01/2025', azione: 'Inviata a SDI', utente: 'Sistema' },
-          { data: '11/01/2025', azione: 'Consegnata al destinatario', utente: 'SDI' }
-        ]
-      },
-      {
-        id: 'fatt-002',
-        nome: 'Fattura Passiva FP0052025',
-        tipo: 'fattura_passiva',
-        formato: 'XML',
-        dimensione: '18 KB',
-        anno: '2025',
-        dataCaricamento: '15/01/2025',
-        dataModifica: '15/01/2025',
-        status: 'elaborato',
-        descrizione: 'Fattura acquisto materiale ufficio',
-        protocollo: 'SDI2025007654321',
-        importo: '€ 450,00',
-        note: 'Ricevuta tramite SDI',
-        cronologia: [
-          { data: '15/01/2025', azione: 'Fattura ricevuta', utente: 'Sistema SDI' }
-        ]
-      },
-      {
-        id: 'fatt-003',
-        nome: 'Corrispettivi Gennaio 2025',
-        tipo: 'corrispettivi',
-        formato: 'XML',
-        dimensione: '36 KB',
-        anno: '2025',
-        dataCaricamento: '31/01/2025',
-        dataModifica: '31/01/2025',
-        status: 'elaborato',
-        descrizione: 'Documento commerciale riepilogativo gennaio',
-        protocollo: 'CORR202501',
-        importo: '€ 3.200,00',
-        note: 'Trasmesso telematicamente',
-        cronologia: [
-          { data: '31/01/2025', azione: 'Corrispettivi trasmessi', utente: 'Sistema' }
-        ]
-      }
-    ],
-    comunicazioni: [
-      {
-        id: 'com-001',
-        nome: 'Comunicazione Liquidazioni IVA Q1 2025',
-        tipo: 'lipe',
-        formato: 'PDF',
-        dimensione: '0.8 MB',
-        anno: '2025',
-        dataCaricamento: '05/02/2025',
-        dataModifica: '05/02/2025',
-        status: 'elaborato',
-        descrizione: 'LIPE - Liquidazione periodica IVA 1° trimestre',
-        protocollo: 'LIPE202501Q1',
-        note: 'Regime forfettario - esente',
-        cronologia: [
-          { data: '05/02/2025', azione: 'Comunicazione inviata', utente: 'Sistema' }
-        ]
-      },
-      {
-        id: 'com-002',
-        nome: 'Esterometro Q4 2023',
-        tipo: 'esterometro',
-        formato: 'XML',
-        dimensione: '12 KB',
-        anno: '2023',
-        dataCaricamento: '15/01/2025',
-        dataModifica: '15/01/2025',
-        status: 'elaborato',
-        descrizione: 'Comunicazione operazioni transfrontaliere',
-        protocollo: 'EST202304',
-        note: 'Trimestre ottobre-dicembre 2023',
-        cronologia: [
-          { data: '15/01/2025', azione: 'Comunicazione trasmessa', utente: 'Sistema' }
-        ]
-      },
-      {
-        id: 'com-003',
-        nome: 'Comunicazione Dati Fatture 2023',
-        tipo: 'spesometro',
-        formato: 'XML',
-        dimensione: '156 KB',
-        anno: '2023',
-        dataCaricamento: '28/02/2025',
-        dataModifica: '28/02/2025',
-        status: 'in_attesa',
-        descrizione: 'Comunicazione dati fatture emesse/ricevute',
-        protocollo: null,
-        note: 'In fase di verifica',
-        cronologia: [
-          { data: '28/02/2025', azione: 'Documento preparato', utente: 'Mario Rossi' }
-        ]
-      }
-    ],
-    versamenti: [
-      {
-        id: 'vers-001',
-        nome: 'F24 Acconto IRPEF 2025',
-        tipo: 'f24',
-        formato: 'PDF',
-        dimensione: '0.3 MB',
-        anno: '2025',
-        dataCaricamento: '30/06/2025',
-        dataModifica: '30/06/2025',
-        status: 'elaborato',
-        descrizione: 'Primo acconto IRPEF anno 2025',
-        protocollo: 'F24202506001',
-        importo: '€ 2.400,00',
-        note: 'Pagato tramite home banking',
-        cronologia: [
-          { data: '30/06/2025', azione: 'F24 generato', utente: 'Sistema' },
-          { data: '30/06/2025', azione: 'Pagamento eseguito', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'vers-002',
-        nome: 'F24 Contributi INPS Gennaio 2025',
-        tipo: 'f24_inps',
-        formato: 'PDF',
-        dimensione: '0.2 MB',
-        anno: '2025',
-        dataCaricamento: '16/02/2025',
-        dataModifica: '16/02/2025',
-        status: 'elaborato',
-        descrizione: 'Contributi INPS gestione separata',
-        protocollo: 'F24202502INPS',
-        importo: '€ 650,00',
-        note: 'Pagamento regolare',
-        cronologia: [
-          { data: '16/02/2025', azione: 'Versamento effettuato', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'vers-003',
-        nome: 'Ravvedimento Operoso F24',
-        tipo: 'ravvedimento',
-        formato: 'PDF',
-        dimensione: '0.4 MB',
-        anno: '2025',
-        dataCaricamento: '15/03/2025',
-        dataModifica: '15/03/2025',
-        status: 'in_elaborazione',
-        descrizione: 'Ravvedimento pagamento in ritardo',
-        protocollo: null,
-        importo: '€ 120,00',
-        note: 'In attesa di conferma AdE',
-        cronologia: [
-          { data: '15/03/2025', azione: 'Ravvedimento presentato', utente: 'Sistema' }
-        ]
-      }
-    ],
-    consultazione: [
-      {
-        id: 'cons-001',
-        nome: 'Estratto Conto Fiscale 2023',
-        tipo: 'estratto_conto',
-        formato: 'PDF',
-        dimensione: '1.1 MB',
-        anno: '2023',
-        dataCaricamento: '10/01/2025',
-        dataModifica: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Situazione debitoria/creditoria con Fisco',
-        protocollo: 'ECF202301',
-        note: 'Nessun debito pendente',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Estratto scaricato', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'cons-002',
-        nome: 'Certificazione Unica 2025',
-        tipo: 'cu',
-        formato: 'PDF',
-        dimensione: '0.6 MB',
-        anno: '2025',
-        dataCaricamento: '16/03/2025',
-        dataModifica: '16/03/2025',
-        status: 'elaborato',
-        descrizione: 'CU redditi lavoro dipendente/assimilati',
-        protocollo: 'CU202500456',
-        note: 'Ricevuta da sostituto d\'imposta',
-        cronologia: [
-          { data: '16/03/2025', azione: 'CU emessa', utente: 'Datore lavoro' }
-        ]
-      },
-      {
-        id: 'cons-003',
-        nome: 'Visura Partita IVA',
-        tipo: 'visura',
-        formato: 'PDF',
-        dimensione: '0.4 MB',
-        anno: '2025',
-        dataCaricamento: '05/02/2025',
-        dataModifica: '05/02/2025',
-        status: 'elaborato',
-        descrizione: 'Visura anagrafica partita IVA',
-        protocollo: 'VIS202502',
-        note: 'P.IVA attiva - regime forfettario',
-        cronologia: [
-          { data: '05/02/2025', azione: 'Visura richiesta', utente: 'Mario Rossi' }
-        ]
-      }
-    ],
-    registri: [
-      {
-        id: 'reg-001',
-        nome: 'Registro Incassi 2025',
-        tipo: 'registro_incassi',
-        formato: 'XLSX',
-        dimensione: '0.8 MB',
-        anno: '2025',
-        dataCaricamento: '31/01/2025',
-        dataModifica: '28/02/2025',
-        status: 'elaborato',
-        descrizione: 'Registro cronologico incassi regime forfettario',
-        protocollo: 'REG-INC-2025',
-        note: 'Aggiornato mensilmente',
-        cronologia: [
-          { data: '31/01/2025', azione: 'Registro creato', utente: 'Mario Rossi' },
-          { data: '28/02/2025', azione: 'Aggiornamento febbraio', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'reg-002',
-        nome: 'Registro Acquisti 2025',
-        tipo: 'registro_acquisti',
-        formato: 'XLSX',
-        dimensione: '0.6 MB',
-        anno: '2025',
-        dataCaricamento: '31/01/2025',
-        dataModifica: '28/02/2025',
-        status: 'elaborato',
-        descrizione: 'Registro cronologico spese sostenute',
-        protocollo: 'REG-ACQ-2025',
-        note: 'Include tutte le fatture passive',
-        cronologia: [
-          { data: '31/01/2025', azione: 'Registro creato', utente: 'Mario Rossi' },
-          { data: '28/02/2025', azione: 'Aggiornamento febbraio', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'reg-003',
-        nome: 'Libro Cespiti 2025',
-        tipo: 'libro_cespiti',
-        formato: 'PDF',
-        dimensione: '0.5 MB',
-        anno: '2025',
-        dataCaricamento: '15/01/2025',
-        dataModifica: '15/01/2025',
-        status: 'elaborato',
-        descrizione: 'Registro beni ammortizzabili',
-        protocollo: 'CESP-2025',
-        note: 'Regime forfettario - non obbligatorio',
-        cronologia: [
-          { data: '15/01/2025', azione: 'Libro caricato', utente: 'Mario Rossi' }
-        ]
-      }
-    ],
-    altri_documenti: [
-      {
-        id: 'alt-001',
-        nome: 'Contratto Locazione Ufficio',
-        tipo: 'contratto',
-        formato: 'PDF',
-        dimensione: '1.2 MB',
-        anno: '2025',
-        dataCaricamento: '10/01/2025',
-        dataModifica: '10/01/2025',
-        status: 'elaborato',
-        descrizione: 'Contratto affitto sede operativa',
-        protocollo: null,
-        note: 'Registrato all\'Agenzia Entrate',
-        cronologia: [
-          { data: '10/01/2025', azione: 'Contratto caricato', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'alt-002',
-        nome: 'Visura Camerale Aggiornata',
-        tipo: 'visura_camerale',
-        formato: 'PDF',
-        dimensione: '0.7 MB',
-        anno: '2025',
-        dataCaricamento: '15/02/2025',
-        dataModifica: '15/02/2025',
-        status: 'elaborato',
-        descrizione: 'Visura CCIAA aggiornata',
-        protocollo: 'VC202502',
-        note: 'Scaricata da Registro Imprese',
-        cronologia: [
-          { data: '15/02/2025', azione: 'Visura scaricata', utente: 'Mario Rossi' }
-        ]
-      },
-      {
-        id: 'alt-003',
-        nome: 'Polizza Assicurativa RC Professionale',
-        tipo: 'assicurazione',
-        formato: 'PDF',
-        dimensione: '0.9 MB',
-        anno: '2025',
-        dataCaricamento: '01/01/2025',
-        dataModifica: '01/01/2025',
-        status: 'elaborato',
-        descrizione: 'Polizza RC professionale anno 2025',
-        protocollo: 'ASS-RC-2025-001',
-        note: 'Valida fino al 31/12/2025',
-        cronologia: [
-          { data: '01/01/2025', azione: 'Polizza attivata', utente: 'Compagnia Assicurativa' }
-        ]
-      }
-    ]
+  // Load documents from API
+  useEffect(() => {
+    loadDocuments()
+  }, [])
+
+  // Reload when filters change
+  useEffect(() => {
+    if (documentsFromApi.length > 0) {
+      // Only reload from API if we have API docs loaded
+      loadDocuments()
+    }
+  }, [activeTab])
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true)
+      const response = await api.getDocuments()
+      setDocumentsFromApi(response.documents || [])
+    } catch (error: any) {
+      console.error('Error loading documents:', error)
+      showToast(error.message || 'Errore nel caricamento dei documenti', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    showToast('Documento caricato con successo!', 'success')
-    setIsUploadModalOpen(false)
+  const handleOpenUploadModal = () => {
+    // Genera nome documento basato sulla categoria e data
+    const categoryName = tabs.find(t => t.id === activeTab)?.name || 'Documento'
+    const today = new Date()
+    const formattedDate = today.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const documentName = `${categoryName} - ${formattedDate}`
+
+    // Precompila il form con categoria attiva e nome generato
     setUploadForm({
-      nome: '',
+      nome: documentName,
       tipo: 'modello_redditi',
       descrizione: '',
-      categoria: 'dichiarazioni',
+      categoria: activeTab, // Precompila con la tab attiva
+      anno: new Date().getFullYear().toString(),
+      protocollo: '',
+      importo: '',
+      note: '',
       file: null
     })
+    setIsUploadModalOpen(true)
+  }
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!uploadForm.file) {
+      showToast('Seleziona un file da caricare', 'error')
+      return
+    }
+
+    try {
+      setUploading(true)
+
+      const formData = new FormData()
+      formData.append('file', uploadForm.file)
+      formData.append('nome', uploadForm.nome)
+      formData.append('tipo', uploadForm.tipo)
+      formData.append('categoria', uploadForm.categoria)
+      formData.append('anno', uploadForm.anno)
+      if (uploadForm.descrizione) formData.append('descrizione', uploadForm.descrizione)
+      if (uploadForm.protocollo) formData.append('protocollo', uploadForm.protocollo)
+      if (uploadForm.importo) formData.append('importo', uploadForm.importo)
+      if (uploadForm.note) formData.append('note', uploadForm.note)
+
+      await api.uploadDocument(formData)
+      showToast('Documento caricato con successo!', 'success')
+      setIsUploadModalOpen(false)
+      setUploadForm({
+        nome: '',
+        tipo: 'modello_redditi',
+        descrizione: '',
+        categoria: 'dichiarazioni',
+        anno: new Date().getFullYear().toString(),
+        protocollo: '',
+        importo: '',
+        note: '',
+        file: null
+      })
+
+      // Reload documents
+      await loadDocuments()
+    } catch (error: any) {
+      console.error('Error uploading document:', error)
+      showToast(error.message || 'Errore durante il caricamento del documento', 'error')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const getFilteredDocuments = () => {
-    const docs = documenti[activeTab as keyof typeof documenti] || []
+    // Always use API documents (empty array if no documents loaded yet)
+    const allDocs = documentsFromApi
+
+    // Filter by active tab
+    const docs = allDocs.filter(doc => doc.categoria === activeTab)
+
     return docs.filter(doc => {
       const matchesSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase())
+                           (doc.descrizione && doc.descrizione.toLowerCase().includes(searchTerm.toLowerCase()))
       const matchesStatus = filterStatus === 'all' || doc.status === filterStatus
       const matchesAnno = filterAnno === 'all' || doc.anno === filterAnno
       return matchesSearch && matchesStatus && matchesAnno
@@ -468,16 +174,6 @@ export default function Documenti() {
     }
   }
 
-  const handleOpenPdfViewer = (documento: any) => {
-    if (documento.formato === 'PDF' && documento.fileUrl) {
-      setPdfUrl(documento.fileUrl)
-      setIsPdfViewerOpen(true)
-      setIsPdfFullscreen(false)
-    } else {
-      setSelectedDocument(documento)
-    }
-  }
-
   const togglePdfFullscreen = () => {
     if (!isPdfFullscreen) {
       // Quando apro fullscreen, chiudo il modale normale
@@ -500,6 +196,43 @@ export default function Documenti() {
     }
   }
 
+  const handleOpenDeleteModal = (documento: any) => {
+    setDocumentToDelete(documento)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!documentToDelete) return
+
+    try {
+      await api.deleteDocument(documentToDelete.id)
+      showToast('Documento eliminato definitivamente', 'success')
+      setIsDeleteModalOpen(false)
+      setDocumentToDelete(null)
+      await loadDocuments()
+    } catch (error: any) {
+      console.error('Error deleting document:', error)
+      showToast(error.message || 'Errore durante l\'eliminazione del documento', 'error')
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false)
+    setDocumentToDelete(null)
+  }
+
+  const handleOpenPdfViewerApi = (documento: any) => {
+    if (documento.formato === 'PDF' && documento.fileUrl) {
+      // Use API URL for real documents
+      const fullUrl = api.getDocumentUrl(documento.fileUrl)
+      setPdfUrl(fullUrl)
+      setIsPdfViewerOpen(true)
+      setIsPdfFullscreen(false)
+    } else {
+      setSelectedDocument(documento)
+    }
+  }
+
   const tabs = [
     { id: 'dichiarazioni', name: 'Dichiarazioni', icon: FileCheck, description: 'Modelli redditi, IVA, 730' },
     { id: 'fatturazione', name: 'Fatturazione', icon: Receipt, description: 'Fatture elettroniche, corrispettivi' },
@@ -510,7 +243,7 @@ export default function Documenti() {
     { id: 'altri_documenti', name: 'Altri Documenti', icon: FolderOpen, description: 'Contratti, visure, assicurazioni' }
   ]
 
-  const allDocuments = Object.values(documenti).flat()
+  const allDocuments = documentsFromApi
   const currentTabData = tabs.find(t => t.id === activeTab)
   const filteredDocuments = getFilteredDocuments()
   const availableYears = getAvailableYears()
@@ -657,7 +390,7 @@ export default function Documenti() {
             </select>
           </div>
           <button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleOpenUploadModal}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg flex items-center whitespace-nowrap"
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -679,8 +412,17 @@ export default function Documenti() {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Caricamento documenti...</p>
+        </div>
+      )}
+
       {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDocuments.map((documento) => (
           <div key={documento.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
@@ -730,27 +472,42 @@ export default function Documenti() {
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-100">
               <button
-                onClick={() => handleOpenPdfViewer(documento)}
+                onClick={() => handleOpenPdfViewerApi(documento)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
               >
                 <Eye className="h-4 w-4 mr-1" />
                 Visualizza
               </button>
               <div className="flex items-center space-x-2">
-                <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50" title="Download">
-                  <Download className="h-4 w-4" />
-                </button>
-                <button className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50" title="Elimina">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {documento.fileUrl && (
+                  <a
+                    href={api.getDocumentUrl(documento.fileUrl)}
+                    download
+                    className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50"
+                    title="Download"
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                )}
+                {/* I clienti business possono eliminare solo documenti non elaborati */}
+                {documento.status !== 'elaborato' && (
+                  <button
+                    onClick={() => handleOpenDeleteModal(documento)}
+                    className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                    title="Elimina"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
+      )}
 
       {/* Empty State */}
-      {filteredDocuments.length === 0 && (
+      {!loading && filteredDocuments.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
           <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun documento trovato</h3>
@@ -758,7 +515,7 @@ export default function Documenti() {
             Non ci sono documenti in questa categoria o che corrispondono ai filtri selezionati.
           </p>
           <button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleOpenUploadModal}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 inline-flex items-center"
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -824,14 +581,59 @@ export default function Documenti() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Anno *</label>
+              <input
+                type="text"
+                value={uploadForm.anno}
+                onChange={(e) => setUploadForm({...uploadForm, anno: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="2025"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Protocollo</label>
+              <input
+                type="text"
+                value={uploadForm.protocollo}
+                onChange={(e) => setUploadForm({...uploadForm, protocollo: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="DR202500123456"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Importo</label>
+              <input
+                type="text"
+                value={uploadForm.importo}
+                onChange={(e) => setUploadForm({...uploadForm, importo: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="€ 1.500,00"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Descrizione</label>
             <textarea
               value={uploadForm.descrizione}
               onChange={(e) => setUploadForm({...uploadForm, descrizione: e.target.value})}
-              rows={3}
+              rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Descrizione opzionale del documento..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Note</label>
+            <textarea
+              value={uploadForm.note}
+              onChange={(e) => setUploadForm({...uploadForm, note: e.target.value})}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Note aggiuntive..."
             />
           </div>
 
@@ -871,9 +673,17 @@ export default function Documenti() {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+              disabled={uploading}
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Carica Documento
+              {uploading ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Caricamento...
+                </>
+              ) : (
+                'Carica Documento'
+              )}
             </button>
           </div>
         </form>
@@ -1039,6 +849,62 @@ export default function Documenti() {
             />
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && documentToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCancelDelete}
+          title="Conferma eliminazione"
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Eliminare definitivamente questo documento?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Stai per eliminare <span className="font-semibold">"{documentToDelete.nome}"</span>.
+                  Questa azione è <span className="font-semibold text-red-600">irreversibile</span> e il file verrà rimosso permanentemente dal sistema.
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Categoria:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.categoria}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Formato:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.formato}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Dimensione:</span>
+                    <span className="font-medium text-gray-900">{documentToDelete.dimensione}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Elimina definitivamente
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

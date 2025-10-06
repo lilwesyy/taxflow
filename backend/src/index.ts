@@ -15,6 +15,7 @@ import aiAssistantRoutes from './routes/ai-assistant'
 import clientsRoutes from './routes/clients'
 import feedbackRoutes from './routes/feedback'
 import stripeRoutes from './routes/stripe'
+import documentsRoutes from './routes/documents'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -49,6 +50,7 @@ app.use('/api/ai', aiAssistantRoutes)
 app.use('/api/clients', clientsRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/stripe', stripeRoutes)
+app.use('/api/documents', documentsRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

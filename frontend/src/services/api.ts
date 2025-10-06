@@ -513,6 +513,129 @@ class ApiService {
 
     return response.json()
   }
+
+  // Documents Management
+  async getDocuments(filters?: {
+    categoria?: string
+    status?: string
+    anno?: string
+    clientId?: string
+  }) {
+    const params = new URLSearchParams()
+    if (filters?.categoria) params.append('categoria', filters.categoria)
+    if (filters?.status) params.append('status', filters.status)
+    if (filters?.anno) params.append('anno', filters.anno)
+    if (filters?.clientId) params.append('clientId', filters.clientId)
+
+    const url = `${API_BASE_URL}/documents${params.toString() ? '?' + params.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get documents')
+    }
+
+    return response.json()
+  }
+
+  async uploadDocument(formData: FormData) {
+    const token = this.getToken()
+    const headers: HeadersInit = {}
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+      method: 'POST',
+      headers, // Don't set Content-Type, browser will set it with boundary for multipart/form-data
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to upload document')
+    }
+
+    return response.json()
+  }
+
+  async getDocument(documentId: string) {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get document')
+    }
+
+    return response.json()
+  }
+
+  async updateDocument(documentId: string, data: {
+    nome?: string
+    descrizione?: string
+    status?: string
+    protocollo?: string
+    importo?: string
+    note?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update document')
+    }
+
+    return response.json()
+  }
+
+  async deleteDocument(documentId: string) {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete document')
+    }
+
+    return response.json()
+  }
+
+  async getDocumentStats(clientId?: string) {
+    const params = new URLSearchParams()
+    if (clientId) params.append('clientId', clientId)
+
+    const url = `${API_BASE_URL}/documents/stats/summary${params.toString() ? '?' + params.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get document stats')
+    }
+
+    return response.json()
+  }
+
+  getDocumentUrl(fileUrl: string) {
+    // Remove /api prefix if present and add backend base URL
+    const cleanUrl = fileUrl.startsWith('/api/') ? fileUrl.substring(4) : fileUrl
+    return `${API_BASE_URL.replace('/api', '')}${cleanUrl}`
+  }
 }
 
 export default new ApiService()
