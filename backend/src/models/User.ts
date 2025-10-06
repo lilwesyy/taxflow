@@ -208,4 +208,11 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
   return bcrypt.compare(candidatePassword, this.password)
 }
 
+// Indexes for faster queries
+UserSchema.index({ email: 1 }, { unique: true })
+UserSchema.index({ role: 1 })
+UserSchema.index({ registrationApprovalStatus: 1 })
+UserSchema.index({ pivaApprovalStatus: 1 })
+UserSchema.index({ role: 1, registrationApprovalStatus: 1 }) // Compound index for admin queries
+
 export default mongoose.model<IUser>('User', UserSchema)
