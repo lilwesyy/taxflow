@@ -6,7 +6,7 @@ const getHeaders = (): HeadersInit => {
     'Content-Type': 'application/json',
   }
 
-  const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+  const token = localStorage.getItem('token')
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
@@ -107,7 +107,7 @@ class ChatService {
       formData.append('files', file)
     })
 
-    const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+    const token = localStorage.getItem('token')
     const response = await fetch(`${API_BASE_URL}/chat/upload`, {
       method: 'POST',
       headers: {

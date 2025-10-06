@@ -31,8 +31,7 @@ class ApiService {
     }
 
     if (includeAuth) {
-      // Use 'token' key to match AuthContext
-      const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+      const token = localStorage.getItem('token')
       if (token) {
         headers.Authorization = `Bearer ${token}`
       }
@@ -55,12 +54,9 @@ class ApiService {
 
     const data = await response.json()
 
-    // Store token in localStorage (using both keys for compatibility)
     if (data.token) {
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('taxflow_token', data.token)
-      localStorage.setItem('taxflow_user', JSON.stringify(data.user))
     }
 
     return data
@@ -80,12 +76,9 @@ class ApiService {
 
     const data = await response.json()
 
-    // Store token in localStorage (using both keys for compatibility)
     if (data.token) {
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('taxflow_token', data.token)
-      localStorage.setItem('taxflow_user', JSON.stringify(data.user))
     }
 
     return data
@@ -108,17 +101,15 @@ class ApiService {
   logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    localStorage.removeItem('taxflow_token')
-    localStorage.removeItem('taxflow_user')
   }
 
   getCurrentUser() {
-    const userString = localStorage.getItem('user') || localStorage.getItem('taxflow_user')
+    const userString = localStorage.getItem('user')
     return userString ? JSON.parse(userString) : null
   }
 
   getToken() {
-    return localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+    return localStorage.getItem('token')
   }
 
   isAuthenticated() {

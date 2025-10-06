@@ -6,7 +6,7 @@ const getHeaders = (): HeadersInit => {
     'Content-Type': 'application/json',
   }
 
-  const token = localStorage.getItem('token') || localStorage.getItem('taxflow_token')
+  const token = localStorage.getItem('token')
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
