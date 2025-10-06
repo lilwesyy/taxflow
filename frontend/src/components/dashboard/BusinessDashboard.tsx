@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, FileText, Settings, HelpCircle, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen } from 'lucide-react'
+import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -54,10 +54,9 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     { id: 'analisi-ai', name: 'Analisi AI', icon: Brain },
     { id: 'business-plan', name: 'Business Plan', icon: Target },
 
-    // Consulenza e supporto
+    // Consulenza e feedback
     { id: 'consulenza', name: 'Chat Consulente', icon: MessageSquare },
     { id: 'feedback-consulente', name: 'Feedback Consulente', icon: Star },
-    { id: 'supporto', name: 'Supporto', icon: HelpCircle },
 
     // Configurazione
     { id: 'impostazioni', name: 'Impostazioni', icon: Settings }
@@ -75,8 +74,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
       'consulenza': 'Chat con il tuo consulente CFO',
       'feedback-consulente': 'Valuta e lascia feedback sui consulenti',
       'documenti': 'Documenti fiscali organizzati come Agenzia delle Entrate',
-      'impostazioni': 'Configura il tuo account',
-      'supporto': 'Ottieni aiuto e assistenza'
+      'impostazioni': 'Configura il tuo account'
     }
 
     return {
