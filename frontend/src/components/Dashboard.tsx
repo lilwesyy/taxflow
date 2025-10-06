@@ -19,9 +19,6 @@ export default function Dashboard({ onLogout, userRole, userName, userEmail }: D
   const { user, updateUser } = useAuth()
   const [showPivaForm, setShowPivaForm] = useState(false)
 
-  console.log('Dashboard - User data:', user)
-  console.log('Dashboard - registrationApprovalStatus:', user?.registrationApprovalStatus)
-
   // Business user flow
   if (userRole === 'business') {
     // Step 1: Registration not approved yet - show registration success page

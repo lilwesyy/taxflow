@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import ATECOAutocomplete from '../../../common/ATECOAutocomplete'
+import AddressAutocomplete from '../../../common/AddressAutocomplete'
 
 interface Session {
   id: string
@@ -595,7 +596,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.nome}
+              value={profileData.nome || ''}
               onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
@@ -607,7 +608,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="email"
-              value={profileData.email}
+              value={profileData.email || ''}
               onChange={(e) => {
                 setProfileData(prev => ({ ...prev, email: e.target.value }))
                 if (validationErrors.email) {
@@ -629,7 +630,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="tel"
-              value={profileData.telefono}
+              value={profileData.telefono || ''}
               onChange={(e) => {
                 setProfileData(prev => ({ ...prev, telefono: e.target.value }))
                 if (validationErrors.telefono) {
@@ -657,7 +658,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.codiceFiscale}
+              value={profileData.codiceFiscale || ''}
               onChange={(e) => {
                 setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value.toUpperCase() }))
                 if (validationErrors.codiceFiscale) {
@@ -686,7 +687,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.professione}
+              value={profileData.professione || ''}
               onChange={(e) => setProfileData(prev => ({ ...prev, professione: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
@@ -698,7 +699,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.settoreAttivita}
+              value={profileData.settoreAttivita || ''}
               onChange={(e) => setProfileData(prev => ({ ...prev, settoreAttivita: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
@@ -709,11 +710,18 @@ export default function Impostazioni() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Indirizzo Completo
           </label>
-          <input
-            type="text"
-            value={profileData.indirizzo}
-            onChange={(e) => setProfileData(prev => ({ ...prev, indirizzo: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          <AddressAutocomplete
+            value={profileData.indirizzo || ''}
+            onChange={(value) => setProfileData(prev => ({ ...prev, indirizzo: value }))}
+            onAddressSelect={(address) => {
+              setProfileData(prev => ({
+                ...prev,
+                indirizzo: address.full,
+                citta: address.city,
+                cap: address.postcode
+              }))
+            }}
+            placeholder="Inizia a digitare l'indirizzo (es. Via Milano 45, Milano)..."
           />
         </div>
 
@@ -724,7 +732,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.citta}
+              value={profileData.citta || ''}
               onChange={(e) => setProfileData(prev => ({ ...prev, citta: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
@@ -736,7 +744,7 @@ export default function Impostazioni() {
             </label>
             <input
               type="text"
-              value={profileData.cap}
+              value={profileData.cap || ''}
               onChange={(e) => {
                 const formatted = formatCAP(e.target.value)
                 setProfileData(prev => ({ ...prev, cap: formatted }))
@@ -766,7 +774,7 @@ export default function Impostazioni() {
               </label>
               <input
                 type="text"
-                value={profileData.company}
+                value={profileData.company || ''}
                 onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Nome azienda o tuo nome"
@@ -779,7 +787,7 @@ export default function Impostazioni() {
               </label>
               <input
                 type="text"
-                value={profileData.partitaIva}
+                value={profileData.partitaIva || ''}
                 onChange={(e) => {
                   setProfileData(prev => ({ ...prev, partitaIva: e.target.value.toUpperCase() }))
                   if (validationErrors.partitaIva) {
@@ -807,7 +815,7 @@ export default function Impostazioni() {
                 Codice ATECO
               </label>
               <ATECOAutocomplete
-                value={profileData.codiceAteco}
+                value={profileData.codiceAteco || ''}
                 onChange={(value) => {
                   setProfileData(prev => ({ ...prev, codiceAteco: value }))
                   if (validationErrors.codiceAteco) {
@@ -827,7 +835,7 @@ export default function Impostazioni() {
                 Regime Contabile
               </label>
               <select
-                value={profileData.regimeFiscale}
+                value={profileData.regimeFiscale || ''}
                 onChange={(e) => setProfileData(prev => ({ ...prev, regimeFiscale: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
@@ -842,7 +850,7 @@ export default function Impostazioni() {
                 Aliquota IVA
               </label>
               <select
-                value={profileData.aliquotaIva}
+                value={profileData.aliquotaIva || ''}
                 onChange={(e) => setProfileData(prev => ({ ...prev, aliquotaIva: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
