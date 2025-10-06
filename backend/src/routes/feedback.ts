@@ -181,10 +181,10 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
   try {
     const { status, rating, category, consultantId } = req.query
 
-    const query: any = {}
+    const query: mongoose.FilterQuery<typeof Feedback> = {}
 
     if (status && status !== 'all') {
-      query.status = status
+      query.status = status as 'pending' | 'responded' | 'archived'
     }
 
     if (rating) {
@@ -198,11 +198,11 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
     }
 
     if (category && category !== 'all') {
-      query.category = category
+      query.category = category as string
     }
 
     if (consultantId) {
-      query.consultantId = consultantId
+      query.consultantId = consultantId as string
     }
 
     const feedbacks = await Feedback.find(query)

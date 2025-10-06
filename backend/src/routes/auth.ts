@@ -266,9 +266,9 @@ router.post('/register', async (req: Request, res: Response) => {
         pivaApprovalStatus: user.pivaApprovalStatus
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration error:', error)
-    if (error.code === 11000) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return res.status(409).json({ error: 'Esiste già un utente con questa email' })
     }
     res.status(500).json({ error: 'Errore interno del server' })

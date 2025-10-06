@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request } from 'express'
 import multer from 'multer'
 import path from 'path'
 import PDFDocument from 'pdfkit'
@@ -13,10 +13,10 @@ const router = express.Router()
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (_req: any, _file: any, cb: any) => {
+  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, 'uploads/chat/')
   },
-  filename: (_req: any, file: any, cb: any) => {
+  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     cb(null, uniqueSuffix + path.extname(file.originalname))
   }
@@ -27,7 +27,7 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB max
   },
-  fileFilter: (_req: any, file: any, cb: any) => {
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     // Allow images and common document types
     const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|txt/
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -162,10 +162,10 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
     )
 
     // Format messages for frontend
-    const formattedMessages = messages.map((msg: any) => ({
+    const formattedMessages = messages.map((msg) => ({
       id: msg._id,
       mittente: msg.senderRole === userRole ? (userRole === 'business' ? 'user' : 'consulente') : (userRole === 'business' ? 'consulente' : 'cliente'),
-      nome: msg.senderId?.name || 'Utente',
+      nome: (msg.senderId as any)?.name || 'Utente',
       testo: msg.testo,
       timestamp: msg.createdAt.toISOString(),
       stato: msg.stato,
@@ -180,15 +180,15 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
 })
 
 // Upload files
-router.post('/upload', authenticateToken, (upload.array('files', 5) as any), async (req: any, res: any) => {
+router.post('/upload', authenticateToken, upload.array('files', 5), async (req: AuthRequest, res) => {
   try {
-    const files = req.files as any[]
+    const files = req.files as Express.Multer.File[]
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Nessun file caricato' })
     }
 
-    const uploadedFiles = files.map((file: any) => ({
+    const uploadedFiles = files.map((file) => ({
       filename: file.originalname,
       url: `/uploads/chat/${file.filename}`,
       mimeType: file.mimetype,
@@ -286,7 +286,7 @@ router.get('/conversations/:conversationId/messages/new', authenticateToken, asy
     }
 
     // Get new messages
-    const query: any = { conversationId }
+    const query: mongoose.FilterQuery<typeof Message> = { conversationId }
     if (since) {
       query.createdAt = { $gt: new Date(since as string) }
     }
@@ -308,10 +308,10 @@ router.get('/conversations/:conversationId/messages/new', authenticateToken, asy
     )
 
     // Format messages for frontend
-    const formattedMessages = messages.map((msg: any) => ({
+    const formattedMessages = messages.map((msg) => ({
       id: msg._id,
       mittente: msg.senderRole === userRole ? (userRole === 'business' ? 'user' : 'consulente') : (userRole === 'business' ? 'consulente' : 'cliente'),
-      nome: msg.senderId?.name || 'Utente',
+      nome: (msg.senderId as any)?.name || 'Utente',
       testo: msg.testo,
       timestamp: msg.createdAt.toISOString(),
       stato: msg.stato,
@@ -592,7 +592,7 @@ router.get('/conversations/paid/list', authenticateToken, async (req: AuthReques
       .sort({ createdAt: -1 })
       .lean()
 
-    const paidTransactions = paidInvoices.map((invoice: any) => ({
+    const paidTransactions = paidInvoices.map((invoice) => ({
       id: invoice._id,
       numero: invoice.numero,
       cliente: invoice.cliente,
@@ -625,14 +625,14 @@ router.get('/conversations/paid/list', authenticateToken, async (req: AuthReques
       .sort({ createdAt: -1 })
       .lean()
 
-    const pendingTransactions = pendingConversations.map((conv: any) => ({
+    const pendingTransactions = pendingConversations.map((conv) => ({
       id: conv._id,
       numero: `INV-${conv._id.toString().slice(-6).toUpperCase()}-PENDING`,
-      cliente: conv.businessUserId?.name || 'Cliente sconosciuto',
-      email: conv.businessUserId?.email || '',
-      clienteEmail: conv.businessUserId?.email || '',
-      azienda: conv.businessUserId?.company || 'Non specificata',
-      consulente: conv.adminUserId?.name || 'Non assegnato',
+      cliente: (conv.businessUserId as any)?.name || 'Cliente sconosciuto',
+      email: (conv.businessUserId as any)?.email || '',
+      clienteEmail: (conv.businessUserId as any)?.email || '',
+      azienda: (conv.businessUserId as any)?.company || 'Non specificata',
+      consulente: (conv.adminUserId as any)?.name || 'Non assegnato',
       servizio: conv.argomento,
       tipo: conv.tipo,
       importo: conv.importo,

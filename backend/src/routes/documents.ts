@@ -1,7 +1,8 @@
-import { Router, Response } from 'express'
+import { Router, Response, Request } from 'express'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
+import mongoose from 'mongoose'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
 import Document from '../models/Document'
 import User from '../models/User'
@@ -10,7 +11,7 @@ const router = Router()
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     const uploadDir = path.join(__dirname, '../../uploads/documents')
 
     // Create directory if it doesn't exist
@@ -20,7 +21,7 @@ const storage = multer.diskStorage({
 
     cb(null, uploadDir)
   },
-  filename: (req, file, cb) => {
+  filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     // Generate unique filename: timestamp-userid-originalname
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     const ext = path.extname(file.originalname)
@@ -29,7 +30,7 @@ const storage = multer.diskStorage({
   }
 })
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   // Allowed file types
   const allowedMimeTypes = [
     'application/pdf',
@@ -70,7 +71,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const userRole = req.user!.role
     const { categoria, status, anno, clientId } = req.query
 
-    let query: any = { deleted: false }
+    let query: mongoose.FilterQuery<typeof Document> = { deleted: false }
 
     if (userRole === 'business') {
       // Business users can only see their own documents
@@ -216,7 +217,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
         fileUrl: document.fileUrl
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error uploading document:', error)
 
     // Delete uploaded file on error
@@ -228,7 +229,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
       }
     }
 
-    if (error.message && error.message.includes('Tipo di file non supportato')) {
+    if (error instanceof Error && error.message && error.message.includes('Tipo di file non supportato')) {
       return res.status(400).json({ error: error.message })
     }
 
@@ -400,7 +401,7 @@ router.get('/stats/summary', authMiddleware, async (req: AuthRequest, res: Respo
     const userRole = req.user!.role
     const { clientId } = req.query
 
-    let query: any = { deleted: false }
+    let query: mongoose.FilterQuery<typeof Document> = { deleted: false }
 
     if (userRole === 'business') {
       query.userId = userId
