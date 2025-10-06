@@ -4,6 +4,8 @@ import speakeasy from 'speakeasy'
 import User from '../models/User'
 import Session from '../models/Session'
 import { UAParser } from 'ua-parser-js'
+import { validate } from '../middleware/validate'
+import { loginSchema, registerSchema, verify2FASchema } from '../validators/auth'
 
 const router = Router()
 
@@ -54,19 +56,11 @@ const validateName = (name: string): { valid: boolean; sanitized?: string; error
 }
 
 // Login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', validate(loginSchema), async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email e password sono obbligatori' })
-    }
-
     const normalizedEmail = email.trim().toLowerCase()
-
-    if (!isValidEmail(normalizedEmail)) {
-      return res.status(400).json({ error: 'Formato email non valido' })
-    }
 
     const user = await User.findOne({ email: normalizedEmail })
     if (!user) {
