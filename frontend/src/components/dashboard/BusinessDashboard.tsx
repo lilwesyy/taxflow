@@ -44,16 +44,23 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
   }
 
   const sidebarItems = [
+    // Overview e gestione operativa
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'fatture', name: 'Fatturazione', icon: Receipt },
+    { id: 'documenti', name: 'Cassetto Fiscale', icon: FolderOpen },
+
+    // Strumenti di analisi e pianificazione
     { id: 'simulazione-imposte', name: 'Simulazione Imposte', icon: Calculator },
     { id: 'analisi-ai', name: 'Analisi AI', icon: Brain },
     { id: 'business-plan', name: 'Business Plan', icon: Target },
+
+    // Consulenza e supporto
     { id: 'consulenza', name: 'Chat Consulente', icon: MessageSquare },
-    { id: 'documenti', name: 'Cassetto Fiscale', icon: FolderOpen },
-    { id: 'impostazioni', name: 'Impostazioni', icon: Settings },
+    { id: 'feedback-consulente', name: 'Feedback Consulente', icon: Star },
     { id: 'supporto', name: 'Supporto', icon: HelpCircle },
-    { id: 'feedback-consulente', name: 'Feedback Consulente', icon: Star }
+
+    // Configurazione
+    { id: 'impostazioni', name: 'Impostazioni', icon: Settings }
   ]
 
 

@@ -47,18 +47,27 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
   }
 
   const sidebarItems = [
+    // Overview e gestione clienti
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'clienti', name: 'Gestione Clienti', icon: Users },
     { id: 'richieste-piva', name: 'Richieste P.IVA', icon: Building2 },
+
+    // Strumenti di consulenza
+    { id: 'consulenze', name: 'Chat Consulenze', icon: MessageSquare },
     { id: 'analisi-ai', name: 'Analisi AI Clienti', icon: Brain },
     { id: 'business-plans', name: 'Business Plans', icon: Target },
-    { id: 'consulenze', name: 'Chat Consulenze', icon: MessageSquare },
+
+    // Gestione documenti e fatturazione
     { id: 'documenti', name: 'Cassetti Fiscali', icon: FolderOpen },
     { id: 'fatturazione', name: 'Fatturazione', icon: Receipt },
+
+    // Analisi e feedback
     { id: 'reports', name: 'Report & Analytics', icon: TrendingUp },
     { id: 'feedback-clienti', name: 'Feedback Clienti', icon: Star },
-    { id: 'impostazioni', name: 'Impostazioni', icon: Settings },
-    { id: 'supporto', name: 'Supporto', icon: HelpCircle }
+
+    // Sistema e supporto
+    { id: 'supporto', name: 'Supporto', icon: HelpCircle },
+    { id: 'impostazioni', name: 'Impostazioni', icon: Settings }
   ]
 
 
