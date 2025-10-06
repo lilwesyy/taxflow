@@ -1,4 +1,4 @@
-import { Settings, User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2 } from 'lucide-react'
+import { User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -110,7 +110,46 @@ export default function Impostazioni() {
 
       if (response.ok) {
         const data = await response.json()
-        setSessions(data.sessions)
+        const sessions = data.sessions
+
+        // Auto-terminate sessions if more than 3
+        if (sessions.length > 3) {
+          // Sort by lastActivity (oldest first)
+          const sortedSessions = [...sessions].sort((a, b) =>
+            new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime()
+          )
+
+          // Get sessions to terminate (all except the 3 most recent)
+          const sessionsToTerminate = sortedSessions.slice(0, sessions.length - 3)
+
+          // Terminate old sessions
+          for (const session of sessionsToTerminate) {
+            try {
+              await fetch(`${API_URL}/security/sessions/${session.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+            } catch (err) {
+              console.error('Error terminating session:', err)
+            }
+          }
+
+          // Reload sessions after cleanup
+          const updatedResponse = await fetch(`${API_URL}/security/sessions`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json()
+            setSessions(updatedData.sessions)
+          }
+        } else {
+          setSessions(sessions)
+        }
       }
     } catch (error) {
       console.error('Error loading sessions:', error)
@@ -262,14 +301,6 @@ export default function Impostazioni() {
     weeklyReport: true
   })
 
-  const [systemSettings, setSystemSettings] = useState({
-    language: 'it',
-    timezone: 'Europe/Rome',
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'EUR',
-    theme: 'light'
-  })
-
   const [integrationSettings, setIntegrationSettings] = useState({
     apiKey: 'sk_live_1234567890abcdef',
     webhookUrl: 'https://taxflow.it/api/webhooks',
@@ -293,7 +324,6 @@ export default function Impostazioni() {
     { id: 'profile', name: 'Profilo', icon: User },
     { id: 'notifications', name: 'Notifiche', icon: Bell },
     { id: 'security', name: 'Sicurezza', icon: Shield },
-    { id: 'system', name: 'Sistema', icon: Settings },
     { id: 'integrations', name: 'Integrazioni', icon: Database }
   ]
 
@@ -1034,104 +1064,6 @@ export default function Impostazioni() {
     </div>
   )
 
-  const renderSystemTab = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Impostazioni Sistema</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lingua
-            </label>
-            <select
-              value={systemSettings.language}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, language: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="it">Italiano</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fuso Orario
-            </label>
-            <select
-              value={systemSettings.timezone}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, timezone: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="Europe/Rome">Europa/Roma (GMT+1)</option>
-              <option value="Europe/London">Europa/Londra (GMT+0)</option>
-              <option value="America/New_York">America/New York (GMT-5)</option>
-              <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Formato Data
-            </label>
-            <select
-              value={systemSettings.dateFormat}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Valuta
-            </label>
-            <select
-              value={systemSettings.currency}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, currency: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="EUR">Euro (€)</option>
-              <option value="USD">Dollaro US ($)</option>
-              <option value="GBP">Sterlina (£)</option>
-              <option value="CHF">Franco Svizzero (CHF)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tema
-            </label>
-            <select
-              value={systemSettings.theme}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, theme: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="light">Chiaro</option>
-              <option value="dark">Scuro</option>
-              <option value="auto">Automatico</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('system')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Salva Impostazioni
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-
   const renderIntegrationsTab = () => (
     <div className="space-y-6">
       <div>
@@ -1294,8 +1226,6 @@ export default function Impostazioni() {
         return renderNotificationsTab()
       case 'security':
         return renderSecurityTab()
-      case 'system':
-        return renderSystemTab()
       case 'integrations':
         return renderIntegrationsTab()
       default:
