@@ -45,7 +45,6 @@ const upload = multer({
 router.get('/consultants', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userRole = req.user!.role
-    console.log('🔍 User requesting consultants:', req.user)
 
     if (userRole !== 'business') {
       return res.status(403).json({ error: 'Solo i clienti possono vedere i consulenti' })
@@ -55,9 +54,6 @@ router.get('/consultants', authenticateToken, async (req: AuthRequest, res) => {
     const consultants = await User.find({ role: 'admin' })
       .select('name email professionalRole bio')
       .lean()
-
-    console.log('👥 Found consultants:', consultants.length)
-    console.log('Consultants:', consultants)
 
     res.json(consultants)
   } catch (error) {

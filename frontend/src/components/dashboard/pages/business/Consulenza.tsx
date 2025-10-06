@@ -330,16 +330,32 @@ export default function Consulenza() {
     setShowNewChatModal(true)
   }
 
-  const handleCreateConversation = async (argomento: string, tipo: string) => {
+  const getTipoLabel = (tipo: string) => {
+    const labels: { [key: string]: string } = {
+      'consulenza_fiscale': 'Consulenza Fiscale',
+      'business_plan': 'Business Plan',
+      'analisi_finanziaria': 'Analisi Finanziaria',
+      'consulenza_generale': 'Consulenza Generale',
+      'adempimenti_fiscali': 'Adempimenti Fiscali',
+      'consulenza_immobiliare': 'Consulenza Immobiliare'
+    }
+    return labels[tipo] || tipo
+  }
+
+  const handleCreateConversation = async (tipo: string, messaggio: string) => {
     if (!selectedConsultant) return
 
     try {
-      await chatService.createConversation({
-        argomento,
+      // Create conversation with formatted tipo as argomento
+      const newConversation = await chatService.createConversation({
+        argomento: getTipoLabel(tipo),
         tipo,
         adminUserId: selectedConsultant._id,
         importo: 0
       })
+
+      // Send initial message
+      await chatService.sendMessage(newConversation._id, messaggio, [])
 
       // Reload conversations to show the new pending conversation
       await loadConversations()
@@ -348,8 +364,11 @@ export default function Consulenza() {
       setShowNewChatModal(false)
       setSelectedConsultant(null)
 
-      // Switch to conversations view
+      // Switch to conversations view and select the new conversation
       setViewMode('conversations')
+      setActiveChat(newConversation._id)
+
+      showToast('Richiesta di consulenza inviata con successo!', 'success')
     } catch (error) {
       console.error('Error creating conversation:', error)
       showToast('Errore nella creazione della conversazione', 'error')
@@ -996,25 +1015,12 @@ export default function Consulenza() {
             onSubmit={(e) => {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
-              const argomento = formData.get('argomento') as string
               const tipo = formData.get('tipo') as string
-              handleCreateConversation(argomento, tipo)
+              const messaggio = formData.get('messaggio') as string
+              handleCreateConversation(tipo, messaggio)
             }}
           >
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Argomento della consulenza
-                </label>
-                <input
-                  type="text"
-                  name="argomento"
-                  required
-                  placeholder="Es: Apertura P.IVA forfettaria"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tipo di consulenza
@@ -1031,6 +1037,22 @@ export default function Consulenza() {
                   <option value="adempimenti_fiscali">Adempimenti Fiscali</option>
                   <option value="consulenza_immobiliare">Consulenza Immobiliare</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Messaggio iniziale <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="messaggio"
+                  required
+                  rows={4}
+                  placeholder="Descrivi in dettaglio la tua richiesta di consulenza..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Il consulente leggerà questo messaggio per decidere se accettare la richiesta
+                </p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

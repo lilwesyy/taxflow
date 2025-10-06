@@ -717,46 +717,57 @@ export default function Consulenze() {
               </div>
 
               {/* Messaggi */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {conversazioneAttiva?.status === 'pending' ? (
-                  /* Pending conversation - show accept/reject buttons */
-                  <div className="h-full flex items-center justify-center">
-                    <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
-                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-yellow-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta di Consulenza</h3>
-                      <p className="text-gray-600 mb-2">
-                        <span className="font-medium">{conversazioneAttiva.cliente.nome}</span> ha richiesto una consulenza
-                      </p>
-                      <p className="text-sm text-gray-500 mb-6">
-                        Argomento: <span className="font-medium">{conversazioneAttiva.argomento}</span>
-                      </p>
+              {conversazioneAttiva?.status === 'pending' ? (
+                <>
+                  {/* Pending conversation - show alert banner */}
+                  <div className="bg-yellow-50 border-b border-yellow-200 p-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
+                        <AlertCircle className="h-6 w-6 text-yellow-600" />
+                        <div>
+                          <h3 className="font-semibold text-gray-900">Richiesta di Consulenza</h3>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">{conversazioneAttiva.cliente.nome}</span> ha richiesto una consulenza su: {conversazioneAttiva.argomento}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
                         <button
                           onClick={(e) => {
                             e.preventDefault()
                             handleAcceptConversation(activeChat!, e)
                           }}
-                          className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center space-x-2"
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center space-x-2"
                         >
-                          <Check className="h-5 w-5" />
-                          <span>Accetta Richiesta</span>
+                          <Check className="h-4 w-4" />
+                          <span>Accetta</span>
                         </button>
                         <button
                           onClick={(e) => {
                             e.preventDefault()
                             handleRejectConversation(activeChat!, e)
                           }}
-                          className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center space-x-2"
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center space-x-2"
                         >
-                          <X className="h-5 w-5" />
-                          <span>Rifiuta Richiesta</span>
+                          <X className="h-4 w-4" />
+                          <span>Rifiuta</span>
                         </button>
                       </div>
                     </div>
                   </div>
-                ) : (
+                  {/* Show messages even when pending */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                    <MessageList
+                      messages={chatMessages}
+                      userRole="admin"
+                      aiLoading={aiLoading && activeChat === aiConversationId}
+                      onPreviewFile={handlePreviewFile}
+                      onDownloadFile={handleDownloadFile}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
                   <MessageList
                     messages={chatMessages}
                     userRole="admin"
@@ -764,8 +775,8 @@ export default function Consulenze() {
                     onPreviewFile={handlePreviewFile}
                     onDownloadFile={handleDownloadFile}
                   />
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Input Messaggio */}
               <MessageInput

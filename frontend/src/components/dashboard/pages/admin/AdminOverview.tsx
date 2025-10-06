@@ -19,6 +19,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
   const [recentClients, setRecentClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [monthlyRevenue, setMonthlyRevenue] = useState(0)
+  const [completedConsultations, setCompletedConsultations] = useState(0)
 
   useEffect(() => {
     loadStats()
@@ -47,12 +48,12 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
         setPivaRequestsCount(pivaResponse.requests.length)
       }
 
-      // Calculate monthly revenue from paid invoices
+      // Calculate monthly revenue from paid invoices and completed consultations
       if (invoicesResponse) {
         const currentMonth = new Date().getMonth()
         const currentYear = new Date().getFullYear()
 
-        const monthlyTotal = invoicesResponse
+        const monthlyInvoices = invoicesResponse
           .filter((invoice: any) => {
             if (invoice.status !== 'paid' || !invoice.dataPagamento) return false
 
@@ -63,9 +64,13 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
             return paymentDate.getMonth() === currentMonth &&
                    paymentDate.getFullYear() === currentYear
           })
-          .reduce((sum: number, invoice: any) => sum + (invoice.totale || 0), 0)
 
+        const monthlyTotal = monthlyInvoices.reduce((sum: number, invoice: any) => sum + (invoice.totale || 0), 0)
         setMonthlyRevenue(monthlyTotal)
+
+        // Count completed (paid) consultations
+        const completedCount = invoicesResponse.filter((invoice: any) => invoice.status === 'paid').length
+        setCompletedConsultations(completedCount)
       }
     } catch (error) {
       console.error('Error loading stats:', error)
@@ -90,7 +95,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
     { title: 'Clienti Attivi', value: loading ? '...' : clientsCount.toString(), change: '+8%', icon: Users, color: 'text-blue-600', trend: 'up' },
     { title: 'Fatturato Mensile', value: loading ? '...' : formatRevenue(monthlyRevenue), change: '+15%', icon: DollarSign, color: 'text-green-600', trend: 'up' },
     { title: 'Richieste P.IVA', value: loading ? '...' : pivaRequestsCount.toString(), change: '+25%', icon: Building2, color: 'text-purple-600', trend: 'up' },
-    { title: 'Analisi Completate', value: '89', change: '+12%', icon: Brain, color: 'text-accent-600', trend: 'up' }
+    { title: 'Consulenze Completate', value: loading ? '...' : completedConsultations.toString(), change: '+12%', icon: CheckCircle, color: 'text-accent-600', trend: 'up' }
   ]
 
   const pendingRequests = mockAdminRequests
