@@ -35,11 +35,13 @@ export default function Consulenze() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [invoiceAmount, setInvoiceAmount] = useState('')
   const [creatingInvoice, setCreatingInvoice] = useState(false)
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0)
 
   // Load conversations and AI assistant on mount
   useEffect(() => {
     loadAIAssistant()
     loadConversations()
+    loadRevenueStats()
   }, [])
 
   const loadAIAssistant = async () => {
@@ -51,6 +53,44 @@ export default function Consulenze() {
       setActiveChat(aiConv.id)
     } catch (error) {
       console.error('Error loading AI assistant:', error)
+    }
+  }
+
+  const loadRevenueStats = async () => {
+    try {
+      // Load all invoices for this admin
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/conversations/paid/list`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (!response.ok) return
+
+      const invoices = await response.json()
+
+      // Filter only paid invoices
+      const paidInvoices = invoices.filter((inv: any) => inv.status === 'paid')
+
+      // Calculate monthly revenue (current month)
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+
+      const monthlyTotal = paidInvoices
+        .filter((inv: any) => {
+          if (!inv.dataPagamento) return false
+
+          // Parse Italian date format (dd/mm/yyyy)
+          const [day, month, year] = inv.dataPagamento.split('/')
+          const paymentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+
+          return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear
+        })
+        .reduce((sum: number, inv: any) => sum + (inv.totale || 0), 0)
+
+      setMonthlyRevenue(monthlyTotal)
+    } catch (error) {
+      console.error('Error loading revenue stats:', error)
     }
   }
 
@@ -135,7 +175,8 @@ export default function Consulenze() {
         durataConsulenza: conv.durataConsulenza,
         rating: conv.rating,
         fatturata: conv.fatturata,
-        importo: conv.importo
+        importo: conv.importo,
+        paidAt: conv.paidAt
       }))
 
       setConversazioni(transformed)
@@ -485,11 +526,15 @@ export default function Consulenze() {
     }
   }
 
+  const formatRevenue = (amount: number) => {
+    return amount % 1 === 0 ? `€ ${amount.toFixed(0)}` : `€ ${amount.toFixed(2)}`
+  }
+
   const stats = [
     { title: 'Consulenze Totali', value: conversazioni.length.toString(), icon: MessageSquare, color: 'text-blue-600' },
     { title: 'Attive', value: conversazioni.filter(c => c.status === 'active').length.toString(), icon: Users, color: 'text-green-600' },
     { title: 'In Attesa', value: conversazioni.filter(c => c.status === 'pending').length.toString(), icon: Clock, color: 'text-yellow-600' },
-    { title: 'Fatturato Mensile', value: `€ ${conversazioni.filter(c => c.fatturata).reduce((sum, c) => sum + c.importo, 0)}`, icon: TrendingUp, color: 'text-purple-600' }
+    { title: 'Fatturato Mensile', value: loading ? '...' : formatRevenue(monthlyRevenue), icon: TrendingUp, color: 'text-purple-600' }
   ]
 
   // Check if active chat is AI or regular conversation
