@@ -8,9 +8,39 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'icons-vendor': ['lucide-react']
+        manualChunks(id) {
+          // Vendor chunks for libraries
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor'
+            }
+            if (id.includes('lucide-react')) {
+              return 'icons-vendor'
+            }
+            if (id.includes('@stripe')) {
+              return 'stripe-vendor'
+            }
+            if (id.includes('xlsx')) {
+              return 'xlsx-vendor'
+            }
+            // Other node_modules go to vendor chunk
+            return 'vendor'
+          }
+
+          // Split admin dashboard pages
+          if (id.includes('/pages/admin/')) {
+            return 'admin-pages'
+          }
+
+          // Split business dashboard pages
+          if (id.includes('/pages/business/')) {
+            return 'business-pages'
+          }
+
+          // Split shared dashboard components
+          if (id.includes('/dashboard/shared/')) {
+            return 'dashboard-shared'
+          }
         }
       }
     },
