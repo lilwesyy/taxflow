@@ -16,6 +16,8 @@ interface IUser extends mongoose.Document {
   professionalRole?: string
   bio?: string
   address?: string
+  city?: string
+  cap?: string
   fiscalCode?: string
   registrationNumber?: string
 
@@ -23,6 +25,7 @@ interface IUser extends mongoose.Document {
   company?: string
   piva?: string
   codiceAteco?: string
+  settoreAttivita?: string
   regimeContabile?: 'Forfettario' | 'Ordinario' | 'Semplificato'
   aliquotaIva?: string
   fatturato?: number
@@ -105,6 +108,8 @@ const UserSchema = new mongoose.Schema({
   professionalRole: { type: String },
   bio: { type: String },
   address: { type: String },
+  city: { type: String },
+  cap: { type: String },
   fiscalCode: { type: String },
   registrationNumber: { type: String },
 
@@ -112,6 +117,7 @@ const UserSchema = new mongoose.Schema({
   company: { type: String },
   piva: { type: String },
   codiceAteco: { type: String },
+  settoreAttivita: { type: String },
   regimeContabile: { type: String, enum: ['Forfettario', 'Ordinario', 'Semplificato'], default: 'Forfettario' },
   aliquotaIva: { type: String, default: '5%' },
   fatturato: { type: Number, default: 0 },

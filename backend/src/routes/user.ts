@@ -24,8 +24,18 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
         professionalRole: user.professionalRole,
         bio: user.bio,
         address: user.address,
+        city: user.city,
+        cap: user.cap,
         fiscalCode: user.fiscalCode,
         registrationNumber: user.registrationNumber,
+        company: user.company,
+        piva: user.piva,
+        codiceAteco: user.codiceAteco,
+        settoreAttivita: user.settoreAttivita,
+        regimeContabile: user.regimeContabile,
+        aliquotaIva: user.aliquotaIva,
+        fatturato: user.fatturato,
+        status: user.status,
         notificationSettings: user.notificationSettings || {
           emailNewClient: true,
           emailNewRequest: true,
@@ -55,7 +65,59 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
       return res.status(404).json({ error: 'Utente non trovato' })
     }
 
-    const { name, email, phone, professionalRole, bio, address, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings, pivaRequestData, pivaFormSubmitted, pivaApprovalStatus, company, piva, codiceAteco, regimeContabile, aliquotaIva } = req.body
+    const { name, email, phone, professionalRole, bio, address, city, cap, fiscalCode, registrationNumber, currentPassword, newPassword, notificationSettings, pivaRequestData, pivaFormSubmitted, pivaApprovalStatus, company, piva, codiceAteco, settoreAttivita, regimeContabile, aliquotaIva } = req.body
+
+    // Validation
+    if (name !== undefined && !name.trim()) {
+      return res.status(400).json({ error: 'Il nome è obbligatorio' })
+    }
+
+    if (email !== undefined) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Email non valida' })
+      }
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } })
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email già in uso' })
+      }
+    }
+
+    if (phone !== undefined && phone) {
+      const phoneRegex = /^(\+39)?[ ]?[0-9]{9,10}$/
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        return res.status(400).json({ error: 'Numero di telefono non valido' })
+      }
+    }
+
+    if (fiscalCode !== undefined && fiscalCode) {
+      const cfRegex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/
+      if (!cfRegex.test(fiscalCode.toUpperCase())) {
+        return res.status(400).json({ error: 'Codice fiscale non valido' })
+      }
+    }
+
+    if (piva !== undefined && piva) {
+      const pivaRegex = /^(IT)?[0-9]{11}$/
+      if (!pivaRegex.test(piva.replace(/\s/g, ''))) {
+        return res.status(400).json({ error: 'Partita IVA non valida' })
+      }
+    }
+
+    if (cap !== undefined && cap) {
+      const capRegex = /^[0-9]{5}$/
+      if (!capRegex.test(cap)) {
+        return res.status(400).json({ error: 'CAP non valido' })
+      }
+    }
+
+    if (codiceAteco !== undefined && codiceAteco) {
+      const atecoRegex = /^[0-9]{2}\.[0-9]{2}\.[0-9]{2}$/
+      if (!atecoRegex.test(codiceAteco)) {
+        return res.status(400).json({ error: 'Codice ATECO non valido (formato: XX.XX.XX)' })
+      }
+    }
 
     // Update basic fields
     if (name !== undefined) user.name = name.trim()
@@ -64,11 +126,14 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
     if (professionalRole !== undefined) user.professionalRole = professionalRole?.trim() || undefined
     if (bio !== undefined) user.bio = bio?.trim() || undefined
     if (address !== undefined) user.address = address?.trim() || undefined
+    if (city !== undefined) user.city = city?.trim() || undefined
+    if (cap !== undefined) user.cap = cap?.trim() || undefined
     if (fiscalCode !== undefined) user.fiscalCode = fiscalCode?.trim().toUpperCase() || undefined
     if (registrationNumber !== undefined) user.registrationNumber = registrationNumber?.trim() || undefined
     if (company !== undefined) user.company = company?.trim() || undefined
     if (piva !== undefined) user.piva = piva?.trim() || undefined
     if (codiceAteco !== undefined) user.codiceAteco = codiceAteco?.trim() || undefined
+    if (settoreAttivita !== undefined) user.settoreAttivita = settoreAttivita?.trim() || undefined
     if (regimeContabile !== undefined) user.regimeContabile = regimeContabile?.trim() || undefined
     if (aliquotaIva !== undefined) user.aliquotaIva = aliquotaIva?.trim() || undefined
 
@@ -128,8 +193,18 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
         professionalRole: savedUser.professionalRole,
         bio: savedUser.bio,
         address: savedUser.address,
+        city: savedUser.city,
+        cap: savedUser.cap,
         fiscalCode: savedUser.fiscalCode,
         registrationNumber: savedUser.registrationNumber,
+        company: savedUser.company,
+        piva: savedUser.piva,
+        codiceAteco: savedUser.codiceAteco,
+        settoreAttivita: savedUser.settoreAttivita,
+        regimeContabile: savedUser.regimeContabile,
+        aliquotaIva: savedUser.aliquotaIva,
+        fatturato: savedUser.fatturato,
+        status: savedUser.status,
         notificationSettings: savedUser.notificationSettings,
         pivaRequestData: savedUser.pivaRequestData,
         pivaFormSubmitted: savedUser.pivaFormSubmitted,
