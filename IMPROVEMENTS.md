@@ -62,26 +62,6 @@
 
 ---
 
-### 4. **UX Issues**
-
-**a) Delay artificiale inutile**
-
-Location: `frontend/src/context/AuthContext.tsx:49`
-
-```typescript
-// Delay artificiale di 1 secondo
-await new Promise(resolve => setTimeout(resolve, 1000))
-```
-
-**Impatto:** App sembra più lenta del necessario
-
-**b) Error handling inconsistente**
-- Try-catch pattern non standardizzato
-- Messaggi di errore non user-friendly
-- Mancanza di error boundaries React
-
----
-
 ### 5. **Infrastructure**
 
 **a) File uploads locali**

@@ -36,21 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Carica token e utente da localStorage all'avvio
-    const loadUserData = async () => {
-      const savedToken = localStorage.getItem('token')
-      const savedUser = localStorage.getItem('user')
+    const savedToken = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
 
-      if (savedToken && savedUser) {
-        setToken(savedToken)
-        setUser(JSON.parse(savedUser))
-      }
-
-      // Delay minimo per mostrare il loading
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setIsLoading(false)
+    if (savedToken && savedUser) {
+      setToken(savedToken)
+      setUser(JSON.parse(savedUser))
     }
 
-    loadUserData()
+    setIsLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<LoginResponse | void> => {
