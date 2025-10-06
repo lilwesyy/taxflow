@@ -1,10 +1,12 @@
 import express from 'express'
 import multer from 'multer'
 import path from 'path'
+import PDFDocument from 'pdfkit'
 import { authenticateToken, AuthRequest } from '../middleware/auth'
 import Conversation from '../models/Conversation'
 import Message from '../models/Message'
 import User from '../models/User'
+import Invoice from '../models/Invoice'
 import mongoose from 'mongoose'
 
 const router = express.Router()
@@ -486,6 +488,50 @@ router.delete('/conversations/:conversationId/reject', authenticateToken, async 
   }
 })
 
+// Update conversation invoice amount (admin only)
+router.patch('/conversations/:conversationId/invoice', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { conversationId } = req.params
+    const { importo } = req.body
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    // Only admins can set invoice amounts
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Solo i consulenti possono creare fatture' })
+    }
+
+    // Validate amount
+    if (typeof importo !== 'number' || importo < 0) {
+      return res.status(400).json({ error: 'Importo non valido' })
+    }
+
+    // Verify conversation exists and belongs to this admin
+    const conversation = await Conversation.findById(conversationId)
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversazione non trovata' })
+    }
+
+    if (conversation.adminUserId?.toString() !== userId) {
+      return res.status(403).json({ error: 'Non hai i permessi per modificare questa conversazione' })
+    }
+
+    // Check if already paid - cannot modify paid invoices
+    if (conversation.fatturata) {
+      return res.status(400).json({ error: 'Non puoi modificare una fattura già pagata' })
+    }
+
+    // Update amount
+    conversation.importo = importo
+    await conversation.save()
+
+    res.json({ message: 'Importo aggiornato con successo', importo })
+  } catch (error) {
+    console.error('Error updating invoice amount:', error)
+    res.status(500).json({ error: 'Errore nell\'aggiornamento dell\'importo' })
+  }
+})
+
 // Delete a conversation (admin only)
 router.delete('/conversations/:conversationId', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -518,6 +564,331 @@ router.delete('/conversations/:conversationId', authenticateToken, async (req: A
   } catch (error) {
     console.error('Error deleting conversation:', error)
     res.status(500).json({ error: 'Errore nell\'eliminazione della conversazione' })
+  }
+})
+
+// Get all invoices for admin (for invoicing/billing page)
+router.get('/conversations/paid/list', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    // Only admins can view all invoices
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    // Helper function to format date for Italian locale
+    const formatItalianDate = (date: Date) => {
+      if (!date) return ''
+      const d = new Date(date)
+      const day = d.getDate().toString().padStart(2, '0')
+      const month = (d.getMonth() + 1).toString().padStart(2, '0')
+      const year = d.getFullYear()
+      return `${day}/${month}/${year}`
+    }
+
+    // Get all paid invoices (from Invoice model)
+    const paidInvoices = await Invoice.find({
+      adminUserId: userId,
+      status: 'paid'
+    })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    const paidTransactions = paidInvoices.map((invoice: any) => ({
+      id: invoice._id,
+      numero: invoice.numero,
+      cliente: invoice.cliente,
+      email: invoice.clienteEmail,
+      clienteEmail: invoice.clienteEmail,
+      azienda: invoice.azienda,
+      consulente: invoice.consulente,
+      servizio: invoice.servizio,
+      tipo: invoice.tipo,
+      importo: invoice.importo,
+      iva: invoice.iva,
+      totale: invoice.totale,
+      status: invoice.status,
+      dataEmissione: invoice.dataEmissione,
+      dataScadenza: invoice.dataEmissione,
+      dataPagamento: invoice.dataPagamento,
+      metodoPagamento: 'carta',
+      stripePaymentIntentId: invoice.stripePaymentIntentId,
+      stripePaymentStatus: invoice.stripePaymentStatus
+    }))
+
+    // Get pending invoices (from Conversation model - not yet paid)
+    const pendingConversations = await Conversation.find({
+      adminUserId: userId,
+      fatturata: false,
+      importo: { $gt: 0 }
+    })
+      .populate('businessUserId', 'name email company')
+      .populate('adminUserId', 'name')
+      .sort({ createdAt: -1 })
+      .lean()
+
+    const pendingTransactions = pendingConversations.map((conv: any) => ({
+      id: conv._id,
+      numero: `INV-${conv._id.toString().slice(-6).toUpperCase()}-PENDING`,
+      cliente: conv.businessUserId?.name || 'Cliente sconosciuto',
+      email: conv.businessUserId?.email || '',
+      clienteEmail: conv.businessUserId?.email || '',
+      azienda: conv.businessUserId?.company || 'Non specificata',
+      consulente: conv.adminUserId?.name || 'Non assegnato',
+      servizio: conv.argomento,
+      tipo: conv.tipo,
+      importo: conv.importo,
+      iva: conv.importo * 0.22,
+      totale: conv.importo * 1.22,
+      status: 'pending',
+      dataEmissione: formatItalianDate(conv.createdAt),
+      dataScadenza: formatItalianDate(conv.createdAt),
+      dataPagamento: null,
+      metodoPagamento: 'carta',
+      stripePaymentIntentId: conv.stripePaymentIntentId,
+      stripePaymentStatus: conv.stripePaymentStatus || 'pending'
+    }))
+
+    // Combine and sort by date (newest first)
+    const allTransactions = [...paidTransactions, ...pendingTransactions]
+
+    res.json(allTransactions)
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
+    res.status(500).json({ error: 'Errore nel recupero delle transazioni' })
+  }
+})
+
+// Update invoice amount (only for pending invoices)
+router.patch('/invoices/:invoiceId/amount', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { invoiceId } = req.params
+    const { importo } = req.body
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    // Only admins can update invoices
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Solo i consulenti possono modificare le fatture' })
+    }
+
+    // Validate amount
+    if (typeof importo !== 'number' || importo < 0) {
+      return res.status(400).json({ error: 'Importo non valido' })
+    }
+
+    // Check if it's a paid invoice (from Invoice model)
+    const paidInvoice = await Invoice.findById(invoiceId)
+    if (paidInvoice) {
+      return res.status(400).json({ error: 'Non puoi modificare una fattura già pagata' })
+    }
+
+    // It's a pending invoice (from Conversation model)
+    // Extract the actual conversation ID (remove -PENDING suffix if present)
+    const conversationId = invoiceId.replace('-PENDING', '')
+
+    const conversation = await Conversation.findById(conversationId)
+    if (!conversation) {
+      return res.status(404).json({ error: 'Fattura non trovata' })
+    }
+
+    // Verify admin ownership
+    if (conversation.adminUserId?.toString() !== userId) {
+      return res.status(403).json({ error: 'Non hai i permessi per modificare questa fattura' })
+    }
+
+    // Check if already paid
+    if (conversation.fatturata) {
+      return res.status(400).json({ error: 'Non puoi modificare una fattura già pagata' })
+    }
+
+    // Update amount
+    conversation.importo = importo
+    await conversation.save()
+
+    res.json({
+      message: 'Importo aggiornato con successo',
+      importo,
+      iva: importo * 0.22,
+      totale: importo * 1.22
+    })
+  } catch (error) {
+    console.error('Error updating invoice amount:', error)
+    res.status(500).json({ error: 'Errore nell\'aggiornamento dell\'importo' })
+  }
+})
+
+// Download invoice PDF
+router.get('/invoices/:invoiceId/pdf', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { invoiceId } = req.params
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    // Find the invoice
+    const invoice = await Invoice.findById(invoiceId)
+      .populate('businessUserId', 'name email company vatNumber address city zipCode province')
+      .populate('adminUserId', 'name email')
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Fattura non trovata' })
+    }
+
+    // Verify user has access
+    if (
+      (userRole === 'business' && invoice.businessUserId._id.toString() !== userId) ||
+      (userRole === 'admin' && invoice.adminUserId._id.toString() !== userId)
+    ) {
+      return res.status(403).json({ error: 'Non autorizzato' })
+    }
+
+    // Only allow PDF download for paid invoices
+    if (invoice.status !== 'paid') {
+      return res.status(400).json({ error: 'Solo le fatture pagate possono essere scaricate' })
+    }
+
+    // Create PDF document
+    const doc = new PDFDocument({ size: 'A4', margin: 50 })
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename=fattura-${invoice.numero}.pdf`)
+
+    // Pipe PDF to response
+    doc.pipe(res)
+
+    // Helper function to format currency
+    const formatCurrency = (amount: number) => `€ ${amount.toFixed(2)}`
+
+    // Colors
+    const primaryColor = '#3b82f6'
+    const textColor = '#1f2937'
+    const lightGray = '#6b7280'
+
+    // Add logo
+    try {
+      const logoPath = path.join(__dirname, '..', 'assets', 'logo.png')
+      doc.image(logoPath, 50, 45, { width: 80 })
+    } catch (error) {
+      console.log('Logo not found, using text instead')
+      doc.fontSize(24).fillColor(primaryColor).text('TaxFlow', 50, 50)
+    }
+
+    // Header with company info
+    doc.fontSize(10).fillColor(lightGray)
+      .text('Via Example 123', 50, 80)
+      .text('00100 Roma, Italia', 50, 95)
+      .text('P.IVA: IT12345678901', 50, 110)
+
+    // Invoice title and number
+    doc.fontSize(28).fillColor(textColor).text('FATTURA', 400, 50, { align: 'right' })
+    doc.fontSize(12).fillColor(lightGray).text(`N. ${invoice.numero}`, 400, 85, { align: 'right' })
+
+    // Horizontal line
+    doc.strokeColor('#e5e7eb').lineWidth(1)
+      .moveTo(50, 140).lineTo(545, 140).stroke()
+
+    // Client information
+    doc.fontSize(10).fillColor(lightGray).text('CLIENTE', 50, 160)
+    doc.fontSize(12).fillColor(textColor)
+      .text((invoice.businessUserId as any).name || 'N/A', 50, 180)
+      .fontSize(10).fillColor(lightGray)
+      .text((invoice.businessUserId as any).email || '', 50, 198)
+
+    if ((invoice.businessUserId as any).company) {
+      doc.text((invoice.businessUserId as any).company, 50, 213)
+    }
+    if ((invoice.businessUserId as any).vatNumber) {
+      doc.text(`P.IVA: ${(invoice.businessUserId as any).vatNumber}`, 50, 228)
+    }
+    if ((invoice.businessUserId as any).address) {
+      doc.text((invoice.businessUserId as any).address, 50, 243)
+    }
+
+    // Invoice details
+    doc.fontSize(10).fillColor(lightGray).text('DATA EMISSIONE', 350, 160)
+    doc.fontSize(12).fillColor(textColor).text(invoice.dataEmissione, 350, 180)
+
+    if (invoice.dataPagamento) {
+      doc.fontSize(10).fillColor(lightGray).text('DATA PAGAMENTO', 350, 205)
+      doc.fontSize(12).fillColor(textColor).text(invoice.dataPagamento, 350, 225)
+    }
+
+    // Consultant info
+    doc.fontSize(10).fillColor(lightGray).text('CONSULENTE', 50, 280)
+    doc.fontSize(12).fillColor(textColor).text(invoice.consulente, 50, 300)
+
+    // Service details section
+    const tableTop = 350
+    doc.fontSize(10).fillColor(lightGray)
+      .text('DESCRIZIONE', 50, tableTop)
+      .text('IMPORTO', 400, tableTop, { width: 90, align: 'right' })
+
+    // Service row
+    doc.strokeColor('#e5e7eb').lineWidth(1)
+      .moveTo(50, tableTop + 20).lineTo(545, tableTop + 20).stroke()
+
+    doc.fontSize(11).fillColor(textColor)
+      .text(invoice.servizio, 50, tableTop + 30, { width: 300 })
+    doc.fontSize(10).fillColor(lightGray)
+      .text(`Tipo: ${invoice.tipo}`, 50, tableTop + 50, { width: 300 })
+    doc.fontSize(12).fillColor(textColor)
+      .text(formatCurrency(invoice.importo), 400, tableTop + 30, { width: 90, align: 'right' })
+
+    // Totals section
+    const totalsTop = tableTop + 100
+    doc.strokeColor('#e5e7eb').lineWidth(1)
+      .moveTo(350, totalsTop).lineTo(545, totalsTop).stroke()
+
+    // Subtotal
+    doc.fontSize(10).fillColor(lightGray)
+      .text('Imponibile:', 350, totalsTop + 15)
+    doc.fontSize(11).fillColor(textColor)
+      .text(formatCurrency(invoice.importo), 450, totalsTop + 15, { width: 95, align: 'right' })
+
+    // IVA
+    doc.fontSize(10).fillColor(lightGray)
+      .text('IVA (22%):', 350, totalsTop + 35)
+    doc.fontSize(11).fillColor(textColor)
+      .text(formatCurrency(invoice.iva), 450, totalsTop + 35, { width: 95, align: 'right' })
+
+    // Total line
+    doc.strokeColor('#e5e7eb').lineWidth(1)
+      .moveTo(350, totalsTop + 55).lineTo(545, totalsTop + 55).stroke()
+
+    // Total
+    doc.fontSize(12).fillColor(primaryColor).font('Helvetica-Bold')
+      .text('TOTALE:', 350, totalsTop + 65)
+    doc.fontSize(14)
+      .text(formatCurrency(invoice.totale), 450, totalsTop + 65, { width: 95, align: 'right' })
+
+    // Payment status badge
+    doc.font('Helvetica')
+    if (invoice.status === 'paid') {
+      doc.fontSize(10).fillColor('#059669')
+        .text('✓ PAGATO', 350, totalsTop + 95, { width: 195, align: 'center' })
+    }
+
+    // Footer
+    doc.fontSize(8).fillColor(lightGray)
+      .text('TaxFlow - Gestione consulenze fiscali', 50, 750, { align: 'center', width: 495 })
+      .text(`Fattura generata il ${new Date().toLocaleDateString('it-IT')}`, 50, 765, { align: 'center', width: 495 })
+
+    // Payment info if available
+    if (invoice.stripePaymentIntentId) {
+      doc.fontSize(7).fillColor('#9ca3af')
+        .text(`ID Transazione: ${invoice.stripePaymentIntentId}`, 50, 780, { align: 'center', width: 495 })
+    }
+
+    // Finalize PDF
+    doc.end()
+
+    console.log('✅ PDF invoice generated:', invoice.numero)
+  } catch (error) {
+    console.error('Error generating PDF:', error)
+    res.status(500).json({ error: 'Errore nella generazione del PDF' })
   }
 })
 

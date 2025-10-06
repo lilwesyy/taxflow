@@ -11,6 +11,7 @@ interface InvoiceTableProps {
   onSendInvoice?: (invoice: Invoice) => void
   showClientEmail?: boolean
   showService?: boolean
+  showConsulente?: boolean
 }
 
 export default function InvoiceTable({
@@ -20,7 +21,8 @@ export default function InvoiceTable({
   onDownloadInvoice,
   onSendInvoice,
   showClientEmail = true,
-  showService = true
+  showService = true,
+  showConsulente = false
 }: InvoiceTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -39,6 +41,9 @@ export default function InvoiceTable({
             <tr>
               <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Numero</th>
               <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
+              {showConsulente && (
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Consulente</th>
+              )}
               {showService && (
                 <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Servizio</th>
               )}
@@ -71,6 +76,11 @@ export default function InvoiceTable({
                       )}
                     </div>
                   </td>
+                  {showConsulente && (
+                    <td className="py-4 px-6">
+                      <span className="text-gray-700 font-medium">{(invoice as any).consulente || 'N/A'}</span>
+                    </td>
+                  )}
                   {showService && (
                     <td className="py-4 px-6">
                       <span className="text-gray-700">{invoice.servizio}</span>
@@ -108,7 +118,7 @@ export default function InvoiceTable({
                           <Eye className="h-4 w-4" />
                         </button>
                       )}
-                      {onEditInvoice && (
+                      {onEditInvoice && invoice.status !== 'paid' && (
                         <button
                           onClick={() => onEditInvoice(invoice)}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200"
@@ -117,7 +127,7 @@ export default function InvoiceTable({
                           <Edit className="h-4 w-4" />
                         </button>
                       )}
-                      {onDownloadInvoice && (
+                      {onDownloadInvoice && invoice.status === 'paid' && (
                         <button
                           onClick={() => onDownloadInvoice(invoice)}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200"

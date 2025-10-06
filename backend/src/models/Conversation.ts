@@ -11,6 +11,9 @@ export interface IConversation extends mongoose.Document {
   rating?: number
   fatturata: boolean
   importo: number
+  stripePaymentIntentId?: string
+  stripePaymentStatus?: 'pending' | 'succeeded' | 'failed' | 'canceled'
+  paidAt?: Date
   lastMessageAt: Date
   createdAt: Date
   updatedAt: Date
@@ -42,6 +45,13 @@ const ConversationSchema = new mongoose.Schema({
   rating: { type: Number, min: 1, max: 5 },
   fatturata: { type: Boolean, default: false },
   importo: { type: Number, default: 0 },
+  stripePaymentIntentId: { type: String },
+  stripePaymentStatus: {
+    type: String,
+    enum: ['pending', 'succeeded', 'failed', 'canceled'],
+    default: 'pending'
+  },
+  paidAt: { type: Date },
   lastMessageAt: { type: Date, default: Date.now }
 }, { timestamps: true })
 

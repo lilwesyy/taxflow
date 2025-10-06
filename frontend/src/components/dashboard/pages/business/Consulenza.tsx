@@ -1,13 +1,20 @@
-import { MessageSquare, Clock, CheckCircle, Search, Filter, Star, CreditCard, DollarSign, AlertCircle, Plus } from 'lucide-react'
+import { MessageSquare, Clock, CheckCircle, Search, Filter, Star, CreditCard, AlertCircle, Plus } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import Modal from '../../../common/Modal'
 import chatService, { type Message, type Consultant } from '../../../../services/chat'
+import stripeService from '../../../../services/stripe'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import MessageList from '../../../chat/shared/MessageList'
 import MessageInput from '../../../chat/shared/MessageInput'
 import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
+import StripePaymentForm from '../../../payment/StripePaymentForm'
 import type { ChatMessage } from '../../../chat/shared/types'
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
 export default function Consulenza() {
   useAuth()
@@ -15,6 +22,7 @@ export default function Consulenza() {
   const [activeChat, setActiveChat] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [chatTab, setChatTab] = useState<'active' | 'archived'>('active')
   const [message, setMessage] = useState('')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showNewChatModal, setShowNewChatModal] = useState(false)
@@ -29,6 +37,8 @@ export default function Consulenza() {
   const [aiLoading, setAiLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewFile, setPreviewFile] = useState<{ url: string; filename: string; mimeType: string } | null>(null)
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null)
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false)
 
   // Load conversations, consultants, and AI assistant on mount
   useEffect(() => {
@@ -294,7 +304,9 @@ export default function Consulenza() {
     const matchesSearch = conv.consulente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conv.argomento.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === 'all' || conv.status === filterStatus
-    return matchesSearch && matchesStatus
+    const isArchived = conv.fatturata === true
+    const matchesTab = chatTab === 'archived' ? isArchived : !isArchived
+    return matchesSearch && matchesStatus && matchesTab
   })
 
   const filteredConsulenti = consulenti.filter(cons =>
@@ -303,6 +315,17 @@ export default function Consulenza() {
   )
 
   const handleStartChat = async (consultant: Consultant) => {
+    // Check if there's already an active (non-archived) chat with this consultant
+    const hasActiveChat = conversazioni.some(conv =>
+      conv.consulente.email === consultant.email &&
+      !conv.fatturata
+    )
+
+    if (hasActiveChat) {
+      showToast('Hai già una consulenza attiva con questo consulente. Completa quella in corso prima di richiederne una nuova.', 'error')
+      return
+    }
+
     setSelectedConsultant(consultant)
     setShowNewChatModal(true)
   }
@@ -331,6 +354,61 @@ export default function Consulenza() {
       console.error('Error creating conversation:', error)
       showToast('Errore nella creazione della conversazione', 'error')
     }
+  }
+
+  const handleInitiatePayment = async () => {
+    if (!activeChat || activeChat === aiConversationId) return
+
+    try {
+      setIsLoadingPayment(true)
+      const { clientSecret } = await stripeService.createPaymentIntent(activeChat)
+      setPaymentClientSecret(clientSecret)
+    } catch (error: any) {
+      console.error('Error creating payment intent:', error)
+      showToast(error.message || 'Errore nell\'inizializzazione del pagamento', 'error')
+      setShowPaymentModal(false)
+    } finally {
+      setIsLoadingPayment(false)
+    }
+  }
+
+  const handlePaymentSuccess = async () => {
+    try {
+      showToast('Pagamento completato con successo!', 'success')
+      setShowPaymentModal(false)
+      setPaymentClientSecret(null)
+
+      // Reload conversations to reflect updated payment status
+      await loadConversations()
+
+      // Force refresh the active conversation state
+      if (activeChat) {
+        const updatedConversations = await chatService.getConversations()
+        const updated = updatedConversations.find((c: any) => c._id === activeChat)
+        if (updated) {
+          // Update the conversations list with new payment status
+          setConversazioni((prev) =>
+            prev.map((conv) => {
+              if (conv.id === activeChat) {
+                return {
+                  ...conv,
+                  fatturata: updated.fatturata,
+                  importo: updated.importo
+                }
+              }
+              return conv
+            })
+          )
+        }
+      }
+    } catch (error) {
+      console.error('Error after payment:', error)
+    }
+  }
+
+  const handleCancelPayment = () => {
+    setShowPaymentModal(false)
+    setPaymentClientSecret(null)
   }
 
   // Check if active chat is AI or regular conversation
@@ -464,18 +542,42 @@ export default function Consulenza() {
               />
             </div>
             {viewMode === 'conversations' && (
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-400" />
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                >
-                  <option value="all">Tutti</option>
-                  <option value="active">Online</option>
-                  <option value="pending">In attesa</option>
-                </select>
-              </div>
+              <>
+                <div className="flex mb-3 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setChatTab('active')}
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                      chatTab === 'active'
+                        ? 'bg-white text-primary-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Attive
+                  </button>
+                  <button
+                    onClick={() => setChatTab('archived')}
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                      chatTab === 'archived'
+                        ? 'bg-white text-primary-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Archiviate
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  >
+                    <option value="all">Tutti</option>
+                    <option value="active">Online</option>
+                    <option value="pending">In attesa</option>
+                  </select>
+                </div>
+              </>
             )}
           </div>
 
@@ -757,11 +859,15 @@ export default function Consulenza() {
                       </div>
 
                       <button
-                        onClick={() => setShowPaymentModal(true)}
-                        className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2"
+                        onClick={async () => {
+                          setShowPaymentModal(true)
+                          await handleInitiatePayment()
+                        }}
+                        disabled={isLoadingPayment}
+                        className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CreditCard className="h-4 w-4" />
-                        <span>Paga € {conversazioneAttiva.importo}</span>
+                        <span>{isLoadingPayment ? 'Caricamento...' : `Paga € ${(conversazioneAttiva.importo * 1.22).toFixed(2)}`}</span>
                       </button>
                     </>
                   )}
@@ -788,152 +894,89 @@ export default function Consulenza() {
       {conversazioneAttiva && (
         <Modal
           isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
+          onClose={handleCancelPayment}
           title="Pagamento Consulenza"
           maxWidth="2xl"
         >
           <div className="space-y-6">
-              {/* Dettagli Consulenza */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Dettagli consulenza</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Consulente:</span>
-                    <span className="font-medium text-gray-900">{conversazioneAttiva.consulente.nome}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Argomento:</span>
-                    <span className="font-medium text-gray-900">{conversazioneAttiva.argomento}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tipo:</span>
-                    <span className="font-medium text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</span>
-                  </div>
-                  {conversazioneAttiva.durataConsulenza && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Durata:</span>
-                      <span className="font-medium text-gray-900">{conversazioneAttiva.durataConsulenza}</span>
-                    </div>
-                  )}
+            {/* Dettagli Consulenza */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-3">Dettagli consulenza</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Consulente:</span>
+                  <span className="font-medium text-gray-900">{conversazioneAttiva.consulente.nome}</span>
                 </div>
-              </div>
-
-              {/* Riepilogo Costi */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Riepilogo costi</h3>
-                <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Argomento:</span>
+                  <span className="font-medium text-gray-900">{conversazioneAttiva.argomento}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tipo:</span>
+                  <span className="font-medium text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</span>
+                </div>
+                {conversazioneAttiva.durataConsulenza && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Consulenza:</span>
-                    <span className="font-medium text-gray-900">€ {conversazioneAttiva.importo}</span>
+                    <span className="text-gray-600">Durata:</span>
+                    <span className="font-medium text-gray-900">{conversazioneAttiva.durataConsulenza}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">IVA (22%):</span>
-                    <span className="font-medium text-gray-900">€ {(conversazioneAttiva.importo * 0.22).toFixed(2)}</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-2 mt-2">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-gray-900">Totale:</span>
-                      <span className="font-bold text-primary-600 text-lg">€ {(conversazioneAttiva.importo * 1.22).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-
-              {/* Metodi di Pagamento */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Metodo di pagamento</h3>
-                <div className="space-y-2">
-                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" name="payment" value="card" defaultChecked className="text-primary-600" />
-                    <CreditCard className="h-5 w-5 text-gray-600" />
-                    <span className="font-medium text-gray-900">Carta di credito/debito</span>
-                  </label>
-                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" name="payment" value="paypal" className="text-primary-600" />
-                    <DollarSign className="h-5 w-5 text-gray-600" />
-                    <span className="font-medium text-gray-900">PayPal</span>
-                  </label>
-                  <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" name="payment" value="bank" className="text-primary-600" />
-                    <DollarSign className="h-5 w-5 text-gray-600" />
-                    <span className="font-medium text-gray-900">Bonifico bancario</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Dati Carta (mockup) */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">Dati carta</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Numero carta</label>
-                    <input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Scadenza</label>
-                      <input
-                        type="text"
-                        placeholder="MM/AA"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome sulla carta</label>
-                    <input
-                      type="text"
-                      placeholder="Mario Rossi"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Info Sicurezza */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">Pagamento sicuro</p>
-                    <p className="text-xs text-blue-800 mt-1">
-                      I tuoi dati sono protetti con crittografia SSL a 256 bit. Non memorizziamo le informazioni della carta.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            {/* Payment Actions */}
-            <div className="flex space-x-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Annulla
-              </button>
-              <button
-                onClick={() => {
-                  // Simulate payment processing
-                  showToast('Pagamento completato con successo!', 'success')
-                  setShowPaymentModal(false)
-                }}
-                className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-              >
-                Paga € {(conversazioneAttiva.importo * 1.22).toFixed(2)}
-              </button>
             </div>
+
+            {/* Riepilogo Costi */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-3">Riepilogo costi</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Consulenza:</span>
+                  <span className="font-medium text-gray-900">€ {conversazioneAttiva.importo}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">IVA (22%):</span>
+                  <span className="font-medium text-gray-900">€ {(conversazioneAttiva.importo * 0.22).toFixed(2)}</span>
+                </div>
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900">Totale:</span>
+                    <span className="font-bold text-primary-600 text-lg">€ {(conversazioneAttiva.importo * 1.22).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Sicurezza */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Pagamento sicuro con Stripe</p>
+                  <p className="text-xs text-blue-800 mt-1">
+                    I tuoi dati sono protetti con crittografia SSL. Stripe non condivide mai le informazioni della tua carta.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stripe Payment Form */}
+            {paymentClientSecret && (
+              <Elements stripe={stripePromise} options={{ clientSecret: paymentClientSecret }}>
+                <StripePaymentForm
+                  amount={conversazioneAttiva.importo}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={handleCancelPayment}
+                />
+              </Elements>
+            )}
+
+            {!paymentClientSecret && isLoadingPayment && (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Inizializzazione pagamento...</p>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
       )}

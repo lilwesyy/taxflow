@@ -18,6 +18,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
   const [pivaRequestsCount, setPivaRequestsCount] = useState(0)
   const [recentClients, setRecentClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0)
 
   useEffect(() => {
     loadStats()
@@ -26,9 +27,14 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
   const loadStats = async () => {
     try {
       setLoading(true)
-      const [clientsResponse, pivaResponse] = await Promise.all([
+      const [clientsResponse, pivaResponse, invoicesResponse] = await Promise.all([
         apiService.getClients(),
-        apiService.getPivaRequests()
+        apiService.getPivaRequests(),
+        fetch(`${import.meta.env.VITE_API_URL}/chat/conversations/paid/list`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }).then(res => res.json())
       ])
 
       if (clientsResponse.success) {
@@ -39,6 +45,27 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
 
       if (pivaResponse.success) {
         setPivaRequestsCount(pivaResponse.requests.length)
+      }
+
+      // Calculate monthly revenue from paid invoices
+      if (invoicesResponse) {
+        const currentMonth = new Date().getMonth()
+        const currentYear = new Date().getFullYear()
+
+        const monthlyTotal = invoicesResponse
+          .filter((invoice: any) => {
+            if (invoice.status !== 'paid' || !invoice.dataPagamento) return false
+
+            // Parse Italian date format (dd/mm/yyyy)
+            const [day, month, year] = invoice.dataPagamento.split('/')
+            const paymentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+
+            return paymentDate.getMonth() === currentMonth &&
+                   paymentDate.getFullYear() === currentYear
+          })
+          .reduce((sum: number, invoice: any) => sum + (invoice.totale || 0), 0)
+
+        setMonthlyRevenue(monthlyTotal)
       }
     } catch (error) {
       console.error('Error loading stats:', error)
@@ -55,9 +82,13 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
     onSectionChange('consulenze')
   }
 
+  const formatRevenue = (amount: number) => {
+    return amount % 1 === 0 ? `€ ${amount.toFixed(0)}` : `€ ${amount.toFixed(2)}`
+  }
+
   const stats: StatItem[] = [
     { title: 'Clienti Attivi', value: loading ? '...' : clientsCount.toString(), change: '+8%', icon: Users, color: 'text-blue-600', trend: 'up' },
-    { title: 'Fatturato Mensile', value: '€ 45.200', change: '+15%', icon: DollarSign, color: 'text-green-600', trend: 'up' },
+    { title: 'Fatturato Mensile', value: loading ? '...' : formatRevenue(monthlyRevenue), change: '+15%', icon: DollarSign, color: 'text-green-600', trend: 'up' },
     { title: 'Richieste P.IVA', value: loading ? '...' : pivaRequestsCount.toString(), change: '+25%', icon: Building2, color: 'text-purple-600', trend: 'up' },
     { title: 'Analisi Completate', value: '89', change: '+12%', icon: Brain, color: 'text-accent-600', trend: 'up' }
   ]

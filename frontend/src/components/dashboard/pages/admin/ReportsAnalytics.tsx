@@ -1,14 +1,203 @@
 import { BarChart3, Users, DollarSign, Download, ArrowUp, ArrowDown, Clock, Target, Activity, PieChart, LineChart } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function ReportsAnalytics() {
   const [timeRange, setTimeRange] = useState('month')
   const [reportType, setReportType] = useState('overview')
+  const [loading, setLoading] = useState(true)
+  const [totalRevenue, setTotalRevenue] = useState(0)
+  const [clientsCount, setClientsCount] = useState(0)
+  const [consultationsCount, setConsultationsCount] = useState(0)
+  const [consultantPerformance, setConsultantPerformance] = useState<any[]>([])
+  const [topClients, setTopClients] = useState<any[]>([])
+  const [monthlyChartData, setMonthlyChartData] = useState<any[]>([])
+
+  useEffect(() => {
+    loadData()
+  }, [timeRange])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [invoicesResponse, clientsResponse] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL}/chat/conversations/paid/list`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }).then(res => res.ok ? res.json() : []),
+        fetch(`${import.meta.env.VITE_API_URL}/clients/list`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }).then(res => res.ok ? res.json() : { success: false, clients: [] })
+      ])
+
+      if (invoicesResponse) {
+
+        // Calculate date range based on selected timeRange
+        const now = new Date()
+        let startDate = new Date()
+
+        switch (timeRange) {
+          case 'week':
+            startDate.setDate(now.getDate() - 7)
+            break
+          case 'month':
+            startDate.setMonth(now.getMonth() - 1)
+            break
+          case 'quarter':
+            startDate.setMonth(now.getMonth() - 3)
+            break
+          case 'year':
+            startDate.setFullYear(now.getFullYear() - 1)
+            break
+        }
+
+        // Filter invoices by date range
+        const filteredInvoices = invoicesResponse.filter((inv: any) => {
+          if (!inv.dataEmissione) return false
+
+          // Parse Italian date format (dd/mm/yyyy)
+          const [day, month, year] = inv.dataEmissione.split('/')
+          const invoiceDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+
+          return invoiceDate >= startDate && invoiceDate <= now
+        })
+
+        // Total revenue from paid invoices in selected time range
+        const total = filteredInvoices
+          .filter((inv: any) => inv.status === 'paid')
+          .reduce((sum: number, inv: any) => sum + (inv.totale || 0), 0)
+
+        setTotalRevenue(total)
+
+        // Count consultations (both paid and pending) in selected time range
+        setConsultationsCount(filteredInvoices.length)
+
+        // Calculate consultant performance
+        const consultantStats = filteredInvoices.reduce((acc: any, inv: any) => {
+          const consultantName = inv.consulente || 'Non assegnato'
+
+          if (!acc[consultantName]) {
+            acc[consultantName] = {
+              nome: consultantName,
+              consulenze: 0,
+              fatturato: 0,
+              clienti: new Set()
+            }
+          }
+
+          acc[consultantName].consulenze++
+          if (inv.status === 'paid') {
+            acc[consultantName].fatturato += inv.totale || 0
+          }
+          acc[consultantName].clienti.add(inv.cliente)
+
+          return acc
+        }, {})
+
+        const performanceArray = Object.values(consultantStats).map((stat: any) => ({
+          nome: stat.nome,
+          consulenze: stat.consulenze,
+          fatturato: stat.fatturato,
+          rating: 4.7, // Mock rating for now
+          clienti: stat.clienti.size
+        })).sort((a: any, b: any) => b.fatturato - a.fatturato)
+
+        setConsultantPerformance(performanceArray)
+
+        // Calculate top clients by total spending
+        const clientStats = filteredInvoices.reduce((acc: any, inv: any) => {
+          const clientName = inv.cliente || 'Cliente sconosciuto'
+          const clientEmail = inv.email || inv.clienteEmail || ''
+          const company = inv.azienda && inv.azienda !== 'Non specificata' ? inv.azienda : clientName
+
+          if (!acc[clientEmail]) {
+            acc[clientEmail] = {
+              nome: clientName,
+              azienda: company,
+              fatturato: 0,
+              consulenze: 0,
+              crescita: '+0%' // Mock for now
+            }
+          }
+
+          acc[clientEmail].consulenze++
+          if (inv.status === 'paid') {
+            acc[clientEmail].fatturato += inv.totale || 0
+          }
+
+          return acc
+        }, {})
+
+        const topClientsArray = Object.values(clientStats)
+          .map((stat: any) => stat)
+          .sort((a: any, b: any) => b.fatturato - a.fatturato)
+          .slice(0, 5) // Top 5 clients
+
+        setTopClients(topClientsArray)
+
+        // Calculate monthly data for chart
+        const monthlyData: any = {}
+        const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
+
+        filteredInvoices.forEach((inv: any) => {
+          if (inv.dataEmissione && inv.status === 'paid') {
+            const [, month] = inv.dataEmissione.split('/')
+            const monthKey = `${monthNames[parseInt(month) - 1]}`
+
+            if (!monthlyData[monthKey]) {
+              monthlyData[monthKey] = {
+                mese: monthKey,
+                fatturato: 0,
+                clienti: new Set(),
+                consulenze: 0
+              }
+            }
+
+            monthlyData[monthKey].fatturato += inv.totale || 0
+            monthlyData[monthKey].clienti.add(inv.cliente)
+            monthlyData[monthKey].consulenze++
+          }
+        })
+
+        // Convert to array and show all 12 months
+        const chartDataArray = monthNames.map(month => {
+          if (monthlyData[month]) {
+            return {
+              mese: month,
+              fatturato: monthlyData[month].fatturato,
+              clienti: monthlyData[month].clienti.size,
+              consulenze: monthlyData[month].consulenze
+            }
+          }
+          return { mese: month, fatturato: 0, clienti: 0, consulenze: 0 }
+        })
+
+        setMonthlyChartData(chartDataArray)
+      }
+
+      if (clientsResponse && clientsResponse.success) {
+        setClientsCount(clientsResponse.clients.length)
+      }
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatRevenue = (amount: number) => {
+    if (amount % 1 === 0) {
+      return `€ ${Math.round(amount).toLocaleString('it-IT')}`
+    }
+    return `€ ${amount.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
 
   const overviewStats = [
     {
       title: 'Fatturato Totale',
-      value: '€ 47,380',
+      value: loading ? '...' : formatRevenue(totalRevenue),
       change: '+12.5%',
       trend: 'up',
       icon: DollarSign,
@@ -17,7 +206,7 @@ export default function ReportsAnalytics() {
     },
     {
       title: 'Clienti Attivi',
-      value: '142',
+      value: loading ? '...' : clientsCount.toString(),
       change: '+8.2%',
       trend: 'up',
       icon: Users,
@@ -26,7 +215,7 @@ export default function ReportsAnalytics() {
     },
     {
       title: 'Consulenze Completate',
-      value: '89',
+      value: loading ? '...' : consultationsCount.toString(),
       change: '+15.3%',
       trend: 'up',
       icon: Target,
@@ -44,27 +233,10 @@ export default function ReportsAnalytics() {
     }
   ]
 
-  const monthlyData = [
-    { mese: 'Gen', fatturato: 3200, clienti: 28, consulenze: 15 },
-    { mese: 'Feb', fatturato: 4100, clienti: 32, consulenze: 18 },
-    { mese: 'Mar', fatturato: 3800, clienti: 29, consulenze: 16 },
-    { mese: 'Apr', fatturato: 5200, clienti: 38, consulenze: 23 },
-    { mese: 'Mag', fatturato: 4900, clienti: 35, consulenze: 21 },
-    { mese: 'Giu', fatturato: 6300, clienti: 42, consulenze: 28 },
-    { mese: 'Lug', fatturato: 5800, clienti: 39, consulenze: 25 },
-    { mese: 'Ago', fatturato: 4600, clienti: 31, consulenze: 19 },
-    { mese: 'Set', fatturato: 7100, clienti: 45, consulenze: 32 },
-    { mese: 'Ott', fatturato: 6800, clienti: 43, consulenze: 29 },
-    { mese: 'Nov', fatturato: 5900, clienti: 37, consulenze: 24 },
-    { mese: 'Dic', fatturato: 8200, clienti: 48, consulenze: 35 }
-  ]
+  const monthlyData = monthlyChartData
 
-  const topClienti = [
-    { nome: 'Mario Rossi', azienda: 'Rossi Consulting', fatturato: 2850, consulenze: 8, crescita: '+23%' },
-    { nome: 'Laura Bianchi', azienda: 'Bianchi Design', fatturato: 2340, consulenze: 6, crescita: '+18%' },
-    { nome: 'Giuseppe Verdi', azienda: 'Verdi Solutions', fatturato: 1980, consulenze: 5, crescita: '+15%' },
-    { nome: 'Francesco Greco', azienda: 'Greco Immobiliare', fatturato: 1750, consulenze: 4, crescita: '+12%' },
-    { nome: 'Elena Ferretti', azienda: 'Ferretti Beauty', fatturato: 1620, consulenze: 4, crescita: '+8%' }
+  const topClienti = topClients.length > 0 ? topClients : [
+    { nome: 'Nessun dato', azienda: '-', fatturato: 0, consulenze: 0, crescita: '+0%' }
   ]
 
   const tipiConsulenza = [
@@ -76,11 +248,8 @@ export default function ReportsAnalytics() {
     { tipo: 'Altri', quantita: 6, percentuale: 6.8, colore: 'bg-gray-500' }
   ]
 
-  const performanceConsulenti = [
-    { nome: 'Dr. Marco Bianchi', consulenze: 45, fatturato: 28500, rating: 4.8, clienti: 32 },
-    { nome: 'Dr. Laura Verdi', consulenze: 38, fatturato: 23200, rating: 4.6, clienti: 28 },
-    { nome: 'Dr. Antonio Rossi', consulenze: 32, fatturato: 19800, rating: 4.7, clienti: 24 },
-    { nome: 'Dr. Sofia Neri', consulenze: 28, fatturato: 17600, rating: 4.5, clienti: 20 }
+  const performanceConsulenti = consultantPerformance.length > 0 ? consultantPerformance : [
+    { nome: 'Nessun dato', consulenze: 0, fatturato: 0, rating: 0, clienti: 0 }
   ]
 
   const getTrendIcon = (trend: string) => {
@@ -160,16 +329,23 @@ export default function ReportsAnalytics() {
             </div>
           </div>
           <div className="h-64 flex items-end justify-between space-x-2">
-            {monthlyData.map((data, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className="w-full bg-primary-600 rounded-t-sm relative group cursor-pointer hover:bg-primary-700 transition-all duration-200 hover:scale-105"
-                  style={{ height: `${(data.fatturato / 8200) * 200}px` }}
-                  title={`${data.mese}: €${data.fatturato}`}
-                />
-                <span className="text-xs text-gray-600 mt-2">{data.mese}</span>
-              </div>
-            ))}
+            {monthlyData.length > 0 ? monthlyData.map((data, index) => {
+              const maxFatturato = Math.max(...monthlyData.map((d: any) => d.fatturato), 1)
+              const height = (data.fatturato / maxFatturato) * 200
+
+              return (
+                <div key={index} className="flex-1 flex flex-col items-center">
+                  <div
+                    className="w-full bg-primary-600 rounded-t-sm relative group cursor-pointer hover:bg-primary-700 transition-all duration-200 hover:scale-105"
+                    style={{ height: `${height}px`, minHeight: data.fatturato > 0 ? '10px' : '0px' }}
+                    title={`${data.mese}: €${data.fatturato.toFixed(2)}`}
+                  />
+                  <span className="text-xs text-gray-600 mt-2">{data.mese}</span>
+                </div>
+              )
+            }) : (
+              <div className="w-full text-center text-gray-500">Nessun dato disponibile</div>
+            )}
           </div>
         </div>
 
@@ -279,19 +455,21 @@ export default function ReportsAnalytics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {monthlyData.map((data, index) => {
-                const ticketMedio = Math.round(data.fatturato / data.consulenze)
-                const crescita = index > 0 ?
-                  ((data.fatturato - monthlyData[index - 1].fatturato) / monthlyData[index - 1].fatturato * 100).toFixed(1) :
+              {monthlyData.filter((data: any) => data.fatturato > 0 || data.consulenze > 0).map((data, index, filteredArray) => {
+                const ticketMedio = data.consulenze > 0 ? Math.round(data.fatturato / data.consulenze) : 0
+                const crescita = index > 0 && filteredArray[index - 1].fatturato > 0 ?
+                  ((data.fatturato - filteredArray[index - 1].fatturato) / filteredArray[index - 1].fatturato * 100).toFixed(1) :
                   '0.0'
+
+                const currentYear = new Date().getFullYear()
 
                 return (
                   <tr key={index} className="hover:bg-gray-50 transition-all duration-200 hover:scale-[1.005]">
                     <td className="py-4 px-6">
-                      <span className="font-medium text-gray-900">{data.mese} 2024</span>
+                      <span className="font-medium text-gray-900">{data.mese} {currentYear}</span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="font-medium text-gray-900">€ {data.fatturato.toLocaleString()}</span>
+                      <span className="font-medium text-gray-900">€ {Math.round(data.fatturato).toLocaleString('it-IT')}</span>
                     </td>
                     <td className="py-4 px-6">
                       <span className="text-gray-900">{data.clienti}</span>
@@ -300,7 +478,7 @@ export default function ReportsAnalytics() {
                       <span className="text-gray-900">{data.consulenze}</span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="text-gray-900">€ {ticketMedio}</span>
+                      <span className="text-gray-900">€ {ticketMedio.toLocaleString('it-IT')}</span>
                     </td>
                     <td className="py-4 px-6">
                       <span className={`font-medium ${parseFloat(crescita) >= 0 ? 'text-green-600' : 'text-red-600'}`}>

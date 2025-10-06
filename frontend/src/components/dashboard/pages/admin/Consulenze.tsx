@@ -20,6 +20,7 @@ export default function Consulenze() {
   const [activeChat, setActiveChat] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [chatTab, setChatTab] = useState<'active' | 'archived'>('active')
   const [message, setMessage] = useState('')
   const [conversazioni, setConversazioni] = useState<any[]>([])
   const [messaggi, setMessaggi] = useState<{ [key: string]: TransformedMessage[] }>({})
@@ -31,6 +32,9 @@ export default function Consulenze() {
   const [deletingConversation, setDeletingConversation] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewFile, setPreviewFile] = useState<{ url: string; filename: string; mimeType: string } | null>(null)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [invoiceAmount, setInvoiceAmount] = useState('')
+  const [creatingInvoice, setCreatingInvoice] = useState(false)
 
   // Load conversations and AI assistant on mount
   useEffect(() => {
@@ -276,6 +280,45 @@ export default function Consulenze() {
     link.click()
   }
 
+  const handleCreateInvoice = async () => {
+    if (!activeChat || activeChat === aiConversationId || !invoiceAmount) return
+
+    const amount = parseFloat(invoiceAmount)
+    if (isNaN(amount) || amount <= 0) {
+      showToast('Inserisci un importo valido', 'error')
+      return
+    }
+
+    try {
+      setCreatingInvoice(true)
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/conversations/${activeChat}/invoice`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ importo: amount })
+      })
+
+      if (!response.ok) {
+        throw new Error('Errore nella creazione della fattura')
+      }
+
+      showToast('Fattura creata con successo!', 'success')
+      setShowInvoiceModal(false)
+      setInvoiceAmount('')
+
+      // Reload conversations to show updated amount
+      await loadConversations()
+    } catch (error) {
+      console.error('Error creating invoice:', error)
+      showToast('Errore nella creazione della fattura', 'error')
+    } finally {
+      setCreatingInvoice(false)
+    }
+  }
+
   const handleSendMessage = async (files: File[]) => {
     if ((!message.trim() && files.length === 0) || !activeChat || sending) return
 
@@ -397,8 +440,10 @@ export default function Consulenze() {
                          conv.argomento.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = filterStatus === 'all' || conv.status === filterStatus
+    const isArchived = conv.fatturata === true
+    const matchesTab = chatTab === 'archived' ? isArchived : !isArchived
 
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesTab
   })
 
   const getStatusColor = (status: string) => {
@@ -534,6 +579,28 @@ export default function Consulenze() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm transition-all duration-200"
               />
+            </div>
+            <div className="flex mb-3 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setChatTab('active')}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  chatTab === 'active'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Attive
+              </button>
+              <button
+                onClick={() => setChatTab('archived')}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  chatTab === 'archived'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Archiviate
+              </button>
             </div>
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-gray-400" />
@@ -785,9 +852,19 @@ export default function Consulenze() {
             </div>
 
             <div className="mt-auto pt-4 border-t border-gray-200">
-              <button className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 text-sm hover:scale-105 hover:shadow-lg">
-                Crea Fattura
-              </button>
+              {conversazioneAttiva.fatturata ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <p className="text-sm font-medium text-green-800">Fattura Pagata</p>
+                  <p className="text-xs text-green-700 mt-1">Non modificabile</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowInvoiceModal(true)}
+                  className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 text-sm hover:scale-105 hover:shadow-lg"
+                >
+                  {conversazioneAttiva.importo > 0 ? 'Modifica Importo' : 'Crea Fattura'}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -825,6 +902,111 @@ export default function Consulenze() {
           </div>
         </div>
       </Modal>
+
+      {/* Invoice Creation Modal */}
+      {conversazioneAttiva && activeChat !== aiConversationId && (
+        <Modal
+          isOpen={showInvoiceModal}
+          onClose={() => {
+            setShowInvoiceModal(false)
+            setInvoiceAmount('')
+          }}
+          title={conversazioneAttiva.importo > 0 ? 'Modifica Importo Consulenza' : 'Crea Fattura per Consulenza'}
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Imposta l'importo per la consulenza con{' '}
+              <span className="font-semibold">{conversazioneAttiva.cliente.nome}</span>
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-3">Dettagli consulenza</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Cliente:</span>
+                  <span className="font-medium text-gray-900">{conversazioneAttiva.cliente.nome}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Azienda:</span>
+                  <span className="font-medium text-gray-900">{conversazioneAttiva.cliente.azienda}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Argomento:</span>
+                  <span className="font-medium text-gray-900">{conversazioneAttiva.argomento}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tipo:</span>
+                  <span className="font-medium text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</span>
+                </div>
+                {conversazioneAttiva.importo > 0 && (
+                  <div className="flex justify-between pt-2 border-t border-gray-200">
+                    <span className="text-gray-600">Importo attuale:</span>
+                    <span className="font-bold text-gray-900">€ {conversazioneAttiva.importo}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Importo consulenza (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={invoiceAmount}
+                onChange={(e) => setInvoiceAmount(e.target.value)}
+                placeholder="Es: 150.00"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Il cliente riceverà una richiesta di pagamento per questo importo + IVA (22%)
+              </p>
+            </div>
+
+            {invoiceAmount && parseFloat(invoiceAmount) > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">Importo base:</span>
+                    <span className="font-medium text-gray-900">€ {parseFloat(invoiceAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">IVA (22%):</span>
+                    <span className="font-medium text-gray-900">€ {(parseFloat(invoiceAmount) * 0.22).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-blue-300">
+                    <span className="font-semibold text-gray-900">Totale da pagare:</span>
+                    <span className="font-bold text-primary-600 text-lg">€ {(parseFloat(invoiceAmount) * 1.22).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowInvoiceModal(false)
+                  setInvoiceAmount('')
+                }}
+                disabled={creatingInvoice}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleCreateInvoice}
+                disabled={creatingInvoice || !invoiceAmount || parseFloat(invoiceAmount) <= 0}
+                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creatingInvoice ? 'Creazione...' : (conversazioneAttiva.importo > 0 ? 'Aggiorna Importo' : 'Crea Fattura')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* File Preview Modal */}
       <FilePreviewModal

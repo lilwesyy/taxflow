@@ -153,7 +153,7 @@ export default function InvoiceDetailModal({
         {/* Azioni */}
         <div className="flex justify-between items-center pt-6 border-t border-gray-200">
           <div className="flex space-x-3">
-            {onDownloadInvoice && (
+            {onDownloadInvoice && invoice.status === 'paid' && (
               <button
                 onClick={() => onDownloadInvoice(invoice)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
@@ -162,7 +162,7 @@ export default function InvoiceDetailModal({
                 Scarica PDF
               </button>
             )}
-            {onEditInvoice && (
+            {onEditInvoice && invoice.status !== 'paid' && (
               <button
                 onClick={() => onEditInvoice(invoice)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:scale-105 hover:shadow-sm"

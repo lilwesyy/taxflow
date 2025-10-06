@@ -2,6 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
+
+// Load .env from backend directory FIRST
+dotenv.config({ path: path.join(__dirname, '..', '.env') })
+
 import connectDB from './config/database'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
@@ -10,10 +14,8 @@ import chatRoutes from './routes/chat'
 import aiAssistantRoutes from './routes/ai-assistant'
 import clientsRoutes from './routes/clients'
 import feedbackRoutes from './routes/feedback'
+import stripeRoutes from './routes/stripe'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
-
-// Load .env from backend directory
-dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -29,6 +31,10 @@ app.use(cors({
   ],
   credentials: true
 }))
+
+// Stripe webhook needs raw body - must be before express.json()
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }))
+
 app.use(express.json())
 
 // Serve uploaded files
@@ -42,6 +48,7 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/ai', aiAssistantRoutes)
 app.use('/api/clients', clientsRoutes)
 app.use('/api/feedback', feedbackRoutes)
+app.use('/api/stripe', stripeRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
