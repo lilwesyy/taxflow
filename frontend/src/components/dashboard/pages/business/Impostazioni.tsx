@@ -1,7 +1,8 @@
-import { Settings, User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Receipt, Clock, Trash2 } from 'lucide-react'
+import { User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Clock, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import apiService from '../../../../services/api'
+import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
+import ATECOAutocomplete from '../../../common/ATECOAutocomplete'
 
 interface Session {
   id: string
@@ -16,12 +17,14 @@ interface Session {
 }
 
 export default function Impostazioni() {
+  const { user, token, updateUser } = useAuth()
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const [sessions, setSessions] = useState<Session[]>([])
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
   const [loading, setLoading] = useState(false)
+  const [loadingSessions, setLoadingSessions] = useState(false)
 
   const [profileData, setProfileData] = useState({
     nome: 'Mario Rossi',
@@ -46,6 +49,135 @@ export default function Impostazioni() {
     confirmPassword: ''
   })
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false
+  })
+
+  // Validate password strength
+  const validatePassword = (password: string) => {
+    setPasswordStrength({
+      hasMinLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password)
+    })
+  }
+
+  const isPasswordValid = passwordStrength.hasMinLength &&
+    passwordStrength.hasUpperCase &&
+    passwordStrength.hasLowerCase &&
+    passwordStrength.hasNumber
+
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({})
+
+  // Validation functions
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePhone = (phone: string): boolean => {
+    if (!phone) return true // Optional field
+    const phoneRegex = /^(\+39)?[ ]?[0-9]{9,10}$/
+    return phoneRegex.test(phone.replace(/\s/g, ''))
+  }
+
+  const validateFiscalCode = (cf: string): boolean => {
+    if (!cf) return true // Optional field
+    const cfRegex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/
+    return cfRegex.test(cf.toUpperCase())
+  }
+
+  const validatePIVA = (piva: string): boolean => {
+    if (!piva) return true // Optional field
+    const pivaRegex = /^(IT)?[0-9]{11}$/
+    return pivaRegex.test(piva.replace(/\s/g, ''))
+  }
+
+  const validateCAP = (cap: string): boolean => {
+    if (!cap) return true // Optional field
+    const capRegex = /^[0-9]{5}$/
+    return capRegex.test(cap)
+  }
+
+  const validateCodiceATECO = (codice: string): boolean => {
+    if (!codice) return true // Optional field
+    const atecoRegex = /^[0-9]{2}\.[0-9]{2}\.[0-9]{2}$/
+    return atecoRegex.test(codice)
+  }
+
+  // Formatting functions
+  const formatPhone = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '')
+    if (cleaned.startsWith('39') && cleaned.length === 12) {
+      return `+39 ${cleaned.slice(2, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`
+    }
+    if (cleaned.length === 10) {
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`
+    }
+    return phone
+  }
+
+  const formatFiscalCode = (cf: string): string => {
+    return cf.toUpperCase().replace(/\s/g, '')
+  }
+
+  const formatPIVA = (piva: string): string => {
+    const cleaned = piva.replace(/\D/g, '')
+    if (cleaned.length === 11) {
+      return `IT${cleaned}`
+    }
+    if (piva.startsWith('IT')) {
+      return piva.toUpperCase()
+    }
+    return cleaned
+  }
+
+  const formatCAP = (cap: string): string => {
+    return cap.replace(/\D/g, '').slice(0, 5)
+  }
+
+
+  const validateProfile = (): boolean => {
+    const errors: {[key: string]: string} = {}
+
+    if (!profileData.nome.trim()) {
+      errors.nome = 'Il nome è obbligatorio'
+    }
+
+    if (!profileData.email.trim()) {
+      errors.email = 'L\'email è obbligatoria'
+    } else if (!validateEmail(profileData.email)) {
+      errors.email = 'Email non valida'
+    }
+
+    if (profileData.telefono && !validatePhone(profileData.telefono)) {
+      errors.telefono = 'Numero di telefono non valido (formato: +39 XXX XXX XXXX o XXX XXX XXXX)'
+    }
+
+    if (profileData.codiceFiscale && !validateFiscalCode(profileData.codiceFiscale)) {
+      errors.codiceFiscale = 'Codice fiscale non valido (16 caratteri)'
+    }
+
+    if (profileData.cap && !validateCAP(profileData.cap)) {
+      errors.cap = 'CAP non valido (5 cifre)'
+    }
+
+    if (profileData.partitaIva && !validatePIVA(profileData.partitaIva)) {
+      errors.partitaIva = 'Partita IVA non valida (11 cifre)'
+    }
+
+    if (profileData.codiceAteco && !validateCodiceATECO(profileData.codiceAteco)) {
+      errors.codiceAteco = 'Codice ATECO non valido (formato: XX.XX.XX)'
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const [notificationSettings, setNotificationSettings] = useState({
     emailDocumentiRichiesti: true,
     emailScadenzeFiscali: true,
@@ -57,13 +189,6 @@ export default function Impostazioni() {
     promozionali: false
   })
 
-  const [systemSettings, setSystemSettings] = useState({
-    language: 'it',
-    timezone: 'Europe/Rome',
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'EUR',
-    theme: 'light'
-  })
 
   const [paymentSettings, setPaymentSettings] = useState({
     metodoPagamentoPredefinito: 'carta',
@@ -83,68 +208,132 @@ export default function Impostazioni() {
     { id: 'profile', name: 'Profilo', icon: User },
     { id: 'notifications', name: 'Notifiche', icon: Bell },
     { id: 'security', name: 'Sicurezza', icon: Shield },
-    { id: 'payment', name: 'Pagamenti', icon: CreditCard },
-    { id: 'system', name: 'Sistema', icon: Settings }
+    { id: 'payment', name: 'Pagamenti', icon: CreditCard }
   ]
 
   // Load user profile on mount
   useEffect(() => {
     loadUserProfile()
-  }, [])
+  }, [user, token])
 
   // Load sessions when security tab is active
   useEffect(() => {
-    if (activeTab === 'security') {
+    if (activeTab === 'security' && token) {
       loadSessions()
       loadSessionTimeout()
     }
-  }, [activeTab])
+  }, [activeTab, token])
 
   const loadUserProfile = async () => {
+    if (!user || !token) return
+
     try {
-      const response = await apiService.getCurrentUser()
-      if (response.success && response.user) {
-        const user = response.user
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/user/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const userData = data.user
+
         setProfileData({
-          nome: user.name || '',
-          email: user.email || '',
-          telefono: user.phone || '',
-          codiceFiscale: user.fiscalCode || '',
-          indirizzo: user.address || '',
-          citta: '',
-          cap: '',
-          professione: user.professionalRole || '',
-          settoreAttivita: '',
-          partitaIva: user.piva || '',
-          regimeFiscale: user.regimeContabile || 'Forfettario',
-          company: user.company || '',
-          codiceAteco: user.codiceAteco || '',
-          aliquotaIva: user.aliquotaIva || '22%'
+          nome: userData.name || '',
+          email: userData.email || '',
+          telefono: userData.phone || '',
+          codiceFiscale: userData.fiscalCode || '',
+          indirizzo: userData.address || '',
+          citta: userData.city || '',
+          cap: userData.cap || '',
+          professione: userData.professionalRole || '',
+          settoreAttivita: userData.settoreAttivita || '',
+          partitaIva: userData.piva || '',
+          regimeFiscale: userData.regimeContabile || 'Forfettario',
+          company: userData.company || '',
+          codiceAteco: userData.codiceAteco || '',
+          aliquotaIva: userData.aliquotaIva || '22%'
         })
+
+        if (userData.notificationSettings) {
+          setNotificationSettings(userData.notificationSettings)
+        }
       }
     } catch (error) {
       console.error('Failed to load user profile:', error)
-      showToast('Errore nel caricamento del profilo', 'error')
     }
   }
 
   const loadSessions = async () => {
+    setLoadingSessions(true)
     try {
-      setLoading(true)
-      const response = await apiService.getSessions()
-      setSessions(response.sessions)
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const sessions = data.sessions
+
+        // Auto-terminate sessions if more than 3
+        if (sessions.length > 3) {
+          const sortedSessions = [...sessions].sort((a, b) =>
+            new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime()
+          )
+
+          const sessionsToTerminate = sortedSessions.slice(0, sessions.length - 3)
+
+          for (const session of sessionsToTerminate) {
+            try {
+              await fetch(`${API_URL}/security/sessions/${session.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+            } catch (err) {
+              console.error('Error terminating session:', err)
+            }
+          }
+
+          const updatedResponse = await fetch(`${API_URL}/security/sessions`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json()
+            setSessions(updatedData.sessions)
+          }
+        } else {
+          setSessions(sessions)
+        }
+      }
     } catch (error) {
       console.error('Failed to load sessions:', error)
-      showToast('Errore nel caricamento delle sessioni', 'error')
     } finally {
-      setLoading(false)
+      setLoadingSessions(false)
     }
   }
 
   const loadSessionTimeout = async () => {
     try {
-      const response = await apiService.getSessionTimeout()
-      setSessionTimeout(response.sessionTimeout)
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSessionTimeout(data.sessionTimeout)
+      }
     } catch (error) {
       console.error('Failed to load session timeout:', error)
     }
@@ -154,48 +343,104 @@ export default function Impostazioni() {
     if (!confirm('Sei sicuro di voler terminare questa sessione?')) return
 
     try {
-      await apiService.terminateSession(sessionId)
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la terminazione della sessione')
+      }
+
       showToast('Sessione terminata con successo', 'success')
       loadSessions()
-    } catch (error) {
-      console.error('Failed to terminate session:', error)
-      showToast('Errore nella terminazione della sessione', 'error')
+    } catch (error: any) {
+      showToast(error.message, 'error')
     }
   }
 
   const handleTerminateAllSessions = async () => {
     if (!confirm('Sei sicuro di voler terminare tutte le altre sessioni?')) return
 
+    setLoading(true)
     try {
-      await apiService.terminateAllSessions()
-      showToast('Tutte le altre sessioni sono state terminate', 'success')
-      loadSessions()
-    } catch (error) {
-      console.error('Failed to terminate all sessions:', error)
-      showToast('Errore nella terminazione delle sessioni', 'error')
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        showToast('Tutte le altre sessioni sono state terminate', 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella terminazione delle sessioni')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleSaveSessionTimeout = async () => {
+    setLoading(true)
     try {
-      await apiService.updateSessionTimeout(sessionTimeout)
-      showToast('Timeout sessione aggiornato con successo', 'success')
-    } catch (error) {
-      console.error('Failed to update session timeout:', error)
-      showToast('Errore nell\'aggiornamento del timeout', 'error')
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ sessionTimeout })
+      })
+
+      if (response.ok) {
+        showToast('Timeout sessione aggiornato con successo', 'success')
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleCleanupSessions = async () => {
     if (!confirm('Eliminare manualmente tutte le sessioni inattive?')) return
 
+    setLoading(true)
     try {
-      const response = await apiService.cleanupSessions()
-      showToast(response.message, 'success')
-      loadSessions()
-    } catch (error) {
-      console.error('Failed to cleanup sessions:', error)
-      showToast('Errore nella pulizia delle sessioni', 'error')
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/cleanup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        showToast(data.message, 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella pulizia delle sessioni')
+      }
+    } catch (error: any) {
+      showToast(error.message, 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -222,25 +467,120 @@ export default function Impostazioni() {
   }
 
   const handleSave = async (section: string) => {
+    setLoading(true)
+
     try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+
       if (section === 'profile') {
-        await apiService.updateUserProfile({
-          name: profileData.nome,
-          email: profileData.email,
-          phone: profileData.telefono,
-          fiscalCode: profileData.codiceFiscale,
-          address: profileData.indirizzo,
-          company: profileData.company,
-          piva: profileData.partitaIva,
-          codiceAteco: profileData.codiceAteco,
-          regimeContabile: profileData.regimeFiscale,
-          aliquotaIva: profileData.aliquotaIva
+        // Validate before saving
+        if (!validateProfile()) {
+          setLoading(false)
+          showToast('Correggi gli errori nel form prima di salvare', 'error')
+          return
+        }
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: profileData.nome,
+            email: profileData.email,
+            phone: profileData.telefono,
+            fiscalCode: profileData.codiceFiscale,
+            address: profileData.indirizzo,
+            city: profileData.citta,
+            cap: profileData.cap,
+            company: profileData.company,
+            piva: profileData.partitaIva,
+            codiceAteco: profileData.codiceAteco,
+            settoreAttivita: profileData.settoreAttivita,
+            regimeContabile: profileData.regimeFiscale,
+            aliquotaIva: profileData.aliquotaIva,
+            professionalRole: profileData.professione
+          })
         })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update profile')
+        }
+
+        const data = await response.json()
+        updateUser(data.user)
+
+        setProfileData({
+          nome: data.user.name || '',
+          email: data.user.email || '',
+          telefono: data.user.phone || '',
+          codiceFiscale: data.user.fiscalCode || '',
+          indirizzo: data.user.address || '',
+          citta: data.user.city || '',
+          cap: data.user.cap || '',
+          professione: data.user.professionalRole || '',
+          settoreAttivita: data.user.settoreAttivita || '',
+          partitaIva: data.user.piva || '',
+          regimeFiscale: data.user.regimeContabile || 'Forfettario',
+          company: data.user.company || '',
+          codiceAteco: data.user.codiceAteco || '',
+          aliquotaIva: data.user.aliquotaIva || '22%'
+        })
+
+        showToast('Profilo aggiornato con successo!', 'success')
+      } else if (section === 'password') {
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currentPassword: passwordData.currentPassword,
+            newPassword: passwordData.newPassword
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update password')
+        }
+
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        showToast('Password aggiornata con successo!', 'success')
+      } else if (section === 'notifications') {
+        const response = await fetch(`${API_URL}/user/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            notificationSettings
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update notifications')
+        }
+
+        const data = await response.json()
+
+        if (data.user?.notificationSettings) {
+          setNotificationSettings(data.user.notificationSettings)
+        }
+
+        showToast('Preferenze notifiche aggiornate con successo!', 'success')
+      } else {
+        showToast(`Impostazioni ${section} salvate!`, 'success')
       }
-      showToast('Impostazioni salvate con successo!', 'success')
     } catch (error: any) {
       console.error(`Error saving ${section}:`, error)
-      showToast('Errore durante il salvataggio delle impostazioni', 'error')
+      showToast(error.message || 'Errore durante il salvataggio', 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -268,9 +608,19 @@ export default function Impostazioni() {
             <input
               type="email"
               value={profileData.email}
-              onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              onChange={(e) => {
+                setProfileData(prev => ({ ...prev, email: e.target.value }))
+                if (validationErrors.email) {
+                  setValidationErrors(prev => ({ ...prev, email: '' }))
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {validationErrors.email && (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -280,9 +630,25 @@ export default function Impostazioni() {
             <input
               type="tel"
               value={profileData.telefono}
-              onChange={(e) => setProfileData(prev => ({ ...prev, telefono: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              onChange={(e) => {
+                setProfileData(prev => ({ ...prev, telefono: e.target.value }))
+                if (validationErrors.telefono) {
+                  setValidationErrors(prev => ({ ...prev, telefono: '' }))
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value) {
+                  setProfileData(prev => ({ ...prev, telefono: formatPhone(e.target.value) }))
+                }
+              }}
+              placeholder="+39 XXX XXX XXXX"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.telefono ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {validationErrors.telefono && (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.telefono}</p>
+            )}
           </div>
 
           <div>
@@ -292,9 +658,26 @@ export default function Impostazioni() {
             <input
               type="text"
               value={profileData.codiceFiscale}
-              onChange={(e) => setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              onChange={(e) => {
+                setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value.toUpperCase() }))
+                if (validationErrors.codiceFiscale) {
+                  setValidationErrors(prev => ({ ...prev, codiceFiscale: '' }))
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value) {
+                  setProfileData(prev => ({ ...prev, codiceFiscale: formatFiscalCode(e.target.value) }))
+                }
+              }}
+              maxLength={16}
+              placeholder="RSSMRA85M01H501Z"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.codiceFiscale ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {validationErrors.codiceFiscale && (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.codiceFiscale}</p>
+            )}
           </div>
 
           <div>
@@ -354,9 +737,22 @@ export default function Impostazioni() {
             <input
               type="text"
               value={profileData.cap}
-              onChange={(e) => setProfileData(prev => ({ ...prev, cap: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              onChange={(e) => {
+                const formatted = formatCAP(e.target.value)
+                setProfileData(prev => ({ ...prev, cap: formatted }))
+                if (validationErrors.cap) {
+                  setValidationErrors(prev => ({ ...prev, cap: '' }))
+                }
+              }}
+              maxLength={5}
+              placeholder="00100"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.cap ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {validationErrors.cap && (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.cap}</p>
+            )}
           </div>
         </div>
 
@@ -384,23 +780,46 @@ export default function Impostazioni() {
               <input
                 type="text"
                 value={profileData.partitaIva}
-                onChange={(e) => setProfileData(prev => ({ ...prev, partitaIva: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                onChange={(e) => {
+                  setProfileData(prev => ({ ...prev, partitaIva: e.target.value.toUpperCase() }))
+                  if (validationErrors.partitaIva) {
+                    setValidationErrors(prev => ({ ...prev, partitaIva: '' }))
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value) {
+                    setProfileData(prev => ({ ...prev, partitaIva: formatPIVA(e.target.value) }))
+                  }
+                }}
+                maxLength={13}
                 placeholder="IT12345678901"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  validationErrors.partitaIva ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {validationErrors.partitaIva && (
+                <p className="text-sm text-red-600 mt-1">{validationErrors.partitaIva}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Codice ATECO
               </label>
-              <input
-                type="text"
+              <ATECOAutocomplete
                 value={profileData.codiceAteco}
-                onChange={(e) => setProfileData(prev => ({ ...prev, codiceAteco: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="XX.XX.XX"
+                onChange={(value) => {
+                  setProfileData(prev => ({ ...prev, codiceAteco: value }))
+                  if (validationErrors.codiceAteco) {
+                    setValidationErrors(prev => ({ ...prev, codiceAteco: '' }))
+                  }
+                }}
+                error={validationErrors.codiceAteco}
+                placeholder="Cerca per codice o descrizione (es. 62.02.00 o consulenza informatica)"
               />
+              {validationErrors.codiceAteco && (
+                <p className="text-sm text-red-600 mt-1">{validationErrors.codiceAteco}</p>
+              )}
             </div>
 
             <div>
@@ -422,13 +841,18 @@ export default function Impostazioni() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Aliquota IVA
               </label>
-              <input
-                type="text"
+              <select
                 value={profileData.aliquotaIva}
                 onChange={(e) => setProfileData(prev => ({ ...prev, aliquotaIva: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="22%"
-              />
+              >
+                <option value="">Seleziona aliquota</option>
+                <option value="0%">0% - Esente</option>
+                <option value="4%">4% - Ridotta (alimentari, libri)</option>
+                <option value="5%">5% - Forfettario</option>
+                <option value="10%">10% - Ridotta (turismo, edilizia)</option>
+                <option value="22%">22% - Ordinaria</option>
+              </select>
             </div>
           </div>
         </div>
@@ -436,10 +860,11 @@ export default function Impostazioni() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => handleSave('profile')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
+            disabled={loading}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
-            Salva Modifiche
+            {loading ? 'Salvataggio...' : 'Salva Modifiche'}
           </button>
         </div>
       </div>
@@ -580,10 +1005,11 @@ export default function Impostazioni() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => handleSave('notifications')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
+            disabled={loading}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
-            Salva Preferenze
+            {loading ? 'Salvataggio...' : 'Salva Preferenze'}
           </button>
         </div>
       </div>
@@ -648,9 +1074,32 @@ export default function Impostazioni() {
                 <input
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) => {
+                    setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))
+                    validatePassword(e.target.value)
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
+                {passwordData.newPassword && (
+                  <div className="mt-2 space-y-1 text-sm">
+                    <div className={`flex items-center ${passwordStrength.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasMinLength ? '✓' : '○'}</span>
+                      Almeno 8 caratteri
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasUpperCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasUpperCase ? '✓' : '○'}</span>
+                      Una lettera maiuscola
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasLowerCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasLowerCase ? '✓' : '○'}</span>
+                      Una lettera minuscola
+                    </div>
+                    <div className={`flex items-center ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordStrength.hasNumber ? '✓' : '○'}</span>
+                      Un numero
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -665,12 +1114,17 @@ export default function Impostazioni() {
                 />
               </div>
 
+              {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-sm text-red-600 mt-2">Le password non corrispondono</p>
+              )}
+
               <div className="flex justify-end">
                 <button
                   onClick={() => handleSave('password')}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm"
+                  disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
+                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Aggiorna Password
+                  {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
                 </button>
               </div>
             </div>
@@ -710,7 +1164,8 @@ export default function Impostazioni() {
               <div className="flex justify-end">
                 <button
                   onClick={handleSaveSessionTimeout}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center"
+                  disabled={loading}
+                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-1" />
                   Salva Timeout
@@ -730,7 +1185,8 @@ export default function Impostazioni() {
               <div className="flex space-x-2">
                 <button
                   onClick={handleCleanupSessions}
-                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center"
+                  disabled={loading}
+                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Pulisci Inattive
@@ -738,7 +1194,8 @@ export default function Impostazioni() {
                 {sessions.filter(s => !s.isCurrent).length > 0 && (
                   <button
                     onClick={handleTerminateAllSessions}
-                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium disabled:opacity-50"
                   >
                     Termina Tutte
                   </button>
@@ -746,7 +1203,7 @@ export default function Impostazioni() {
               </div>
             </div>
 
-            {loading ? (
+            {loadingSessions ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">Caricamento sessioni...</p>
               </div>
@@ -1008,115 +1465,6 @@ export default function Impostazioni() {
     </div>
   )
 
-  const renderSystemTab = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Impostazioni Sistema</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lingua
-            </label>
-            <select
-              value={systemSettings.language}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, language: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="it">Italiano</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fuso Orario
-            </label>
-            <select
-              value={systemSettings.timezone}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, timezone: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="Europe/Rome">Europa/Roma (GMT+1)</option>
-              <option value="Europe/London">Europa/Londra (GMT+0)</option>
-              <option value="America/New_York">America/New York (GMT-5)</option>
-              <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Formato Data
-            </label>
-            <select
-              value={systemSettings.dateFormat}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Valuta
-            </label>
-            <select
-              value={systemSettings.currency}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, currency: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="EUR">Euro (€)</option>
-              <option value="USD">Dollaro US ($)</option>
-              <option value="GBP">Sterlina (£)</option>
-              <option value="CHF">Franco Svizzero (CHF)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tema
-            </label>
-            <select
-              value={systemSettings.theme}
-              onChange={(e) => setSystemSettings(prev => ({ ...prev, theme: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="light">Chiaro</option>
-              <option value="dark">Scuro</option>
-              <option value="auto">Automatico</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start space-x-2">
-            <Receipt className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-blue-900">Piano Attuale: Regime Forfettario</p>
-              <p className="text-xs text-blue-800 mt-1">
-                Hai accesso a tutte le funzionalità per la gestione del regime forfettario
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('system')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Salva Impostazioni
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -1128,8 +1476,6 @@ export default function Impostazioni() {
         return renderSecurityTab()
       case 'payment':
         return renderPaymentTab()
-      case 'system':
-        return renderSystemTab()
       default:
         return renderProfileTab()
     }
