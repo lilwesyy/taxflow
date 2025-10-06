@@ -1,12 +1,16 @@
 import {
-  FileText, Search, Filter, CheckCircle, Clock, AlertTriangle, Download,
-  Trash2, FolderOpen, Building, Receipt, DollarSign, FileCheck, BookOpen,
-  Eye, Upload, Users, TrendingUp, Maximize2
+  FileText, CheckCircle, Clock, AlertTriangle, Download,
+  FolderOpen, Building, Upload, Users, Maximize2
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
 import api from '../../../../services/api'
+import DocumentTabs, { tabs } from '../../shared/documents/DocumentTabs'
+import DocumentStats from '../../shared/documents/DocumentStats'
+import DocumentCard from '../../shared/documents/DocumentCard'
+import DocumentFilters from '../../shared/documents/DocumentFilters'
+import { getAvailableYears } from '../../../../utils/documentUtils'
 
 export default function DocumentiClienti() {
   const { showToast } = useToast()
@@ -253,32 +257,6 @@ export default function DocumentiClienti() {
     }
   }
 
-  // Estrai tutti gli anni disponibili dai documenti
-  const getAvailableYears = () => {
-    const years = new Set(allDocuments.map(doc => doc.anno))
-    return Array.from(years).sort((a, b) => b.localeCompare(a)) // Ordine decrescente
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'elaborato': return 'bg-green-100 text-green-600'
-      case 'in_elaborazione': return 'bg-blue-100 text-blue-600'
-      case 'in_attesa': return 'bg-yellow-100 text-yellow-600'
-      case 'rifiutato': return 'bg-red-100 text-red-600'
-      default: return 'bg-gray-100 text-gray-600'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'elaborato': return 'Elaborato'
-      case 'in_elaborazione': return 'In elaborazione'
-      case 'in_attesa': return 'In attesa'
-      case 'rifiutato': return 'Rifiutato'
-      default: return 'Sconosciuto'
-    }
-  }
-
   const togglePdfFullscreen = () => {
     if (!isPdfFullscreen) {
       // Quando apro fullscreen, chiudo il modale normale
@@ -291,30 +269,10 @@ export default function DocumentiClienti() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'elaborato': return <CheckCircle className="h-4 w-4" />
-      case 'in_elaborazione': return <Clock className="h-4 w-4" />
-      case 'in_attesa': return <Clock className="h-4 w-4" />
-      case 'rifiutato': return <AlertTriangle className="h-4 w-4" />
-      default: return <Clock className="h-4 w-4" />
-    }
-  }
-
-  const tabs = [
-    { id: 'dichiarazioni', name: 'Dichiarazioni', icon: FileCheck, description: 'Modelli redditi, IVA, 730' },
-    { id: 'fatturazione', name: 'Fatturazione', icon: Receipt, description: 'Fatture elettroniche, corrispettivi' },
-    { id: 'comunicazioni', name: 'Comunicazioni', icon: BookOpen, description: 'LIPE, Esterometro, Spesometro' },
-    { id: 'versamenti', name: 'Versamenti', icon: DollarSign, description: 'F24, tributi, ravvedimenti' },
-    { id: 'consultazione', name: 'Consultazione', icon: Eye, description: 'Estratti conto, CU, visure' },
-    { id: 'registri', name: 'Registri', icon: BookOpen, description: 'Registri IVA, incassi, cespiti' },
-    { id: 'altri_documenti', name: 'Altri Documenti', icon: FolderOpen, description: 'Contratti, visure, assicurazioni' }
-  ]
-
   const allDocuments = documentsFromApi
   const currentTabData = tabs.find(t => t.id === activeTab)
   const filteredDocuments = getFilteredDocuments()
-  const availableYears = getAvailableYears()
+  const availableYears = getAvailableYears(allDocuments)
 
   // Statistiche basate sul cliente selezionato
   const getStatsForCliente = () => {
@@ -394,135 +352,27 @@ export default function DocumentiClienti() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Totale Documenti</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totale}</p>
-            </div>
-            <FileText className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Elaborati</p>
-              <p className="text-2xl font-bold text-green-600">{stats.elaborati}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">In Elaborazione</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.inElaborazione}</p>
-            </div>
-            <Clock className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Anno Corrente</p>
-              <p className="text-2xl font-bold text-gray-900">2025</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-purple-600" />
-          </div>
-        </div>
-      </div>
+      <DocumentStats documents={allDocuments} />
 
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`p-3 rounded-lg text-left transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center space-x-2 mb-1">
-                <tab.icon className="h-4 w-4" />
-                <span className="font-medium text-sm">{tab.name}</span>
-              </div>
-              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
-                {tab.description}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      <DocumentTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Cerca documenti o clienti..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-gray-400" />
-            <select
-              value={selectedCliente}
-              onChange={(e) => setSelectedCliente(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tutti i clienti</option>
-              {clienti.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome} - {cliente.azienda}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-gray-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tutti gli stati</option>
-              <option value="elaborato">Elaborato</option>
-              <option value="in_elaborazione">In elaborazione</option>
-              <option value="in_attesa">In attesa</option>
-            </select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4 text-gray-400" />
-            <select
-              value={filterAnno}
-              onChange={(e) => setFilterAnno(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tutti gli anni</option>
-              {availableYears.map((anno) => (
-                <option key={anno} value={anno}>
-                  Anno {anno}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={handleOpenUploadModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg flex items-center whitespace-nowrap"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Carica Documento
-          </button>
-        </div>
-      </div>
+      <DocumentFilters
+        searchTerm={searchTerm}
+        filterStatus={filterStatus}
+        filterAnno={filterAnno}
+        availableYears={availableYears}
+        searchPlaceholder="Cerca documenti o clienti..."
+        showClientFilter={true}
+        clients={clienti}
+        selectedClient={selectedCliente}
+        onSearchChange={setSearchTerm}
+        onStatusChange={setFilterStatus}
+        onYearChange={setFilterAnno}
+        onClientChange={setSelectedCliente}
+        onUpload={handleOpenUploadModal}
+      />
 
       {/* Current Tab Info */}
       {currentTabData && (
@@ -549,85 +399,14 @@ export default function DocumentiClienti() {
       {!loading && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDocuments.filter(doc => doc && doc.nome && doc.cliente).map((documento) => (
-          <div key={documento.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start space-x-3 flex-1">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{documento.nome}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{documento.descrizione}</p>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Users className="h-3 w-3 text-gray-500" />
-                    <p className="text-xs text-gray-600">{documento.cliente.nome}</p>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs text-gray-500">
-                    <span>{documento.formato}</span>
-                    <span>•</span>
-                    <span>{documento.dimensione}</span>
-                    <span>•</span>
-                    <span>Anno {documento.anno}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(documento.status)}`}>
-                {getStatusIcon(documento.status)}
-                <span className="ml-1">{getStatusText(documento.status)}</span>
-              </span>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              {documento.protocollo && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Protocollo:</span>
-                  <span className="text-gray-900 font-mono text-xs">{documento.protocollo}</span>
-                </div>
-              )}
-              {(documento as any).importo && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Importo:</span>
-                  <span className="text-gray-900 font-semibold">{(documento as any).importo}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Data:</span>
-                <span className="text-gray-900">{documento.dataCaricamento}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-              <button
-                onClick={() => handleOpenPdfViewerApi(documento)}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                Visualizza
-              </button>
-              <div className="flex items-center space-x-2">
-                {documento.fileUrl && (
-                  <a
-                    href={api.getDocumentUrl(documento.fileUrl)}
-                    download
-                    className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50"
-                    title="Download"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
-                )}
-                <button
-                  onClick={() => handleOpenDeleteModal(documento)}
-                  className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                  title="Elimina"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <DocumentCard
+            key={documento.id}
+            documento={documento}
+            showClientInfo={true}
+            canDeleteAll={true}
+            onView={handleOpenPdfViewerApi}
+            onDelete={handleOpenDeleteModal}
+          />
         ))}
       </div>
       )}
