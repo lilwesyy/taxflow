@@ -123,6 +123,7 @@ export default function DocumentiClienti() {
     return {
       ...c,
       nome: ('nome' in c && c.nome) || (isUser && 'name' in c && c.name) || 'Sconosciuto',
+      azienda: c.azienda || (isUser && 'company' in c && c.company) || 'N/A',
       email: isUser ? c.email : '',
       telefono: (isUser && 'telefono' in c && c.telefono) || (isUser && 'phone' in c && c.phone) || '',
       piva: c.piva || '',
@@ -285,19 +286,12 @@ export default function DocumentiClienti() {
   const availableYears = getAvailableYears(allDocuments)
 
   // Statistiche basate sul cliente selezionato
-  const getStatsForCliente = () => {
-    const docs = selectedCliente === 'all'
-      ? allDocuments
-      : allDocuments.filter(d => d.clientId === selectedCliente)
-
-    return {
-      totale: docs.length,
-      elaborati: docs.filter(d => d.status === 'elaborato').length,
-      inElaborazione: docs.filter(d => d.status === 'in_elaborazione').length
-    }
+  // I documenti in allDocuments sono già filtrati dall'API quando selectedCliente !== 'all'
+  const stats = {
+    totale: allDocuments.length,
+    elaborati: allDocuments.filter(d => d.status === 'elaborato').length,
+    inElaborazione: allDocuments.filter(d => d.status === 'in_elaborazione').length
   }
-
-  const stats = getStatsForCliente()
   const clienteSelezionato = clienti.find(c => c.id === selectedCliente)
 
   return (
