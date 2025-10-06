@@ -9,6 +9,7 @@ interface DashboardLayoutProps {
   userRole: UserRole
   userName?: string
   userEmail?: string
+  userCompany?: string
   children: ReactNode
   sidebarItems: Array<{
     id: string
@@ -26,6 +27,7 @@ export default function DashboardLayout({
   userRole,
   userName = 'Dr. Francesco Alberti',
   userEmail = 'francesco.alberti@taxflow.it',
+  userCompany,
   children,
   sidebarItems,
   activeSection,
@@ -146,7 +148,9 @@ export default function DashboardLayout({
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">{userName}</p>
                 <p className="text-xs text-gray-500">{userEmail}</p>
-                <p className="text-xs text-primary-600 capitalize">{userRole === 'admin' ? 'Consulente' : 'Cliente'}</p>
+                <p className="text-xs text-primary-600 capitalize">
+                  {userRole === 'admin' ? 'Consulente' : (userCompany || 'Cliente')}
+                </p>
               </div>
             </div>
             <button

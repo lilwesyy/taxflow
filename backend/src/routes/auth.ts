@@ -125,6 +125,7 @@ router.post('/login', async (req: Request, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        company: user.company,
         registrationApprovalStatus: user.registrationApprovalStatus,
         pivaFormSubmitted: user.pivaFormSubmitted,
         pivaApprovalStatus: user.pivaApprovalStatus
@@ -199,6 +200,7 @@ router.post('/login/verify-2fa', async (req: Request, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        company: user.company,
         registrationApprovalStatus: user.registrationApprovalStatus,
         pivaFormSubmitted: user.pivaFormSubmitted,
         pivaApprovalStatus: user.pivaApprovalStatus
@@ -264,6 +266,7 @@ router.post('/register', async (req: Request, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        company: user.company,
         registrationApprovalStatus: user.registrationApprovalStatus,
         pivaFormSubmitted: user.pivaFormSubmitted,
         pivaApprovalStatus: user.pivaApprovalStatus

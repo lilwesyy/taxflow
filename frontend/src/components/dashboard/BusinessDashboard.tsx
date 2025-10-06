@@ -24,7 +24,7 @@ interface BusinessDashboardProps {
 }
 
 export default function BusinessDashboard({ onLogout, userRole, userName, userEmail }: BusinessDashboardProps) {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const { showToast } = useToast()
   const [activeSection, setActiveSection] = useState(() => {
     // Carica la sezione salvata o usa 'dashboard' come default
@@ -132,6 +132,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
       userRole={userRole}
       userName={userName}
       userEmail={userEmail}
+      userCompany={user?.company}
       sidebarItems={sidebarItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}

@@ -5,6 +5,7 @@ interface User {
   email: string
   name: string
   role: 'business' | 'admin'
+  company?: string
   registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'
   pivaFormSubmitted?: boolean
   pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'
