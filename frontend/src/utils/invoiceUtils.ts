@@ -1,12 +1,17 @@
 import { CheckCircle, Clock, AlertTriangle, Send, Edit, FileText } from 'lucide-react'
 import type { InvoiceStatus } from '../types/dashboard'
+import type { Invoice } from '../types'
 
-export const getStatusInfo = (status: InvoiceStatus) => {
+export const getStatusInfo = (status: InvoiceStatus | string) => {
   switch (status) {
     case 'paid':
       return { label: 'Pagata', color: 'bg-green-100 text-green-700', icon: CheckCircle }
     case 'pending':
       return { label: 'In Attesa', color: 'bg-yellow-100 text-yellow-700', icon: Clock }
+    case 'failed':
+      return { label: 'Fallita', color: 'bg-red-100 text-red-700', icon: AlertTriangle }
+    case 'canceled':
+      return { label: 'Annullata', color: 'bg-gray-100 text-gray-700', icon: AlertTriangle }
     case 'sent':
       return { label: 'Inviata', color: 'bg-blue-100 text-blue-700', icon: Send }
     case 'overdue':
@@ -25,7 +30,7 @@ export const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export const calculateInvoiceStats = (invoices: any[]) => {
+export const calculateInvoiceStats = (invoices: Invoice[]) => {
   return {
     total: invoices.length,
     paid: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.totale, 0),

@@ -125,7 +125,7 @@ class ChatService {
   }
 
   // Send a message
-  async sendMessage(conversationId: string, testo: string, attachments?: any[]): Promise<Message> {
+  async sendMessage(conversationId: string, testo: string, attachments?: { filename: string; url: string; mimeType: string; size: number }[]): Promise<Message> {
     const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: getHeaders(),

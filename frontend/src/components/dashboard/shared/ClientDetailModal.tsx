@@ -4,9 +4,10 @@ import Modal from '../../common/Modal'
 import apiService from '../../../services/api'
 import chatService from '../../../services/chat'
 import { useToast } from '../../../context/ToastContext'
+import type { User as UserType, ActivityLog } from '../../../types'
 
 interface ClientDetailModalProps {
-  client: any
+  client: UserType | null
   isOpen: boolean
   onClose: () => void
   onClientUpdated?: () => void
@@ -26,7 +27,7 @@ export default function ClientDetailModal({
 }: ClientDetailModalProps) {
   const { showToast } = useToast()
   const [isEditMode, setIsEditMode] = useState(false)
-  const [editedClient, setEditedClient] = useState<any>(null)
+  const [editedClient, setEditedClient] = useState<UserType | null>(null)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [isStartingConsultation, setIsStartingConsultation] = useState(false)
 
@@ -38,7 +39,9 @@ export default function ClientDetailModal({
 
   const handleEditClick = () => {
     setIsEditMode(true)
-    setEditedClient({ ...client })
+    if (client) {
+      setEditedClient({ ...client } as UserType)
+    }
     setValidationErrors({})
   }
 
@@ -50,6 +53,8 @@ export default function ClientDetailModal({
 
   const validateFields = () => {
     const errors: Record<string, string> = {}
+
+    if (!editedClient) return false
 
     if (editedClient.codiceFiscale && !/^[A-Z0-9]{16}$/i.test(editedClient.codiceFiscale)) {
       errors.codiceFiscale = 'Il codice fiscale deve essere di 16 caratteri alfanumerici'
@@ -76,7 +81,7 @@ export default function ClientDetailModal({
   }
 
   const handleSaveEdit = async () => {
-    if (!validateFields()) {
+    if (!validateFields() || !editedClient) {
       return
     }
 
@@ -104,13 +109,15 @@ export default function ClientDetailModal({
       if (onClientUpdated) {
         onClientUpdated()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating client:', error)
-      showToast('Errore durante l\'aggiornamento del cliente', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento del cliente'
+      showToast(errorMessage, 'error')
     }
   }
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
+    if (!editedClient) return
     setEditedClient({ ...editedClient, [field]: value })
     if (validationErrors[field]) {
       setValidationErrors({ ...validationErrors, [field]: '' })
@@ -138,9 +145,10 @@ export default function ClientDetailModal({
       if (onStartConsultation) {
         onStartConsultation(conversation._id)
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error starting consultation:', error)
-      showToast('Errore nell\'avvio della consulenza', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore nell\'avvio della consulenza'
+      showToast(errorMessage, 'error')
     } finally {
       setIsStartingConsultation(false)
     }
@@ -194,7 +202,7 @@ export default function ClientDetailModal({
                   <span className="ml-2">{client.status === 'active' ? 'Attivo' : client.status === 'pending' ? 'In Attesa' : 'Inattivo'}</span>
                 </span>
                 <div className="text-sm text-blue-100">
-                  <span>Cliente dal: {formatDate(client.dataRegistrazione)}</span>
+                  <span>Cliente dal: {client.dataRegistrazione ? formatDate(client.dataRegistrazione) : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -250,7 +258,7 @@ export default function ClientDetailModal({
                     )}
                   </div>
                 ) : (
-                  <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.codiceFiscale || 'Non disponibile'}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.codiceFiscale || 'Non disponibile'}</p>
                 )}
               </div>
               <div>
@@ -270,7 +278,7 @@ export default function ClientDetailModal({
                     )}
                   </div>
                 ) : (
-                  <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.indirizzo || 'Non disponibile'}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.indirizzo || 'Non disponibile'}</p>
                 )}
               </div>
             </div>
@@ -305,7 +313,7 @@ export default function ClientDetailModal({
                       )}
                     </div>
                   ) : (
-                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.piva || 'Non disponibile'}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.piva || 'Non disponibile'}</p>
                   )}
                 </div>
                 <div>
@@ -327,7 +335,7 @@ export default function ClientDetailModal({
                       )}
                     </div>
                   ) : (
-                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.codiceAteco || 'N/A'}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.codiceAteco || 'N/A'}</p>
                   )}
                 </div>
               </div>
@@ -345,7 +353,7 @@ export default function ClientDetailModal({
                       <option value="Semplificato">Semplificato</option>
                     </select>
                   ) : (
-                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.regimeContabile || 'Forfettario'}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.regimeContabile || 'Forfettario'}</p>
                   )}
                 </div>
                 <div>
@@ -367,7 +375,7 @@ export default function ClientDetailModal({
                       )}
                     </div>
                   ) : (
-                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient.aliquotaIva || '5%'}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.aliquotaIva || '5%'}</p>
                   )}
                 </div>
               </div>
@@ -395,7 +403,7 @@ export default function ClientDetailModal({
               </div>
               <div className="p-3 bg-red-50 rounded-lg">
                 <label className="text-xs font-medium text-red-700 uppercase tracking-wider">Prossima Scadenza Tasse</label>
-                <p className="mt-1 text-sm font-bold text-red-800">{formatDate(client.prossimaTasse)}</p>
+                <p className="mt-1 text-sm font-bold text-red-800">{client.prossimaTasse ? formatDate(client.prossimaTasse) : 'Non impostata'}</p>
               </div>
             </div>
           </div>
@@ -410,7 +418,7 @@ export default function ClientDetailModal({
             </div>
             <div className="space-y-3 max-h-48 overflow-y-auto">
               {(client.attivitaRecenti && client.attivitaRecenti.length > 0) ? (
-                client.attivitaRecenti.slice(0, 3).map((attivita: any, index: number) => (
+                client.attivitaRecenti.slice(0, 3).map((attivita: ActivityLog, index: number) => (
                   <div key={index} className="border-l-2 border-orange-200 pl-3 pb-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-gray-900">{attivita.action}</p>

@@ -1,6 +1,52 @@
 import { BarChart3, Users, DollarSign, Download, ArrowUp, ArrowDown, Clock, Target, Activity, PieChart, LineChart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
+interface Invoice {
+  dataEmissione: string
+  status: string
+  totale: number
+  consulente?: string
+  cliente: string
+  email?: string
+  clienteEmail?: string
+  azienda?: string
+}
+
+interface ConsultantStat {
+  nome: string
+  consulenze: number
+  fatturato: number
+  clienti: Set<string>
+}
+
+interface ConsultantPerformance {
+  nome: string
+  consulenze: number
+  fatturato: number
+  rating: number
+  clienti: number
+}
+
+interface ClientStat {
+  nome: string
+  azienda: string
+  fatturato: number
+  consulenze: number
+  crescita: string
+}
+
+interface MonthlyData {
+  mese: string
+  fatturato: number
+  clienti: number
+  consulenze: number
+}
+
+interface ClientsResponse {
+  success: boolean
+  clients: Array<{ _id: string; name: string; email: string }>
+}
+
 export default function ReportsAnalytics() {
   const [timeRange, setTimeRange] = useState('month')
   const [reportType, setReportType] = useState('overview')
@@ -8,9 +54,9 @@ export default function ReportsAnalytics() {
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [clientsCount, setClientsCount] = useState(0)
   const [consultationsCount, setConsultationsCount] = useState(0)
-  const [consultantPerformance, setConsultantPerformance] = useState<any[]>([])
-  const [topClients, setTopClients] = useState<any[]>([])
-  const [monthlyChartData, setMonthlyChartData] = useState<any[]>([])
+  const [consultantPerformance, setConsultantPerformance] = useState<ConsultantPerformance[]>([])
+  const [topClients, setTopClients] = useState<ClientStat[]>([])
+  const [monthlyChartData, setMonthlyChartData] = useState<MonthlyData[]>([])
 
   useEffect(() => {
     loadData()
@@ -24,12 +70,12 @@ export default function ReportsAnalytics() {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        }).then(res => res.ok ? res.json() : []),
+        }).then(res => res.ok ? res.json() as Promise<Invoice[]> : []),
         fetch(`${import.meta.env.VITE_API_URL}/clients/list`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        }).then(res => res.ok ? res.json() : { success: false, clients: [] })
+        }).then(res => res.ok ? res.json() as Promise<ClientsResponse> : { success: false, clients: [] })
       ])
 
       if (invoicesResponse) {
@@ -54,7 +100,7 @@ export default function ReportsAnalytics() {
         }
 
         // Filter invoices by date range
-        const filteredInvoices = invoicesResponse.filter((inv: any) => {
+        const filteredInvoices = invoicesResponse.filter((inv: Invoice) => {
           if (!inv.dataEmissione) return false
 
           // Parse Italian date format (dd/mm/yyyy)
@@ -66,8 +112,8 @@ export default function ReportsAnalytics() {
 
         // Total revenue from paid invoices in selected time range
         const total = filteredInvoices
-          .filter((inv: any) => inv.status === 'paid')
-          .reduce((sum: number, inv: any) => sum + (inv.totale || 0), 0)
+          .filter((inv: Invoice) => inv.status === 'paid')
+          .reduce((sum: number, inv: Invoice) => sum + (inv.totale || 0), 0)
 
         setTotalRevenue(total)
 
@@ -75,7 +121,7 @@ export default function ReportsAnalytics() {
         setConsultationsCount(filteredInvoices.length)
 
         // Calculate consultant performance
-        const consultantStats = filteredInvoices.reduce((acc: any, inv: any) => {
+        const consultantStats = filteredInvoices.reduce((acc: Record<string, ConsultantStat>, inv: Invoice) => {
           const consultantName = inv.consulente || 'Non assegnato'
 
           if (!acc[consultantName]) {
@@ -94,20 +140,20 @@ export default function ReportsAnalytics() {
           acc[consultantName].clienti.add(inv.cliente)
 
           return acc
-        }, {})
+        }, {} as Record<string, ConsultantStat>)
 
-        const performanceArray = Object.values(consultantStats).map((stat: any) => ({
+        const performanceArray = Object.values(consultantStats).map((stat: ConsultantStat): ConsultantPerformance => ({
           nome: stat.nome,
           consulenze: stat.consulenze,
           fatturato: stat.fatturato,
           rating: 4.7, // Mock rating for now
           clienti: stat.clienti.size
-        })).sort((a: any, b: any) => b.fatturato - a.fatturato)
+        })).sort((a: ConsultantPerformance, b: ConsultantPerformance) => b.fatturato - a.fatturato)
 
         setConsultantPerformance(performanceArray)
 
         // Calculate top clients by total spending
-        const clientStats = filteredInvoices.reduce((acc: any, inv: any) => {
+        const clientStats = filteredInvoices.reduce((acc: Record<string, ClientStat>, inv: Invoice) => {
           const clientName = inv.cliente || 'Cliente sconosciuto'
           const clientEmail = inv.email || inv.clienteEmail || ''
           const company = inv.azienda && inv.azienda !== 'Non specificata' ? inv.azienda : clientName
@@ -128,20 +174,19 @@ export default function ReportsAnalytics() {
           }
 
           return acc
-        }, {})
+        }, {} as Record<string, ClientStat>)
 
         const topClientsArray = Object.values(clientStats)
-          .map((stat: any) => stat)
-          .sort((a: any, b: any) => b.fatturato - a.fatturato)
+          .sort((a: ClientStat, b: ClientStat) => b.fatturato - a.fatturato)
           .slice(0, 5) // Top 5 clients
 
         setTopClients(topClientsArray)
 
         // Calculate monthly data for chart
-        const monthlyData: any = {}
+        const monthlyData: Record<string, { mese: string; fatturato: number; clienti: Set<string>; consulenze: number }> = {}
         const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
 
-        filteredInvoices.forEach((inv: any) => {
+        filteredInvoices.forEach((inv: Invoice) => {
           if (inv.dataEmissione && inv.status === 'paid') {
             const [, month] = inv.dataEmissione.split('/')
             const monthKey = `${monthNames[parseInt(month) - 1]}`
@@ -162,7 +207,7 @@ export default function ReportsAnalytics() {
         })
 
         // Convert to array and show all 12 months
-        const chartDataArray = monthNames.map(month => {
+        const chartDataArray: MonthlyData[] = monthNames.map(month => {
           if (monthlyData[month]) {
             return {
               mese: month,
@@ -329,8 +374,8 @@ export default function ReportsAnalytics() {
             </div>
           </div>
           <div className="h-64 flex items-end justify-between space-x-2">
-            {monthlyData.length > 0 ? monthlyData.map((data, index) => {
-              const maxFatturato = Math.max(...monthlyData.map((d: any) => d.fatturato), 1)
+            {monthlyData.length > 0 ? monthlyData.map((data: MonthlyData, index: number) => {
+              const maxFatturato = Math.max(...monthlyData.map((d: MonthlyData) => d.fatturato), 1)
               const height = (data.fatturato / maxFatturato) * 200
 
               return (
@@ -455,7 +500,7 @@ export default function ReportsAnalytics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {monthlyData.filter((data: any) => data.fatturato > 0 || data.consulenze > 0).map((data, index, filteredArray) => {
+              {monthlyData.filter((data: MonthlyData) => data.fatturato > 0 || data.consulenze > 0).map((data: MonthlyData, index: number, filteredArray: MonthlyData[]) => {
                 const ticketMedio = data.consulenze > 0 ? Math.round(data.fatturato / data.consulenze) : 0
                 const crescita = index > 0 && filteredArray[index - 1].fatturato > 0 ?
                   ((data.fatturato - filteredArray[index - 1].fatturato) / filteredArray[index - 1].fatturato * 100).toFixed(1) :

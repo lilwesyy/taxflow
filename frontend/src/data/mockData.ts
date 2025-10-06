@@ -143,9 +143,16 @@ export const mockClients: Client[] = [
 export const mockInvoices: Invoice[] = [
   {
     id: 'FAT-2024-001',
+    conversationId: 'conv-001',
+    businessUserId: 'user-001',
+    adminUserId: 'admin-001',
     numero: '001/2024',
     cliente: 'Mario Rossi',
+    clienteEmail: 'mario.rossi@email.com',
     email: 'mario.rossi@email.com',
+    azienda: 'Mario Rossi Freelance',
+    consulente: 'Dr. Marco Bianchi',
+    tipo: 'consulenza',
     dataEmissione: '15/01/2024',
     dataScadenza: '15/02/2024',
     importo: 1200.00,
@@ -155,13 +162,23 @@ export const mockInvoices: Invoice[] = [
     servizio: 'Consulenza Apertura P.IVA',
     metodoPagamento: 'bonifico',
     descrizione: 'Consulenza completa per apertura partita IVA forfettaria',
-    note: 'Cliente molto soddisfatto del servizio'
+    note: 'Cliente molto soddisfatto del servizio',
+    stripePaymentIntentId: 'pi_mock_001',
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: 'FAT-2024-002',
+    conversationId: 'conv-002',
+    businessUserId: 'user-002',
+    adminUserId: 'admin-001',
     numero: '002/2024',
     cliente: 'Laura Bianchi',
+    clienteEmail: 'laura.bianchi@email.com',
     email: 'laura.bianchi@email.com',
+    azienda: 'Design Studio LB',
+    consulente: 'Dr. Marco Bianchi',
+    tipo: 'business_plan',
     dataEmissione: '20/01/2024',
     dataScadenza: '20/02/2024',
     importo: 850.00,
@@ -170,13 +187,23 @@ export const mockInvoices: Invoice[] = [
     status: 'sent',
     servizio: 'Business Plan Completo',
     metodoPagamento: 'bonifico',
-    descrizione: 'Sviluppo business plan dettagliato per startup design'
+    descrizione: 'Sviluppo business plan dettagliato per startup design',
+    stripePaymentIntentId: 'pi_mock_002',
+    createdAt: new Date('2024-01-20'),
+    updatedAt: new Date('2024-01-20')
   },
   {
     id: 'FAT-2024-003',
+    conversationId: 'conv-003',
+    businessUserId: 'user-003',
+    adminUserId: 'admin-001',
     numero: '003/2024',
     cliente: 'Giuseppe Verdi',
+    clienteEmail: 'giuseppe.verdi@email.com',
     email: 'giuseppe.verdi@email.com',
+    azienda: 'Giuseppe Verdi & Co',
+    consulente: 'Dr. Marco Bianchi',
+    tipo: 'consulenza_annuale',
     dataEmissione: '25/01/2024',
     dataScadenza: '25/02/2024',
     importo: 1500.00,
@@ -185,14 +212,24 @@ export const mockInvoices: Invoice[] = [
     status: 'draft',
     servizio: 'Consulenza Annuale Completa',
     metodoPagamento: 'bonifico',
-    descrizione: 'Pacchetto consulenza annuale per gestione fiscale completa'
+    descrizione: 'Pacchetto consulenza annuale per gestione fiscale completa',
+    stripePaymentIntentId: 'pi_mock_003',
+    createdAt: new Date('2024-01-25'),
+    updatedAt: new Date('2024-01-25')
   },
   // Admin invoices (con IVA)
   {
     id: 'FAT-ADM-001',
+    conversationId: 'conv-004',
+    businessUserId: 'user-004',
+    adminUserId: 'admin-001',
     numero: '2024/001',
     cliente: 'ABC Consulting SRL',
+    clienteEmail: 'info@abc.it',
     email: 'info@abc.it',
+    azienda: 'ABC Consulting SRL',
+    consulente: 'Dr. Marco Bianchi',
+    tipo: 'consulenza',
     dataEmissione: '15/01/2024',
     dataScadenza: '15/02/2024',
     importo: 1250.00,
@@ -200,13 +237,23 @@ export const mockInvoices: Invoice[] = [
     totale: 1525.00,
     status: 'paid',
     servizio: 'Consulenza Apertura P.IVA',
-    metodoPagamento: 'bonifico'
+    metodoPagamento: 'bonifico',
+    stripePaymentIntentId: 'pi_mock_004',
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: 'FAT-ADM-002',
+    conversationId: 'conv-005',
+    businessUserId: 'user-005',
+    adminUserId: 'admin-001',
     numero: '2024/002',
     cliente: 'XYZ Marketing SRL',
+    clienteEmail: 'contatti@xyz.it',
     email: 'contatti@xyz.it',
+    azienda: 'XYZ Marketing SRL',
+    consulente: 'Dr. Marco Bianchi',
+    tipo: 'business_plan',
     dataEmissione: '18/01/2024',
     dataScadenza: '18/02/2024',
     importo: 800.00,
@@ -214,7 +261,10 @@ export const mockInvoices: Invoice[] = [
     totale: 976.00,
     status: 'pending',
     servizio: 'Business Plan Completo',
-    metodoPagamento: 'carta'
+    metodoPagamento: 'carta',
+    stripePaymentIntentId: 'pi_mock_005',
+    createdAt: new Date('2024-01-18'),
+    updatedAt: new Date('2024-01-18')
   }
 ]
 

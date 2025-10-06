@@ -71,7 +71,7 @@ export default function DocumentCard({
         )}
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Data:</span>
-          <span className="text-gray-900">{documento.dataCaricamento}</span>
+          <span className="text-gray-900">{documento.dataCaricamento instanceof Date ? documento.dataCaricamento.toLocaleDateString('it-IT') : documento.dataCaricamento}</span>
         </div>
       </div>
 

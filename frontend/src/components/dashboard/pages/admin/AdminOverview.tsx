@@ -7,16 +7,17 @@ import type { StatItem } from '../../shared/StatsCard'
 import type { QuickAction } from '../../shared/QuickActions'
 import apiService from '../../../../services/api'
 import ClientDetailModal from '../../shared/ClientDetailModal'
+import type { User, Invoice } from '../../../../types'
 
 interface AdminOverviewProps {
   onSectionChange: (section: string) => void
 }
 
 export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
-  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [selectedClient, setSelectedClient] = useState<User | null>(null)
   const [clientsCount, setClientsCount] = useState(0)
   const [pivaRequestsCount, setPivaRequestsCount] = useState(0)
-  const [recentClients, setRecentClients] = useState<any[]>([])
+  const [recentClients, setRecentClients] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [monthlyRevenue, setMonthlyRevenue] = useState(0)
   const [completedConsultations, setCompletedConsultations] = useState(0)
@@ -53,8 +54,8 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
         const currentMonth = new Date().getMonth()
         const currentYear = new Date().getFullYear()
 
-        const monthlyInvoices = invoicesResponse
-          .filter((invoice: any) => {
+        const monthlyInvoices = (invoicesResponse as Invoice[])
+          .filter((invoice) => {
             if (invoice.status !== 'paid' || !invoice.dataPagamento) return false
 
             // Parse Italian date format (dd/mm/yyyy)
@@ -65,11 +66,11 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
                    paymentDate.getFullYear() === currentYear
           })
 
-        const monthlyTotal = monthlyInvoices.reduce((sum: number, invoice: any) => sum + (invoice.totale || 0), 0)
+        const monthlyTotal = monthlyInvoices.reduce((sum, invoice) => sum + (invoice.totale || 0), 0)
         setMonthlyRevenue(monthlyTotal)
 
         // Count completed (paid) consultations
-        const completedCount = invoicesResponse.filter((invoice: any) => invoice.status === 'paid').length
+        const completedCount = (invoicesResponse as Invoice[]).filter((invoice) => invoice.status === 'paid').length
         setCompletedConsultations(completedCount)
       }
     } catch (error) {
@@ -157,7 +158,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
                           <Users className="h-4 w-4 text-primary-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{client.nome}</p>
+                          <p className="font-medium text-gray-900">{client.nome || client.name}</p>
                           {client.company && <p className="text-sm text-gray-500">{client.company}</p>}
                         </div>
                       </div>
@@ -170,7 +171,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
                           {client.status === 'active' ? 'Attivo' : client.status === 'pending' ? 'In attesa' : 'Nuovo'}
                         </span>
                         <span className="text-xs text-gray-500">P.IVA: {client.piva}</span>
-                        <span className="text-xs text-gray-500">{formatDate(client.ultimaAttivita)}</span>
+                        <span className="text-xs text-gray-500">{client.ultimaAttivita ? formatDate(client.ultimaAttivita) : 'N/A'}</span>
                       </div>
                     </div>
                     <div className="text-right">

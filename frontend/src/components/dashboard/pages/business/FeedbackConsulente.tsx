@@ -50,9 +50,9 @@ export default function FeedbackConsulente() {
         if (consultantsRes.success) {
           setConsultants(consultantsRes.consultants)
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading data:', err)
-        setError(err.message || 'Errore nel caricamento dei dati')
+        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati')
       } finally {
         setLoading(false)
       }
@@ -113,9 +113,9 @@ export default function FeedbackConsulente() {
         setShowNewFeedback(false)
         showToast('Feedback inviato con successo!', 'success')
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error submitting feedback:', err)
-      showToast(err.message || 'Errore nell\'invio del feedback', 'error')
+      showToast(err instanceof Error ? err.message : 'Errore nell\'invio del feedback', 'error')
     } finally {
       setLoading(false)
     }

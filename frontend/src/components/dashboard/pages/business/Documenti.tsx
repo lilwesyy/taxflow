@@ -10,13 +10,14 @@ import DocumentStats from '../../shared/documents/DocumentStats'
 import DocumentCard from '../../shared/documents/DocumentCard'
 import DocumentFilters from '../../shared/documents/DocumentFilters'
 import { getAvailableYears } from '../../../../utils/documentUtils'
+import type { Document } from '../../../../types'
 
 export default function Documenti() {
   const { showToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterAnno, setFilterAnno] = useState('all')
-  const [selectedDocument, setSelectedDocument] = useState<any>(null)
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dichiarazioni')
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false)
@@ -24,9 +25,9 @@ export default function Documenti() {
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [documentsFromApi, setDocumentsFromApi] = useState<any[]>([])
+  const [documentsFromApi, setDocumentsFromApi] = useState<Document[]>([])
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [documentToDelete, setDocumentToDelete] = useState<any>(null)
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
 
   const [uploadForm, setUploadForm] = useState({
     nome: '',
@@ -58,9 +59,10 @@ export default function Documenti() {
       setLoading(true)
       const response = await api.getDocuments()
       setDocumentsFromApi(response.documents || [])
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading documents:', error)
-      showToast(error.message || 'Errore nel caricamento dei documenti', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei documenti'
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }
@@ -127,9 +129,10 @@ export default function Documenti() {
 
       // Reload documents
       await loadDocuments()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error uploading document:', error)
-      showToast(error.message || 'Errore durante il caricamento del documento', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del documento'
+      showToast(errorMessage, 'error')
     } finally {
       setUploading(false)
     }
@@ -164,7 +167,7 @@ export default function Documenti() {
     }
   }
 
-  const handleOpenDeleteModal = (documento: any) => {
+  const handleOpenDeleteModal = (documento: Document) => {
     setDocumentToDelete(documento)
     setIsDeleteModalOpen(true)
   }
@@ -178,9 +181,10 @@ export default function Documenti() {
       setIsDeleteModalOpen(false)
       setDocumentToDelete(null)
       await loadDocuments()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting document:', error)
-      showToast(error.message || 'Errore durante l\'eliminazione del documento', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione del documento'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -189,7 +193,7 @@ export default function Documenti() {
     setDocumentToDelete(null)
   }
 
-  const handleOpenPdfViewerApi = (documento: any) => {
+  const handleOpenPdfViewerApi = (documento: Document) => {
     if (documento.formato === 'PDF' && documento.fileUrl) {
       // Use API URL for real documents
       const fullUrl = api.getDocumentUrl(documento.fileUrl)
@@ -528,12 +532,12 @@ export default function Documenti() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-3">Cronologia</h3>
               <div className="space-y-3">
-                {selectedDocument.cronologia.map((evento: any, index: number) => (
+                {selectedDocument.cronologia.map((evento, index: number) => (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">{evento.azione}</p>
-                      <p className="text-xs text-gray-500">{evento.data} - {evento.utente}</p>
+                      <p className="text-xs text-gray-500">{new Date(evento.data).toLocaleDateString('it-IT')} - {evento.utente}</p>
                     </div>
                   </div>
                 ))}

@@ -1,28 +1,9 @@
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import { ReactNode, createElement } from 'react'
+import type { Document } from '../types'
 
-export interface Document {
-  id: string
-  nome: string
-  tipo: string
-  descrizione?: string
-  categoria: string
-  anno: string
-  status: 'elaborato' | 'in_elaborazione' | 'in_attesa' | 'rifiutato'
-  dataCaricamento: string
-  dataUltimaModifica?: string
-  dimensione: string
-  formato: string
-  protocollo?: string
-  importo?: string
-  note?: string
-  fileUrl: string
-  cliente?: {
-    id: string
-    nome: string
-    azienda?: string
-  }
-}
+// Re-export Document for backward compatibility
+export type { Document } from '../types'
 
 export const getStatusColor = (status: string): string => {
   switch (status) {
@@ -82,13 +63,13 @@ export const formatFileSize = (bytes: number): string => {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
 }
 
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
+export const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateTimeFormat('it-IT', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
-  }).format(date)
+  }).format(dateObj)
 }
 
 export const DOCUMENT_CATEGORIES = [

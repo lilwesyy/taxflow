@@ -1,16 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-
-interface User {
-  id: string
-  email: string
-  name: string
-  role: 'business' | 'admin'
-  company?: string
-  registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'
-  pivaFormSubmitted?: boolean
-  pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'
-  pivaRequestData?: any
-}
+import type { User } from '../types'
 
 interface LoginResponse {
   requires2FA?: boolean

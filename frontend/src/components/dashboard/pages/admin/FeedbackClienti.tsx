@@ -44,9 +44,9 @@ export default function FeedbackClienti() {
         if (statisticsRes.success) {
           setStatistics(statisticsRes.statistics)
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading data:', err)
-        setError(err.message || 'Errore nel caricamento dei dati')
+        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati')
       } finally {
         setLoading(false)
       }
@@ -81,9 +81,9 @@ export default function FeedbackClienti() {
           setSelectedFeedback(null)
           showToast('Risposta inviata con successo!', 'success')
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error responding to feedback:', err)
-        showToast(err.message || 'Errore nell\'invio della risposta', 'error')
+        showToast(err instanceof Error ? err.message : 'Errore nell\'invio della risposta', 'error')
       } finally {
         setLoading(false)
       }

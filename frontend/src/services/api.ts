@@ -1,3 +1,5 @@
+import type { User, UpdateProfileData } from '../types'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
 
@@ -231,7 +233,7 @@ class ApiService {
     return response.json()
   }
 
-  async updateClient(clientId: string, data: any) {
+  async updateClient(clientId: string, data: Partial<User>) {
     const response = await fetch(`${API_BASE_URL}/clients/${clientId}`, {
       method: 'PUT',
       headers: this.getHeaders(true),
@@ -490,7 +492,7 @@ class ApiService {
     return response.json()
   }
 
-  async updateUserProfile(data: any) {
+  async updateUserProfile(data: UpdateProfileData) {
     const response = await fetch(`${API_BASE_URL}/user/update`, {
       method: 'PUT',
       headers: this.getHeaders(true),

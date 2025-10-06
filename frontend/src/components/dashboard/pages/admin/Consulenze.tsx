@@ -14,6 +14,36 @@ type TransformedMessage = Message & {
   nome: string
 }
 
+interface Invoice {
+  status: string
+  dataPagamento?: string
+  totale: number
+}
+
+interface Conversation {
+  id: string
+  cliente: {
+    nome: string
+    azienda: string
+    avatar: string
+    email: string
+  }
+  status: string
+  priority: string
+  ultimoMessaggio: string
+  orarioUltimoMessaggio: string
+  dataUltimaAttivita: string
+  messaggiNonLetti: number
+  tipo: string
+  argomento: string
+  consulente: string
+  durataConsulenza?: string
+  rating?: number
+  fatturata?: boolean
+  importo?: number
+  paidAt?: string | Date | undefined
+}
+
 export default function Consulenze() {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -22,7 +52,7 @@ export default function Consulenze() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [chatTab, setChatTab] = useState<'active' | 'archived'>('active')
   const [message, setMessage] = useState('')
-  const [conversazioni, setConversazioni] = useState<any[]>([])
+  const [conversazioni, setConversazioni] = useState<Conversation[]>([])
   const [messaggi, setMessaggi] = useState<{ [key: string]: TransformedMessage[] }>({})
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -67,17 +97,17 @@ export default function Consulenze() {
 
       if (!response.ok) return
 
-      const invoices = await response.json()
+      const invoices = await response.json() as Invoice[]
 
       // Filter only paid invoices
-      const paidInvoices = invoices.filter((inv: any) => inv.status === 'paid')
+      const paidInvoices = invoices.filter((inv: Invoice) => inv.status === 'paid')
 
       // Calculate monthly revenue (current month)
       const currentMonth = new Date().getMonth()
       const currentYear = new Date().getFullYear()
 
       const monthlyTotal = paidInvoices
-        .filter((inv: any) => {
+        .filter((inv: Invoice) => {
           if (!inv.dataPagamento) return false
 
           // Parse Italian date format (dd/mm/yyyy)
@@ -86,7 +116,7 @@ export default function Consulenze() {
 
           return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear
         })
-        .reduce((sum: number, inv: any) => sum + (inv.totale || 0), 0)
+        .reduce((sum: number, inv: Invoice) => sum + (inv.totale || 0), 0)
 
       setMonthlyRevenue(monthlyTotal)
     } catch (error) {
@@ -155,16 +185,21 @@ export default function Consulenze() {
       const data = await chatService.getConversations()
 
       // Transform data to match component structure
-      const transformed = data.map((conv: any) => ({
+      const transformed = data.map((conv): Conversation => {
+        const businessUser = typeof conv.businessUserId === 'object' && conv.businessUserId !== null
+          ? conv.businessUserId as { name?: string; company?: string; email?: string }
+          : null
+
+        return {
         id: conv._id,
         cliente: {
-          nome: conv.businessUserId?.name || 'Cliente sconosciuto',
-          azienda: conv.businessUserId?.company || 'Non specificata',
+          nome: businessUser?.name || 'Cliente sconosciuto',
+          azienda: businessUser?.company || 'Non specificata',
           avatar: '👨‍💼',
-          email: conv.businessUserId?.email || ''
+          email: businessUser?.email || ''
         },
         status: conv.status,
-        priority: conv.priority,
+        priority: conv.priority || 'medium',
         ultimoMessaggio: conv.ultimoMessaggio,
         orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
         dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
@@ -175,9 +210,10 @@ export default function Consulenze() {
         durataConsulenza: conv.durataConsulenza,
         rating: conv.rating,
         fatturata: conv.fatturata,
-        importo: conv.importo,
-        paidAt: conv.paidAt
-      }))
+        importo: conv.importo ?? 0,
+        paidAt: (conv as typeof conv & { paidAt?: Date | string }).paidAt
+      }
+      })
 
       setConversazioni(transformed)
 
@@ -371,7 +407,7 @@ export default function Consulenze() {
     try {
       setSending(true)
 
-      let attachments: any[] = []
+      let attachments: Array<{ url: string; filename: string; mimeType: string; size: number }> = []
 
       // Upload files first if any
       if (filesToSend.length > 0) {
@@ -557,7 +593,10 @@ export default function Consulenze() {
         messaggiNonLetti: 0,
         ultimoMessaggio: '',
         orarioUltimoMessaggio: '',
-        dataUltimaAttivita: new Date().toLocaleDateString('it-IT')
+        dataUltimaAttivita: new Date().toLocaleDateString('it-IT'),
+        durataConsulenza: undefined,
+        rating: undefined,
+        paidAt: undefined
       }
     : conversazioni.find(c => c.id === activeChat)
 
@@ -874,7 +913,7 @@ export default function Consulenze() {
                 </span>
               </div>
 
-              {conversazioneAttiva.durataConsulenza && (
+              {conversazioneAttiva.durataConsulenza !== undefined && (
                 <div>
                   <p className="text-sm text-gray-600">Durata</p>
                   <p className="font-medium text-gray-900">{conversazioneAttiva.durataConsulenza}</p>
@@ -883,13 +922,13 @@ export default function Consulenze() {
 
               <div>
                 <p className="text-sm text-gray-600">Importo</p>
-                <p className="font-medium text-gray-900">€ {conversazioneAttiva.importo}</p>
+                <p className="font-medium text-gray-900">€ {conversazioneAttiva.importo ?? 0}</p>
                 <p className={`text-xs ${conversazioneAttiva.fatturata ? 'text-green-600' : 'text-orange-600'}`}>
                   {conversazioneAttiva.fatturata ? 'Fatturata' : 'Da fatturare'}
                 </p>
               </div>
 
-              {conversazioneAttiva.rating && (
+              {conversazioneAttiva.rating !== undefined && (
                 <div>
                   <p className="text-sm text-gray-600">Valutazione</p>
                   <div className="flex items-center">
@@ -918,7 +957,7 @@ export default function Consulenze() {
                   onClick={() => setShowInvoiceModal(true)}
                   className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 text-sm hover:scale-105 hover:shadow-lg"
                 >
-                  {conversazioneAttiva.importo > 0 ? 'Modifica Importo' : 'Crea Fattura'}
+                  {(conversazioneAttiva.importo ?? 0) > 0 ? 'Modifica Importo' : 'Crea Fattura'}
                 </button>
               )}
             </div>
@@ -967,7 +1006,7 @@ export default function Consulenze() {
             setShowInvoiceModal(false)
             setInvoiceAmount('')
           }}
-          title={conversazioneAttiva.importo > 0 ? 'Modifica Importo Consulenza' : 'Crea Fattura per Consulenza'}
+          title={(conversazioneAttiva.importo ?? 0) > 0 ? 'Modifica Importo Consulenza' : 'Crea Fattura per Consulenza'}
           maxWidth="lg"
         >
           <div className="space-y-4">
@@ -995,10 +1034,10 @@ export default function Consulenze() {
                   <span className="text-gray-600">Tipo:</span>
                   <span className="font-medium text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</span>
                 </div>
-                {conversazioneAttiva.importo > 0 && (
+                {(conversazioneAttiva.importo ?? 0) > 0 && (
                   <div className="flex justify-between pt-2 border-t border-gray-200">
                     <span className="text-gray-600">Importo attuale:</span>
-                    <span className="font-bold text-gray-900">€ {conversazioneAttiva.importo}</span>
+                    <span className="font-bold text-gray-900">€ {conversazioneAttiva.importo ?? 0}</span>
                   </div>
                 )}
               </div>
@@ -1057,7 +1096,7 @@ export default function Consulenze() {
                 disabled={creatingInvoice || !invoiceAmount || parseFloat(invoiceAmount) <= 0}
                 className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {creatingInvoice ? 'Creazione...' : (conversazioneAttiva.importo > 0 ? 'Aggiorna Importo' : 'Crea Fattura')}
+                {creatingInvoice ? 'Creazione...' : ((conversazioneAttiva.importo ?? 0) > 0 ? 'Aggiorna Importo' : 'Crea Fattura')}
               </button>
             </div>
           </div>

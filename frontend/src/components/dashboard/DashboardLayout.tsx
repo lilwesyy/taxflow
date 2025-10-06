@@ -14,7 +14,7 @@ interface DashboardLayoutProps {
   sidebarItems: Array<{
     id: string
     name: string
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
   }>
   activeSection: string
   onSectionChange: (section: string) => void

@@ -4,6 +4,16 @@ import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
 
+interface Session {
+  id: string
+  browser: string
+  os: string
+  location: string
+  ip: string
+  isCurrent: boolean
+  lastActivity: string
+}
+
 export default function Impostazioni() {
   const { user, token, updateUser } = useAuth()
   const { showToast } = useToast()
@@ -195,8 +205,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -223,8 +233,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nella pulizia delle sessioni')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -250,8 +260,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nella terminazione delle sessioni')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -316,7 +326,7 @@ export default function Impostazioni() {
   const [verificationCode, setVerificationCode] = useState('')
   const [disable2FAPassword, setDisable2FAPassword] = useState('')
 
-  const [sessions, setSessions] = useState<any[]>([])
+  const [sessions, setSessions] = useState<Session[]>([])
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
 
@@ -347,8 +357,8 @@ export default function Impostazioni() {
       const data = await response.json()
       setQrCode(data.qrCode)
       setShow2FAModal(true)
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -383,8 +393,8 @@ export default function Impostazioni() {
       setVerificationCode('')
       setQrCode('')
       showToast('2FA attivato con successo!', 'success')
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -417,8 +427,8 @@ export default function Impostazioni() {
       setTwoFactorEnabled(false)
       setDisable2FAPassword('')
       showToast('2FA disattivato con successo!', 'success')
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -450,8 +460,8 @@ export default function Impostazioni() {
       setShowTerminateSessionModal(false)
       setSessionToTerminate(null)
       loadSessions()
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     }
   }
 
@@ -553,9 +563,9 @@ export default function Impostazioni() {
         // Per ora le altre sezioni non sono implementate
         showToast(`Impostazioni ${section} salvate!`, 'success')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Error saving ${section}:`, error)
-      showToast(error.message || 'Errore durante il salvataggio', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore durante il salvataggio', 'error')
     } finally {
       setLoading(false)
     }

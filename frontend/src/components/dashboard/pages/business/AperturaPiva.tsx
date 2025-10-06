@@ -6,9 +6,45 @@ interface AperturaPivaProps {
   onNavigateToDocuments?: (tab: string) => void
 }
 
+interface PivaRequest {
+  id: string
+  status: string
+  date: string
+  consultant: string
+  datiPersonali: {
+    nome: string
+    cognome: string
+    email: string
+    telefono: string
+    codiceFiscale: string
+    indirizzo: string
+    citta: string
+    cap: string
+  }
+  datiAttivita: {
+    attivita: string
+    codiceAteco: string
+    descrizioneAteco: string
+    fatturatoPrevisto: string
+    regimeFiscale: string
+  }
+  timeline: Array<{
+    data: string
+    evento: string
+    status: string
+    note: string
+  }>
+  note: string
+  costoServizio: string
+  tempiPrevisti: string
+  documentiRichiesti: string[]
+  partitaIvaAssegnata?: string
+  dataAttivazione?: string
+}
+
 export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProps) {
   const [step, setStep] = useState(1)
-  const [selectedRequest, setSelectedRequest] = useState<any>(null)
+  const [selectedRequest, setSelectedRequest] = useState<PivaRequest | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
     cognome: '',
@@ -476,7 +512,7 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
                 Cronologia Pratica
               </h4>
               <div className="space-y-4">
-                {selectedRequest.timeline.map((event: any, index: number) => (
+                {selectedRequest.timeline.map((event, index) => (
                   <div key={index} className="flex items-start space-x-4">
                     <div className="flex flex-col items-center">
                       <div className={`w-3 h-3 rounded-full mt-1.5 ${

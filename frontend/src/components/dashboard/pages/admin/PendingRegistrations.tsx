@@ -63,9 +63,9 @@ export default function PendingRegistrations() {
         setSelectedUser(null)
         showToast(response.message, 'success')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving registration:', error)
-      showToast(error.message || 'Errore durante l\'approvazione', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
     } finally {
       setActionLoading(false)
       setPendingAction(null)

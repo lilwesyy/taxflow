@@ -39,7 +39,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
         setClienti(response.clients)
         // Update selected client with new data if modal is open
         if (selectedClient) {
-          const updatedClient = response.clients.find((c: any) => c.id === selectedClient.id)
+          const updatedClient = response.clients.find((c: { id: string }) => c.id === selectedClient.id)
           if (updatedClient) {
             setSelectedClient(updatedClient)
           }
@@ -70,9 +70,9 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
         if (pendingResponse.success) {
           setPendingCount(pendingResponse.users?.length || 0)
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading data:', err)
-        setError(err.message || 'Errore nel caricamento dei dati')
+        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati')
       } finally {
         setLoading(false)
       }

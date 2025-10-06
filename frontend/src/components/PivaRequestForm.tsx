@@ -170,8 +170,9 @@ export default function PivaRequestForm({ onSubmit, onCancel, userName }: PivaRe
 
     try {
       await onSubmit(formData)
-    } catch (err: any) {
-      setError(err.message || 'Errore durante l\'invio della richiesta')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'invio della richiesta'
+      setError(errorMessage)
       setLoading(false)
     }
   }

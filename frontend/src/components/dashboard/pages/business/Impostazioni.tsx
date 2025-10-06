@@ -359,8 +359,8 @@ export default function Impostazioni() {
 
       showToast('Sessione terminata con successo', 'success')
       loadSessions()
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     }
   }
 
@@ -384,8 +384,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nella terminazione delle sessioni')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -410,8 +410,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -438,8 +438,8 @@ export default function Impostazioni() {
         const error = await response.json()
         throw new Error(error.error || 'Errore nella pulizia delle sessioni')
       }
-    } catch (error: any) {
-      showToast(error.message, 'error')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
     } finally {
       setLoading(false)
     }
@@ -577,9 +577,9 @@ export default function Impostazioni() {
       } else {
         showToast(`Impostazioni ${section} salvate!`, 'success')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Error saving ${section}:`, error)
-      showToast(error.message || 'Errore durante il salvataggio', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore durante il salvataggio', 'error')
     } finally {
       setLoading(false)
     }

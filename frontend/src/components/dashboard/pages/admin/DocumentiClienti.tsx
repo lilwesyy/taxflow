@@ -11,26 +11,27 @@ import DocumentStats from '../../shared/documents/DocumentStats'
 import DocumentCard from '../../shared/documents/DocumentCard'
 import DocumentFilters from '../../shared/documents/DocumentFilters'
 import { getAvailableYears } from '../../../../utils/documentUtils'
+import type { Document, User } from '../../../../types'
 
 export default function DocumentiClienti() {
   const { showToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterAnno, setFilterAnno] = useState('all')
-  const [selectedDocument, setSelectedDocument] = useState<any>(null)
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dichiarazioni')
   const [selectedCliente, setSelectedCliente] = useState('all')
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false)
   const [pdfUrl, setPdfUrl] = useState('')
-  const [currentPdfDocument, setCurrentPdfDocument] = useState<any>(null)
+  const [currentPdfDocument, setCurrentPdfDocument] = useState<Document | null>(null)
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [documentsFromApi, setDocumentsFromApi] = useState<any[]>([])
-  const [clientsFromApi, setClientsFromApi] = useState<any[]>([])
+  const [documentsFromApi, setDocumentsFromApi] = useState<Document[]>([])
+  const [clientsFromApi, setClientsFromApi] = useState<User[]>([])
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [documentToDelete, setDocumentToDelete] = useState<any>(null)
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
 
   const [uploadForm, setUploadForm] = useState({
     nome: '',
@@ -60,31 +61,27 @@ export default function DocumentiClienti() {
     try {
       const response = await api.getClients()
       const clients = response.clients || []
-      setClientsFromApi(clients.map((c: any) => ({
-        id: c.id,
-        nome: c.nome,
-        azienda: c.company || 'N/A',
-        piva: c.piva || 'N/A',
-        email: c.email
-      })))
-    } catch (error: any) {
+      setClientsFromApi(clients as User[])
+    } catch (error) {
       console.error('Error loading clients:', error)
-      showToast(error.message || 'Errore nel caricamento dei clienti', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei clienti'
+      showToast(errorMessage, 'error')
     }
   }
 
   const loadDocuments = async () => {
     try {
       setLoading(true)
-      const filters: any = {}
+      const filters: Record<string, string> = {}
       if (selectedCliente !== 'all') {
         filters.clientId = selectedCliente
       }
       const response = await api.getDocuments(filters)
       setDocumentsFromApi(response.documents || [])
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading documents:', error)
-      showToast(error.message || 'Errore nel caricamento dei documenti', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei documenti'
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }
@@ -121,7 +118,17 @@ export default function DocumentiClienti() {
     { id: '4', nome: 'Anna Neri', azienda: 'Neri Marketing', piva: '45678901234' }
   ]
 
-  const clienti = clientsFromApi.length > 0 ? clientsFromApi : clientiDummy
+  const clienti = (clientsFromApi.length > 0 ? clientsFromApi : clientiDummy).map(c => {
+    const isUser = 'email' in c
+    return {
+      ...c,
+      nome: ('nome' in c && c.nome) || (isUser && 'name' in c && c.name) || 'Sconosciuto',
+      email: isUser ? c.email : '',
+      telefono: (isUser && 'telefono' in c && c.telefono) || (isUser && 'phone' in c && c.phone) || '',
+      piva: c.piva || '',
+      status: (isUser && 'status' in c && c.status) || 'active'
+    }
+  })
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -169,9 +176,10 @@ export default function DocumentiClienti() {
 
       // Reload documents
       await loadDocuments()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error uploading document:', error)
-      showToast(error.message || 'Errore durante il caricamento del documento', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del documento'
+      showToast(errorMessage, 'error')
     } finally {
       setUploading(false)
     }
@@ -201,7 +209,7 @@ export default function DocumentiClienti() {
     })
   }
 
-  const handleOpenDeleteModal = (documento: any) => {
+  const handleOpenDeleteModal = (documento: Document) => {
     setDocumentToDelete(documento)
     setIsDeleteModalOpen(true)
   }
@@ -215,9 +223,10 @@ export default function DocumentiClienti() {
       setIsDeleteModalOpen(false)
       setDocumentToDelete(null)
       await loadDocuments()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting document:', error)
-      showToast(error.message || 'Errore durante l\'eliminazione del documento', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione del documento'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -226,7 +235,7 @@ export default function DocumentiClienti() {
     setDocumentToDelete(null)
   }
 
-  const handleOpenPdfViewerApi = (documento: any) => {
+  const handleOpenPdfViewerApi = (documento: Document) => {
     if (documento.formato === 'PDF' && documento.fileUrl) {
       const fullUrl = api.getDocumentUrl(documento.fileUrl)
       setPdfUrl(fullUrl)
@@ -251,9 +260,10 @@ export default function DocumentiClienti() {
 
       // Ricarica la lista documenti
       await loadDocuments()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating document status:', error)
-      showToast(error.message || 'Errore durante l\'aggiornamento dello status', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento dello status'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -278,7 +288,7 @@ export default function DocumentiClienti() {
   const getStatsForCliente = () => {
     const docs = selectedCliente === 'all'
       ? allDocuments
-      : allDocuments.filter(d => d.clienteId === selectedCliente)
+      : allDocuments.filter(d => d.clientId === selectedCliente)
 
     return {
       totale: docs.length,
@@ -621,15 +631,17 @@ export default function DocumentiClienti() {
         >
           <div className="space-y-6">
             {/* Client Info */}
+            {selectedDocument.cliente && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center space-x-3">
                 <Users className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-semibold text-blue-900">{selectedDocument.cliente.nome}</p>
-                  <p className="text-sm text-blue-700">{selectedDocument.cliente.azienda}</p>
+                  <p className="font-semibold text-blue-900">{selectedDocument.cliente?.nome}</p>
+                  <p className="text-sm text-blue-700">{selectedDocument.cliente?.azienda}</p>
                 </div>
               </div>
             </div>
+            )}
 
             {/* Document Info */}
             <div className="bg-gray-50 rounded-lg p-4">
@@ -677,12 +689,12 @@ export default function DocumentiClienti() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-3">Cronologia</h3>
               <div className="space-y-3">
-                {selectedDocument.cronologia.map((evento: any, index: number) => (
+                {selectedDocument.cronologia.map((evento, index: number) => (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">{evento.azione}</p>
-                      <p className="text-xs text-gray-500">{evento.data} - {evento.utente}</p>
+                      <p className="text-xs text-gray-500">{new Date(evento.data).toLocaleDateString('it-IT')} - {evento.utente}</p>
                     </div>
                   </div>
                 ))}

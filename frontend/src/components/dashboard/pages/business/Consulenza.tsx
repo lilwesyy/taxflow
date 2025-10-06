@@ -13,6 +13,29 @@ import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
 import StripePaymentForm from '../../../payment/StripePaymentForm'
 import type { ChatMessage } from '../../../chat/shared/types'
 
+interface Conversation {
+  id: string
+  consulente: {
+    nome: string
+    specializzazione: string
+    avatar: string
+    email: string
+  }
+  status: string
+  priority: string
+  ultimoMessaggio: string
+  orarioUltimoMessaggio: string
+  dataUltimaAttivita: string
+  messaggiNonLetti: number
+  tipo: string
+  argomento: string
+  durataConsulenza?: string
+  rating?: number
+  fatturata?: boolean
+  importo?: number
+  paidAt?: string
+}
+
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -27,7 +50,7 @@ export default function Consulenza() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showNewChatModal, setShowNewChatModal] = useState(false)
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null)
-  const [conversazioni, setConversazioni] = useState<any[]>([])
+  const [conversazioni, setConversazioni] = useState<Conversation[]>([])
   const [consulenti, setConsulenti] = useState<Consultant[]>([])
   const [messaggi, setMessaggi] = useState<{ [key: string]: Message[] }>({})
   const [loading, setLoading] = useState(true)
@@ -124,16 +147,21 @@ export default function Consulenza() {
       const data = await chatService.getConversations()
 
       // Transform data to match component structure
-      const transformed = data.map((conv: any) => ({
+      const transformed = data.map((conv): Conversation => {
+        const adminUser = typeof conv.adminUserId === 'object' && conv.adminUserId !== null
+          ? conv.adminUserId as { name?: string; professionalRole?: string; email?: string }
+          : null
+
+        return {
         id: conv._id,
         consulente: {
-          nome: conv.adminUserId?.name || 'Consulente non assegnato',
-          specializzazione: conv.adminUserId?.professionalRole || 'In attesa di assegnazione',
+          nome: adminUser?.name || 'Consulente non assegnato',
+          specializzazione: adminUser?.professionalRole || 'In attesa di assegnazione',
           avatar: '👨‍💼',
-          email: conv.adminUserId?.email || ''
+          email: adminUser?.email || ''
         },
         status: conv.status,
-        priority: conv.priority,
+        priority: conv.priority || 'medium',
         ultimoMessaggio: conv.ultimoMessaggio,
         orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
         dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
@@ -143,8 +171,9 @@ export default function Consulenza() {
         durataConsulenza: conv.durataConsulenza,
         rating: conv.rating,
         fatturata: conv.fatturata,
-        importo: conv.importo
-      }))
+        importo: conv.importo ?? 0
+      }
+      })
 
       setConversazioni(transformed)
 
@@ -204,7 +233,7 @@ export default function Consulenza() {
     try {
       setSending(true)
 
-      let attachments: any[] = []
+      let attachments: Array<{ url: string; filename: string; mimeType: string; size: number }> = []
 
       // Upload files first if any
       if (filesToSend.length > 0) {
@@ -382,9 +411,9 @@ export default function Consulenza() {
       setIsLoadingPayment(true)
       const { clientSecret } = await stripeService.createPaymentIntent(activeChat)
       setPaymentClientSecret(clientSecret)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating payment intent:', error)
-      showToast(error.message || 'Errore nell\'inizializzazione del pagamento', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore nell\'inizializzazione del pagamento', 'error')
       setShowPaymentModal(false)
     } finally {
       setIsLoadingPayment(false)
@@ -403,7 +432,7 @@ export default function Consulenza() {
       // Force refresh the active conversation state
       if (activeChat) {
         const updatedConversations = await chatService.getConversations()
-        const updated = updatedConversations.find((c: any) => c._id === activeChat)
+        const updated = updatedConversations.find((c) => c._id === activeChat)
         if (updated) {
           // Update the conversations list with new payment status
           setConversazioni((prev) =>
@@ -449,7 +478,9 @@ export default function Consulenza() {
         messaggiNonLetti: 0,
         ultimoMessaggio: '',
         orarioUltimoMessaggio: '',
-        dataUltimaAttivita: new Date().toLocaleDateString('it-IT')
+        dataUltimaAttivita: new Date().toLocaleDateString('it-IT'),
+        durataConsulenza: undefined,
+        rating: undefined
       }
     : conversazioni.find(conv => conv.id === activeChat)
 
@@ -827,10 +858,10 @@ export default function Consulenza() {
                 </div>
               )}
 
-              {conversazioneAttiva.importo > 0 && (
+              {(conversazioneAttiva.importo ?? 0) > 0 && (
                 <div>
                   <p className="text-sm text-gray-600">Costo consulenza</p>
-                  <p className="font-medium text-gray-900">€ {conversazioneAttiva.importo}</p>
+                  <p className="font-medium text-gray-900">€ {conversazioneAttiva.importo ?? 0}</p>
                 </div>
               )}
 
@@ -851,7 +882,7 @@ export default function Consulenza() {
             </div>
 
             {/* Payment Section */}
-            {conversazioneAttiva.importo > 0 && (
+            {(conversazioneAttiva.importo ?? 0) > 0 && (
               <div className="border-t border-gray-200 pt-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -886,7 +917,7 @@ export default function Consulenza() {
                         className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CreditCard className="h-4 w-4" />
-                        <span>{isLoadingPayment ? 'Caricamento...' : `Paga € ${(conversazioneAttiva.importo * 1.22).toFixed(2)}`}</span>
+                        <span>{isLoadingPayment ? 'Caricamento...' : `Paga € ${((conversazioneAttiva.importo ?? 0) * 1.22).toFixed(2)}`}</span>
                       </button>
                     </>
                   )}
@@ -949,16 +980,16 @@ export default function Consulenza() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Consulenza:</span>
-                  <span className="font-medium text-gray-900">€ {conversazioneAttiva.importo}</span>
+                  <span className="font-medium text-gray-900">€ {conversazioneAttiva.importo ?? 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">IVA (22%):</span>
-                  <span className="font-medium text-gray-900">€ {(conversazioneAttiva.importo * 0.22).toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">€ {((conversazioneAttiva.importo ?? 0) * 0.22).toFixed(2)}</span>
                 </div>
                 <div className="border-t border-gray-200 pt-2 mt-2">
                   <div className="flex justify-between">
                     <span className="font-semibold text-gray-900">Totale:</span>
-                    <span className="font-bold text-primary-600 text-lg">€ {(conversazioneAttiva.importo * 1.22).toFixed(2)}</span>
+                    <span className="font-bold text-primary-600 text-lg">€ {((conversazioneAttiva.importo ?? 0) * 1.22).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -981,7 +1012,7 @@ export default function Consulenza() {
             {paymentClientSecret && (
               <Elements stripe={stripePromise} options={{ clientSecret: paymentClientSecret }}>
                 <StripePaymentForm
-                  amount={conversazioneAttiva.importo}
+                  amount={conversazioneAttiva.importo ?? 0}
                   onSuccess={handlePaymentSuccess}
                   onCancel={handleCancelPayment}
                 />

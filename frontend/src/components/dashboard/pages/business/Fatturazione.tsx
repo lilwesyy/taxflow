@@ -32,7 +32,7 @@ export default function Fatturazione() {
     return matchesSearch && matchesFilter
   })
 
-  const handleCreateInvoice = (formData: any) => {
+  const handleCreateInvoice = (formData: unknown) => {
     console.log('Creating business invoice:', formData)
     setShowNewInvoice(false)
   }

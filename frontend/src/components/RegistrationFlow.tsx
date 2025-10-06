@@ -69,8 +69,9 @@ export default function RegistrationFlow({ onBack, onComplete }: RegistrationFlo
       setCredentials({ email: formData.email, password: formData.password })
       setStep('questionnaire')
       showToast('Account creato! Compila il questionario per continuare', 'success')
-    } catch (error: any) {
-      showToast(error.message || 'Si è verificato un errore', 'error')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Si è verificato un errore'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -108,8 +109,9 @@ export default function RegistrationFlow({ onBack, onComplete }: RegistrationFlo
       setTimeout(() => {
         onComplete()
       }, 1000)
-    } catch (error: any) {
-      showToast(error.message || 'Errore durante l\'invio', 'error')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'invio'
+      showToast(errorMessage, 'error')
       throw error
     }
   }

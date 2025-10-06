@@ -1,23 +1,9 @@
 export type UserRole = 'business' | 'admin'
 
-export type InvoiceStatus = 'draft' | 'sent' | 'pending' | 'paid' | 'overdue'
+export type InvoiceStatus = 'draft' | 'sent' | 'pending' | 'paid' | 'overdue' | 'failed' | 'canceled'
 
-export interface Invoice {
-  id: string
-  numero: string
-  cliente: string
-  email: string
-  dataEmissione: string
-  dataScadenza: string
-  importo: number
-  iva: number
-  totale: number
-  status: InvoiceStatus
-  servizio: string
-  metodoPagamento: 'bonifico' | 'carta' | 'contanti' | 'assegno'
-  descrizione?: string
-  note?: string
-}
+// Re-export Invoice from main types file to ensure consistency
+export type { Invoice } from './index'
 
 export interface Client {
   id: number | string

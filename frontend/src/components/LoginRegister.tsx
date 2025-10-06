@@ -72,8 +72,9 @@ export default function LoginRegister({ onBack, onLogin, onRegistrationSuccess, 
 
       // Ricarica l'app per aggiornare il contesto
       setTimeout(() => window.location.reload(), 500)
-    } catch (error: any) {
-      showToast(error.message || 'Errore durante la verifica', 'error')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante la verifica'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -129,8 +130,9 @@ export default function LoginRegister({ onBack, onLogin, onRegistrationSuccess, 
           setIsLogin(true)
         }
       }
-    } catch (error: any) {
-      showToast(error.message || 'Si è verificato un errore', 'error')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Si è verificato un errore'
+      showToast(errorMessage, 'error')
     }
   }
 

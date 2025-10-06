@@ -97,9 +97,9 @@ export default function RichiestePivaReal() {
         setSelectedRequest(null)
         showToast(pendingAction.approved ? 'Utente approvato con successo!' : 'Utente respinto', 'success')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving request:', error)
-      showToast(error.message || 'Errore durante l\'approvazione', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
     } finally {
       setActionLoading(false)
       setPendingAction(null)

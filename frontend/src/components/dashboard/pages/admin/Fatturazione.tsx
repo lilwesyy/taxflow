@@ -93,7 +93,7 @@ export default function Fatturazione() {
     }
   ]
 
-  const handleCreateInvoice = (formData: any) => {
+  const handleCreateInvoice = (formData: unknown) => {
     console.log('Creating admin invoice:', formData)
     setShowNewInvoiceModal(false)
   }
@@ -177,9 +177,9 @@ export default function Fatturazione() {
 
       // Reload invoices
       await loadTransactions()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating invoice:', error)
-      showToast(error.message || 'Errore nell\'aggiornamento dell\'importo', 'error')
+      showToast(error instanceof Error ? error.message : 'Errore nell\'aggiornamento dell\'importo', 'error')
     } finally {
       setIsUpdating(false)
     }
