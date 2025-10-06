@@ -199,22 +199,6 @@ export default function Fatturazione() {
       {/* Tab Content */}
       {activeTab === 'fatture' ? renderFattureTab() : renderClientiTab()}
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <div className="flex items-start space-x-3">
-          <FileText className="h-5 w-5 text-blue-600 mt-1" />
-          <div>
-            <h4 className="font-semibold text-blue-900 mb-2">Regime Forfettario - Fatturazione</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Esenzione IVA su tutte le fatture</li>
-              <li>• Obbligo fatturazione elettronica sopra € 25.000 annui</li>
-              <li>• Possibilità di emettere ricevute per importi minori</li>
-              <li>• Conservazione digitale automatica</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
       {/* Invoice Create Modal */}
       <InvoiceCreateModal
         isOpen={showNewInvoice}
