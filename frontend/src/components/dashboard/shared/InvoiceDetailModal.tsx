@@ -81,11 +81,11 @@ export default function InvoiceDetailModal({
               </div>
               <div>
                 <label className="text-sm text-gray-600">Email</label>
-                <p className="font-medium text-gray-900">{invoice.email}</p>
+                <p className="font-medium text-gray-900">{invoice.clienteEmail || invoice.email || 'N/D'}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Metodo di pagamento</label>
-                <p className="font-medium text-gray-900 capitalize">{invoice.metodoPagamento}</p>
+                <p className="font-medium text-gray-900">Carta</p>
               </div>
             </div>
           </div>

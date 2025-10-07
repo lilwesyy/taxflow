@@ -104,7 +104,12 @@ export default function Fatturazione() {
 
   const handleDownloadInvoice = async (invoice: Invoice) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/invoices/${invoice.id}/pdf`, {
+      const invoiceId = invoice._id || invoice.id || invoice.conversationId
+      if (!invoiceId) {
+        throw new Error('ID fattura non disponibile')
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/invoices/${invoiceId}/pdf`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -157,7 +162,12 @@ export default function Fatturazione() {
     try {
       setIsUpdating(true)
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/invoices/${editingInvoice.id}/amount`, {
+      const invoiceId = editingInvoice._id || editingInvoice.id || editingInvoice.conversationId
+      if (!invoiceId) {
+        throw new Error('ID fattura non disponibile')
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/invoices/${invoiceId}/amount`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

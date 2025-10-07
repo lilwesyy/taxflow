@@ -17,6 +17,7 @@ export interface IInvoice extends mongoose.Document {
   status: 'paid' | 'pending' | 'failed' | 'canceled'
   dataEmissione: string
   dataPagamento?: string
+  metodoPagamento?: string
   stripePaymentIntentId?: string
   stripePaymentStatus?: string
   stripeCheckoutSessionId?: string
@@ -60,6 +61,7 @@ const InvoiceSchema = new mongoose.Schema({
   },
   dataEmissione: { type: String, required: true },
   dataPagamento: { type: String },
+  metodoPagamento: { type: String },
   stripePaymentIntentId: { type: String },
   stripePaymentStatus: { type: String },
   stripeCheckoutSessionId: { type: String },

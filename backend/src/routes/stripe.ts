@@ -4,6 +4,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth'
 import Conversation from '../models/Conversation'
 import Invoice from '../models/Invoice'
 import User from '../models/User'
+import PurchasedService from '../models/PurchasedService'
 
 const router = express.Router()
 
@@ -621,6 +622,7 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   try {
     const userId = session.metadata?.userId
+    const serviceType = session.metadata?.serviceType
 
     if (!userId) {
       console.error('No userId in checkout session metadata')
@@ -633,7 +635,68 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return
     }
 
-    console.log(`🔍 Checkout session completed - User: ${userId}, Payment Status: ${session.payment_status}, Subscription: ${session.subscription}, Payment Intent: ${session.payment_intent}`)
+    console.log(`🔍 Checkout session completed - User: ${userId}, Payment Status: ${session.payment_status}, Subscription: ${session.subscription}, Payment Intent: ${session.payment_intent}, Service Type: ${serviceType}`)
+
+    // Check if this is a service purchase (Business Plan or Analisi SWOT)
+    if (serviceType && ['business_plan', 'analisi_swot'].includes(serviceType)) {
+      // Create PurchasedService record
+      const purchasedService = new PurchasedService({
+        userId: user._id,
+        serviceType: serviceType,
+        status: 'pending',
+        stripePaymentIntentId: session.payment_intent as string,
+        stripeCheckoutSessionId: session.id,
+        amountPaid: session.amount_total || 0,
+        purchasedAt: new Date()
+      })
+
+      await purchasedService.save()
+
+      // Create invoice for the service purchase
+      const numeroFattura = await (Invoice as any).generateInvoiceNumber()
+
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = date.getFullYear()
+        return `${day}/${month}/${year}`
+      }
+
+      const dataOggi = formatDate(new Date())
+      const serviceName = serviceType === 'business_plan'
+        ? 'Business Plan Predittivo VisionFlow'
+        : 'Analisi SWOT Evolutio'
+
+      // Amount is in cents, convert to euros
+      const amountInEuros = (session.amount_total || 0) / 100
+
+      const newInvoice = new Invoice({
+        numero: numeroFattura,
+        businessUserId: user._id,
+        adminUserId: null,
+        cliente: user.name,
+        clienteEmail: user.email,
+        azienda: user.company || user.name,
+        consulente: 'TaxFlow',
+        servizio: serviceName,
+        tipo: 'Servizio',
+        importo: amountInEuros,
+        iva: 0,
+        totale: amountInEuros,
+        status: 'paid',
+        dataEmissione: dataOggi,
+        dataPagamento: dataOggi,
+        metodoPagamento: 'Carta di credito (Stripe)',
+        stripePaymentIntentId: session.payment_intent as string || '',
+        stripeCheckoutSessionId: session.id,
+        stripePaymentStatus: 'succeeded'
+      })
+
+      await newInvoice.save()
+
+      console.log(`✅ Service ${serviceType} purchased by user ${userId}. Purchased Service ID: ${purchasedService._id}, Invoice: ${numeroFattura}`)
+      return
+    }
 
     // Update user with subscription ID if subscription was created
     if (session.subscription) {
@@ -670,9 +733,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           // Create invoice record in database
           const numeroFattura = await (Invoice as any).generateInvoiceNumber()
 
-          // Find admin user
-          const adminUser = await User.findOne({ role: 'admin' })
-
           // Format date as DD/MM/YYYY
           const formatDate = (date: Date) => {
             const day = String(date.getDate()).padStart(2, '0')
@@ -691,11 +751,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const newInvoice = new Invoice({
             numero: numeroFattura,
             businessUserId: user._id,
-            adminUserId: adminUser?._id,
+            adminUserId: null,
             cliente: user.name,
             clienteEmail: user.email,
             azienda: user.company || user.name,
-            consulente: adminUser?.name || 'TaxFlow',
+            consulente: 'TaxFlow',
             servizio: hasExistingPiva
               ? user.selectedPlan?.name || 'Abbonamento'
               : `${user.selectedPlan?.name || 'Abbonamento'} + Apertura P.IVA`,
@@ -820,9 +880,6 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
         // Create invoice record in database
         const numeroFattura = await (Invoice as any).generateInvoiceNumber()
 
-        // Find admin user (assuming first admin or you can make this configurable)
-        const adminUser = await User.findOne({ role: 'admin' })
-
         // Format date as DD/MM/YYYY
         const formatDate = (date: Date) => {
           const day = String(date.getDate()).padStart(2, '0')
@@ -841,11 +898,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
         const newInvoice = new Invoice({
           numero: numeroFattura,
           businessUserId: user._id,
-          adminUserId: adminUser?._id,
+          adminUserId: null,
           cliente: user.name,
           clienteEmail: user.email,
           azienda: user.company || user.name,
-          consulente: adminUser?.name || 'TaxFlow',
+          consulente: 'TaxFlow',
           servizio: hasExistingPiva
             ? user.selectedPlan?.name || 'Abbonamento'
             : `${user.selectedPlan?.name || 'Abbonamento'} + Apertura P.IVA`,
