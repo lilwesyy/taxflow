@@ -17,6 +17,7 @@ import feedbackRoutes from './routes/feedback'
 import stripeRoutes from './routes/stripe'
 import documentsRoutes from './routes/documents'
 import servicesRoutes from './routes/services'
+import invoicesRoutes from './routes/invoices'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -53,6 +54,7 @@ app.use('/api/feedback', feedbackRoutes)
 app.use('/api/stripe', stripeRoutes)
 app.use('/api/documents', documentsRoutes)
 app.use('/api/services', servicesRoutes)
+app.use('/api/invoices', invoicesRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

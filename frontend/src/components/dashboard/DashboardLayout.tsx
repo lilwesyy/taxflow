@@ -129,12 +129,12 @@ export default function DashboardLayout({
                 onClick={() => onSectionChange(item.id)}
                 className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeSection === item.id
-                    ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 <item.icon className={`h-5 w-5 mr-3 ${
-                  activeSection === item.id ? 'text-primary-600' : 'text-gray-400'
+                  activeSection === item.id ? 'text-white' : 'text-gray-400'
                 }`} />
                 {item.name}
               </button>

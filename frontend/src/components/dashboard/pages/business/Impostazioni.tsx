@@ -1,4 +1,4 @@
-import { User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Building, Clock, Trash2 } from 'lucide-react'
+import { User, Bell, Shield, CreditCard, Save, Eye, EyeOff, Clock, Trash2, Download, Settings, CheckCircle, AlertTriangle, FileText, Mail } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -17,6 +17,23 @@ interface Session {
   isCurrent: boolean
 }
 
+interface Invoice {
+  _id: string
+  numero: string
+  servizio: string
+  tipo: string
+  importo: number
+  iva: number
+  totale: number
+  status: 'paid' | 'pending' | 'failed' | 'canceled'
+  dataEmissione: string
+  dataPagamento?: string
+  metodoPagamento?: string
+  subscriptionPlanName?: string
+  subscriptionInterval?: 'month' | 'year'
+  createdAt: string
+}
+
 export default function Impostazioni() {
   const { user, token, updateUser } = useAuth()
   const { showToast } = useToast()
@@ -26,6 +43,8 @@ export default function Impostazioni() {
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
   const [loading, setLoading] = useState(false)
   const [loadingSessions, setLoadingSessions] = useState(false)
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [loadingInvoices, setLoadingInvoices] = useState(false)
 
   const [profileData, setProfileData] = useState({
     nome: 'Mario',
@@ -197,25 +216,35 @@ export default function Impostazioni() {
 
 
   const [paymentSettings, setPaymentSettings] = useState({
-    metodoPagamentoPredefinito: 'carta',
-    fatturazione: {
-      ragioneSociale: 'Mario Rossi',
-      partitaIva: 'IT12345678901',
-      codiceFiscale: 'RSSMRA85M15F205Z',
-      indirizzo: 'Via Milano 45, 20121 Milano',
-      pec: 'mario.rossi@pec.it',
-      codiceDestinatario: 'XXXXXXX'
-    },
     autoRinnovo: true,
     emailRicevute: true
   })
 
   const tabs = [
-    { id: 'profile', name: 'Profilo', icon: User },
-    { id: 'notifications', name: 'Notifiche', icon: Bell },
-    { id: 'security', name: 'Sicurezza', icon: Shield },
-    { id: 'subscription', name: 'Abbonamento', icon: CreditCard },
-    { id: 'payment', name: 'Pagamenti', icon: CreditCard }
+    {
+      id: 'profile',
+      name: 'Profilo',
+      icon: User,
+      description: 'Gestisci i tuoi dati personali e aziendali'
+    },
+    {
+      id: 'notifications',
+      name: 'Notifiche',
+      icon: Bell,
+      description: 'Configura le preferenze di notifica'
+    },
+    {
+      id: 'security',
+      name: 'Sicurezza',
+      icon: Shield,
+      description: 'Password, sessioni e privacy'
+    },
+    {
+      id: 'subscription',
+      name: 'Abbonamento',
+      icon: CreditCard,
+      description: 'Piano attivo e storico fatture'
+    }
   ]
 
   // Load user profile on mount
@@ -228,6 +257,13 @@ export default function Impostazioni() {
     if (activeTab === 'security' && token) {
       loadSessions()
       loadSessionTimeout()
+    }
+  }, [activeTab, token])
+
+  // Load invoices when subscription tab is active
+  useEffect(() => {
+    if (activeTab === 'subscription' && token) {
+      loadInvoices()
     }
   }, [activeTab, token])
 
@@ -350,6 +386,88 @@ export default function Impostazioni() {
       }
     } catch (error) {
       console.error('Failed to load session timeout:', error)
+    }
+  }
+
+  const loadInvoices = async () => {
+    setLoadingInvoices(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/invoices`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Filter only subscription/abbonamento invoices
+        const subscriptionInvoices = data.invoices.filter((inv: Invoice) =>
+          inv.tipo === 'Abbonamento' && inv.status === 'paid'
+        )
+        setInvoices(subscriptionInvoices)
+      }
+    } catch (error) {
+      console.error('Failed to load invoices:', error)
+      showToast('Errore nel caricamento delle fatture', 'error')
+    } finally {
+      setLoadingInvoices(false)
+    }
+  }
+
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return ''
+
+    // Check if it's already in DD/MM/YYYY format
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString
+    }
+
+    // Parse ISO date or other formats
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
+
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+
+    return `${day}/${month}/${year}`
+  }
+
+  const handleDownloadInvoice = async (invoiceId: string, invoiceNumber: string) => {
+    try {
+      showToast('Generazione PDF in corso...', 'info')
+
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/chat/invoices/${invoiceId}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Errore nel download del PDF')
+      }
+
+      // Create blob from response
+      const blob = await response.blob()
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `fattura-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+
+      // Cleanup
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      showToast('PDF scaricato con successo!', 'success')
+    } catch (error) {
+      console.error('Error downloading invoice:', error)
+      showToast('Errore nel download del PDF', 'error')
     }
   }
 
@@ -903,174 +1021,188 @@ export default function Impostazioni() {
 
   const renderNotificationsTab = () => (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferenze Notifiche</h3>
-
-        <div className="space-y-4">
-          <div className="group bg-blue-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-blue-100 group-hover:scale-110 transition-transform mr-3">
-                <Bell className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium text-blue-900">Notifiche Email</p>
-                <p className="text-sm text-blue-700">Ricevi aggiornamenti importanti via email</p>
-              </div>
-            </div>
+      {/* Email Notifications Section */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="flex items-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mr-4">
+            <Mail className="h-6 w-6 text-white" />
           </div>
-
-          <div className="ml-8 space-y-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailDocumentiRichiesti}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailDocumentiRichiesti: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Richieste documenti dal consulente</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailScadenzeFiscali}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailScadenzeFiscali: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Scadenze fiscali e tributarie</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailFattureRicevute}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailFattureRicevute: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Fatture e pagamenti</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailConsulenza}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailConsulenza: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Risposte del consulente</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.newsletterFiscale}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, newsletterFiscale: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Newsletter fiscale settimanale</span>
-            </label>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Notifiche Email</h3>
+            <p className="text-sm text-gray-600">Ricevi aggiornamenti importanti via email</p>
           </div>
+        </div>
 
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-green-50 group-hover:scale-110 transition-transform mr-3">
-                <Bell className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Notifiche Push</p>
-                <p className="text-sm text-gray-600">Notifiche in tempo reale sul browser</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailDocumentiRichiesti}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailDocumentiRichiesti: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Richieste Documenti</p>
+              <p className="text-sm text-gray-600">Dal consulente</p>
             </div>
-            <label className="flex items-center">
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailScadenzeFiscali}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailScadenzeFiscali: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Scadenze Fiscali</p>
+              <p className="text-sm text-gray-600">Tributarie</p>
+            </div>
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailFattureRicevute}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailFattureRicevute: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Fatture e Pagamenti</p>
+              <p className="text-sm text-gray-600">Transazioni</p>
+            </div>
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailConsulenza}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailConsulenza: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Risposte Consulente</p>
+              <p className="text-sm text-gray-600">Chat e messaggi</p>
+            </div>
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer md:col-span-2">
+            <input
+              type="checkbox"
+              checked={notificationSettings.newsletterFiscale}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, newsletterFiscale: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Newsletter Fiscale Settimanale</p>
+              <p className="text-sm text-gray-600">Aggiornamenti normativi e consigli fiscali</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Other Notifications */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Push Notifications */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={notificationSettings.pushNotifications}
                 onChange={(e) => setNotificationSettings(prev => ({ ...prev, pushNotifications: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="sr-only peer"
               />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
             </label>
           </div>
+          <h4 className="font-semibold text-gray-900 mb-1">Notifiche Push</h4>
+          <p className="text-sm text-gray-600">Notifiche in tempo reale sul browser</p>
+        </div>
 
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-orange-50 group-hover:scale-110 transition-transform mr-3">
-                <Bell className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">SMS Urgenti</p>
-                <p className="text-sm text-gray-600">SMS per scadenze fiscali imminenti</p>
-              </div>
+        {/* SMS Notifications */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
             </div>
-            <label className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={notificationSettings.smsUrgenti}
                 onChange={(e) => setNotificationSettings(prev => ({ ...prev, smsUrgenti: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="sr-only peer"
               />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
             </label>
           </div>
+          <h4 className="font-semibold text-gray-900 mb-1">SMS Urgenti</h4>
+          <p className="text-sm text-gray-600">SMS per scadenze fiscali imminenti</p>
+        </div>
 
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-purple-50 group-hover:scale-110 transition-transform mr-3">
-                <Bell className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Email Promozionali</p>
-                <p className="text-sm text-gray-600">Offerte speciali e nuovi servizi</p>
-              </div>
+        {/* Promotional */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
             </div>
-            <label className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={notificationSettings.promozionali}
                 onChange={(e) => setNotificationSettings(prev => ({ ...prev, promozionali: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="sr-only peer"
               />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
             </label>
           </div>
+          <h4 className="font-semibold text-gray-900 mb-1">Email Promozionali</h4>
+          <p className="text-sm text-gray-600">Offerte speciali e nuovi servizi</p>
         </div>
+      </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('notifications')}
-            disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Salvataggio...' : 'Salva Preferenze'}
-          </button>
-        </div>
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => handleSave('notifications')}
+          disabled={loading}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Save className="h-5 w-5 mr-2" />
+          {loading ? 'Salvataggio...' : 'Salva Preferenze'}
+        </button>
       </div>
     </div>
   )
 
   const renderSecurityTab = () => (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Sicurezza Account</h3>
-
-        <div className="group bg-green-50 border border-green-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
-          <div className="flex items-center">
-            <div className="p-1 rounded-lg bg-green-100 group-hover:scale-110 transition-transform mr-2">
-              <Shield className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="font-medium text-green-900">Account Sicuro</p>
-              <p className="text-sm text-green-700">Il tuo account è protetto e sicuro</p>
-            </div>
+      {/* Security Status Banner */}
+      <div className="bg-green-600 rounded-xl shadow-lg p-6 text-white">
+        <div className="flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mr-4">
+            <Shield className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Account Sicuro</h3>
+            <p className="text-green-100 text-sm">Il tuo account è protetto con le migliori misure di sicurezza</p>
           </div>
         </div>
+      </div>
 
         {/* Grid Layout per le card */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Card: Cambia Password */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-              <Shield className="h-5 w-5 text-primary-600 mr-2" />
-              Cambia Password
-            </h4>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900">Cambia Password</h4>
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1152,8 +1284,9 @@ export default function Impostazioni() {
                 <button
                   onClick={() => handleSave('password')}
                   disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  <Save className="h-4 w-4 mr-2" />
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
                 </button>
               </div>
@@ -1161,11 +1294,13 @@ export default function Impostazioni() {
           </div>
 
           {/* Card: Timeout Sessione */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-              <Clock className="h-5 w-5 text-blue-600 mr-2" />
-              Timeout Sessione
-            </h4>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
+                <Clock className="h-5 w-5 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900">Timeout Sessione</h4>
+            </div>
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -1195,9 +1330,9 @@ export default function Impostazioni() {
                 <button
                   onClick={handleSaveSessionTimeout}
                   disabled={loading}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center disabled:opacity-50"
+                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50"
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save className="h-4 w-4 mr-2" />
                   Salva Timeout
                 </button>
               </div>
@@ -1206,12 +1341,14 @@ export default function Impostazioni() {
         </div>
 
         {/* Sessioni Attive - Full width */}
-        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <Shield className="h-5 w-5 text-green-600 mr-2" />
-              Sessioni Attive
-            </h4>
+        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900">Sessioni Attive</h4>
+            </div>
               <div className="flex space-x-2">
                 <button
                   onClick={handleCleanupSessions}
@@ -1234,12 +1371,15 @@ export default function Impostazioni() {
             </div>
 
             {loadingSessions ? (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
                 <p className="text-gray-600">Caricamento sessioni...</p>
               </div>
             ) : sessions.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">Nessuna sessione attiva</p>
+              <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
+                <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">Nessuna sessione attiva</p>
+                <p className="text-sm text-gray-500 mt-2">Le tue sessioni appariranno qui</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1301,200 +1441,7 @@ export default function Impostazioni() {
           </div>
         </div>
       </div>
-    </div>
-  )
-
-  const renderPaymentTab = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Impostazioni Pagamento</h3>
-
-        <div className="space-y-6">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-4">Metodo di Pagamento Predefinito</h4>
-            <div className="space-y-3">
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="radio"
-                  name="metodoPagamento"
-                  value="carta"
-                  checked={paymentSettings.metodoPagamentoPredefinito === 'carta'}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, metodoPagamentoPredefinito: e.target.value }))}
-                  className="text-primary-600 focus:ring-primary-500"
-                />
-                <div className="ml-3 flex items-center">
-                  <CreditCard className="h-5 w-5 text-gray-600 mr-2" />
-                  <span className="font-medium text-gray-900">Carta di Credito/Debito</span>
-                </div>
-              </label>
-
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="radio"
-                  name="metodoPagamento"
-                  value="paypal"
-                  checked={paymentSettings.metodoPagamentoPredefinito === 'paypal'}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, metodoPagamentoPredefinito: e.target.value }))}
-                  className="text-primary-600 focus:ring-primary-500"
-                />
-                <div className="ml-3 flex items-center">
-                  <CreditCard className="h-5 w-5 text-gray-600 mr-2" />
-                  <span className="font-medium text-gray-900">PayPal</span>
-                </div>
-              </label>
-
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="radio"
-                  name="metodoPagamento"
-                  value="bonifico"
-                  checked={paymentSettings.metodoPagamentoPredefinito === 'bonifico'}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, metodoPagamentoPredefinito: e.target.value }))}
-                  className="text-primary-600 focus:ring-primary-500"
-                />
-                <div className="ml-3 flex items-center">
-                  <Building className="h-5 w-5 text-gray-600 mr-2" />
-                  <span className="font-medium text-gray-900">Bonifico Bancario</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Dati Fatturazione</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ragione Sociale
-                </label>
-                <input
-                  type="text"
-                  value={paymentSettings.fatturazione.ragioneSociale}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, ragioneSociale: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Partita IVA
-                </label>
-                <input
-                  type="text"
-                  value={paymentSettings.fatturazione.partitaIva}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, partitaIva: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Codice Fiscale
-                </label>
-                <input
-                  type="text"
-                  value={paymentSettings.fatturazione.codiceFiscale}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, codiceFiscale: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  PEC
-                </label>
-                <input
-                  type="email"
-                  value={paymentSettings.fatturazione.pec}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, pec: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Indirizzo Fatturazione
-                </label>
-                <input
-                  type="text"
-                  value={paymentSettings.fatturazione.indirizzo}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, indirizzo: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Codice Destinatario
-                </label>
-                <input
-                  type="text"
-                  value={paymentSettings.fatturazione.codiceDestinatario}
-                  onChange={(e) => setPaymentSettings(prev => ({
-                    ...prev,
-                    fatturazione: { ...prev.fatturazione, codiceDestinatario: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="XXXXXXX"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Preferenze</h4>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={paymentSettings.autoRinnovo}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, autoRinnovo: e.target.checked }))}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Auto-rinnovo abbonamento</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={paymentSettings.emailRicevute}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, emailRicevute: e.target.checked }))}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Ricevi ricevute via email</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('payment')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Salva Impostazioni
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-
+    )
 
   const renderSubscriptionTab = () => {
     // Get user's selected plan details
@@ -1519,37 +1466,34 @@ export default function Impostazioni() {
 
     return (
       <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Gestione Abbonamento</h3>
-
-          {/* Current Subscription Status */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-6">
-            <div className="flex items-start justify-between">
+        {/* Current Subscription Status */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="h-8 w-8" />
               <div>
-                <div className="flex items-center mb-2">
-                  <CreditCard className="h-6 w-6 text-blue-600 mr-2" />
-                  <h4 className="text-xl font-semibold text-blue-900">{planName}</h4>
-                </div>
-                <p className="text-blue-700 mb-4">
-                  Il tuo abbonamento è attivo e include tutte le funzionalità premium per gestire la tua partita IVA forfettaria.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="bg-white/50 rounded-lg p-3">
-                    <p className="text-sm text-blue-600 font-medium">Stato</p>
-                    <p className="text-lg font-semibold text-blue-900">Attivo</p>
-                  </div>
-                  <div className="bg-white/50 rounded-lg p-3">
-                    <p className="text-sm text-blue-600 font-medium">Prossimo rinnovo</p>
-                    <p className="text-lg font-semibold text-blue-900">{getNextRenewalDate()}</p>
-                  </div>
-                  <div className="bg-white/50 rounded-lg p-3">
-                    <p className="text-sm text-blue-600 font-medium">Prezzo</p>
-                    <p className="text-lg font-semibold text-blue-900">€{planPrice}/{planInterval}</p>
-                  </div>
-                </div>
+                <h2 className="text-2xl font-bold">{planName}</h2>
+                <p className="text-blue-100 text-sm">Il tuo abbonamento è attivo e include tutte le funzionalità premium</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-8">
+              <div className="text-center">
+                <p className="text-3xl font-bold">Attivo</p>
+                <p className="text-blue-100 text-sm">Stato</p>
+              </div>
+              <div className="h-12 w-px bg-blue-400"></div>
+              <div className="text-center">
+                <p className="text-3xl font-bold">{getNextRenewalDate()}</p>
+                <p className="text-blue-100 text-sm">Prossimo rinnovo</p>
+              </div>
+              <div className="h-12 w-px bg-blue-400"></div>
+              <div className="text-center">
+                <p className="text-3xl font-bold">€{planPrice}/{planInterval}</p>
+                <p className="text-blue-100 text-sm">Prezzo</p>
               </div>
             </div>
           </div>
+        </div>
 
         {/* Subscription Features */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
@@ -1595,63 +1539,162 @@ export default function Impostazioni() {
         </div>
 
         {/* Subscription Actions */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h4 className="font-semibold text-gray-900 mb-4">Azioni Abbonamento</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <div>
-                <p className="font-medium text-gray-900">Auto-rinnovo</p>
-                <p className="text-sm text-gray-600">Il tuo abbonamento si rinnoverà automaticamente</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h4 className="font-semibold text-gray-900 mb-6 flex items-center">
+            <Settings className="h-5 w-5 mr-2 text-gray-600" />
+            Gestisci il tuo Abbonamento
+          </h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Auto-rinnovo Card */}
+            <div className="group relative overflow-hidden rounded-xl p-5 bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <h5 className="font-semibold text-white">Auto-rinnovo</h5>
+                  </div>
+                  <p className="text-sm text-green-100 ml-13">Il tuo abbonamento si rinnoverà automaticamente</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer ml-3">
+                  <input
+                    type="checkbox"
+                    checked={paymentSettings.autoRinnovo}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, autoRinnovo: e.target.checked }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-white/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white/30"></div>
+                </label>
               </div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={paymentSettings.autoRinnovo}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, autoRinnovo: e.target.checked }))}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-              </label>
             </div>
 
-            <button className="w-full p-4 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left">
-              <p className="font-medium text-blue-900">Cambia Piano</p>
-              <p className="text-sm text-blue-700">Esplora altri piani disponibili</p>
+            {/* Cambia Piano Card */}
+            <button className="group text-left rounded-xl p-5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-white mb-1">Cambia Piano</h5>
+                  <p className="text-sm text-blue-100">Esplora altri piani disponibili e aggiorna il tuo abbonamento</p>
+                </div>
+              </div>
             </button>
 
-            <button className="w-full p-4 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors text-left">
-              <p className="font-medium text-orange-900">Sospendi Abbonamento</p>
-              <p className="text-sm text-orange-700">Sospendi temporaneamente il tuo abbonamento</p>
+            {/* Sospendi Abbonamento Card */}
+            <button className="group text-left rounded-xl p-5 bg-orange-600 hover:bg-orange-700 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-white mb-1">Sospendi Abbonamento</h5>
+                  <p className="text-sm text-orange-100">Metti in pausa temporaneamente il tuo abbonamento</p>
+                </div>
+              </div>
             </button>
 
-            <button className="w-full p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-left">
-              <p className="font-medium text-red-900">Cancella Abbonamento</p>
-              <p className="text-sm text-red-700">Termina il tuo abbonamento</p>
+            {/* Cancella Abbonamento Card */}
+            <button className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                  <AlertTriangle className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-white mb-1">Cancella Abbonamento</h5>
+                  <p className="text-sm text-red-100">Termina definitivamente il tuo abbonamento</p>
+                </div>
+              </div>
             </button>
           </div>
         </div>
 
         {/* Billing History */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mt-6">
-          <h4 className="font-semibold text-gray-900 mb-4">Storico Fatture</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">Abbonamento Annuale 2024</p>
-                <p className="text-sm text-gray-600">01/01/2024</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900">€299.00</p>
-                <button className="text-sm text-primary-600 hover:text-primary-700">Scarica PDF</button>
-              </div>
-            </div>
-
-            <div className="text-center py-4 text-gray-500 text-sm">
-              Nessuna altra fattura disponibile
-            </div>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="font-semibold text-gray-900 flex items-center">
+              <FileText className="h-5 w-5 mr-2 text-gray-600" />
+              Storico Fatture
+            </h4>
+            {invoices.length > 0 && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                {invoices.length} {invoices.length === 1 ? 'fattura' : 'fatture'}
+              </span>
+            )}
           </div>
+
+          {loadingInvoices ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
+              <p className="text-gray-600">Caricamento fatture...</p>
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">Nessuna fattura disponibile</p>
+              <p className="text-sm text-gray-500 mt-2">Le tue fatture appariranno qui</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {invoices.map((invoice, index) => (
+                <div
+                  key={invoice._id}
+                  className="group relative overflow-hidden border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50 hover:shadow-lg hover:border-blue-300 transition-all duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      {/* Icon */}
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md">
+                        <FileText className="h-6 w-6 text-white" />
+                      </div>
+
+                      {/* Invoice Details */}
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                          {invoice.servizio}
+                        </h5>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                          <span className="flex items-center">
+                            <span className="font-medium text-gray-900 mr-1">N°</span>
+                            {invoice.numero}
+                          </span>
+                          <span className="flex items-center">
+                            <Clock className="h-3.5 w-3.5 mr-1" />
+                            {formatDate(invoice.dataEmissione)}
+                          </span>
+                          {invoice.dataPagamento && (
+                            <span className="flex items-center text-green-600">
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                              Pagata il {formatDate(invoice.dataPagamento)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Amount and Action */}
+                    <div className="flex items-center gap-6">
+                      <p className="text-2xl font-bold text-gray-900">
+                        €{invoice.totale.toFixed(2)}
+                      </p>
+                      <button
+                        onClick={() => handleDownloadInvoice(invoice._id, invoice.numero)}
+                        className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:shadow-md transition-all duration-200"
+                      >
+                        <Download className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
+                        Scarica PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </div>
     )
   }
 
@@ -1665,8 +1708,6 @@ export default function Impostazioni() {
         return renderSecurityTab()
       case 'subscription':
         return renderSubscriptionTab()
-      case 'payment':
-        return renderPaymentTab()
       default:
         return renderProfileTab()
     }
@@ -1675,23 +1716,28 @@ export default function Impostazioni() {
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`group flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 hover:scale-105 ${
+              className={`p-4 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <tab.icon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-              {tab.name}
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-5 w-5" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Tab Content */}

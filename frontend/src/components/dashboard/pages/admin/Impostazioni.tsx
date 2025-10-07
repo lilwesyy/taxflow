@@ -317,7 +317,9 @@ export default function Impostazioni() {
     emailNewRequest: true,
     emailPayment: false,
     pushNotifications: true,
-    weeklyReport: true
+    weeklyReport: true,
+    smsUrgenti: false,
+    promozionali: false
   })
 
   const [integrationSettings, setIntegrationSettings] = useState({
@@ -340,10 +342,30 @@ export default function Impostazioni() {
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
 
   const tabs = [
-    { id: 'profile', name: 'Profilo', icon: User },
-    { id: 'notifications', name: 'Notifiche', icon: Bell },
-    { id: 'security', name: 'Sicurezza', icon: Shield },
-    { id: 'integrations', name: 'Integrazioni', icon: Database }
+    {
+      id: 'profile',
+      name: 'Profilo',
+      icon: User,
+      description: 'Gestisci i tuoi dati personali e professionali'
+    },
+    {
+      id: 'notifications',
+      name: 'Notifiche',
+      icon: Bell,
+      description: 'Configura le preferenze di notifica'
+    },
+    {
+      id: 'security',
+      name: 'Sicurezza',
+      icon: Shield,
+      description: 'Password, 2FA, sessioni e privacy'
+    },
+    {
+      id: 'integrations',
+      name: 'Integrazioni',
+      icon: Database,
+      description: 'API e servizi esterni'
+    }
   ]
 
   const handle2FAEnable = async () => {
@@ -743,138 +765,175 @@ export default function Impostazioni() {
 
   const renderNotificationsTab = () => (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferenze Notifiche</h3>
-
-        <div className="space-y-4">
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-blue-50 group-hover:scale-110 transition-transform mr-3">
-                <Mail className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Notifiche Email</p>
-                <p className="text-sm text-gray-600">Ricevi notifiche via email per eventi importanti</p>
-              </div>
-            </div>
+      {/* Email Notifications Section */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="flex items-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mr-4">
+            <Mail className="h-6 w-6 text-white" />
           </div>
-
-          <div className="ml-8 space-y-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailNewClient}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailNewClient: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Nuovo cliente registrato</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailNewRequest}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailNewRequest: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Nuova richiesta P.IVA</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.emailPayment}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailPayment: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Pagamenti ricevuti</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notificationSettings.weeklyReport}
-                onChange={(e) => setNotificationSettings(prev => ({ ...prev, weeklyReport: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Report settimanale</span>
-            </label>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Notifiche Email</h3>
+            <p className="text-sm text-gray-600">Ricevi aggiornamenti importanti via email</p>
           </div>
+        </div>
 
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-green-50 group-hover:scale-110 transition-transform mr-3">
-                <Bell className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Notifiche Push</p>
-                <p className="text-sm text-gray-600">Notifiche in tempo reale sul browser</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailNewClient}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailNewClient: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Nuovo Cliente</p>
+              <p className="text-sm text-gray-600">Registrazioni</p>
             </div>
-            <label className="flex items-center">
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailNewRequest}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailNewRequest: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Richieste P.IVA</p>
+              <p className="text-sm text-gray-600">Nuove pratiche</p>
+            </div>
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.emailPayment}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailPayment: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Pagamenti Ricevuti</p>
+              <p className="text-sm text-gray-600">Transazioni</p>
+            </div>
+          </label>
+
+          <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={notificationSettings.weeklyReport}
+              onChange={(e) => setNotificationSettings(prev => ({ ...prev, weeklyReport: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+            />
+            <div className="ml-3 flex-1">
+              <p className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">Report Settimanale</p>
+              <p className="text-sm text-gray-600">Statistiche clienti</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Other Notifications */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Push Notifications */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={notificationSettings.pushNotifications}
                 onChange={(e) => setNotificationSettings(prev => ({ ...prev, pushNotifications: e.target.checked }))}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="sr-only peer"
               />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
             </label>
           </div>
+          <h4 className="font-semibold text-gray-900 mb-1">Notifiche Push</h4>
+          <p className="text-sm text-gray-600">Notifiche in tempo reale sul browser</p>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('notifications')}
-            disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Salvataggio...' : 'Salva Preferenze'}
-          </button>
+        {/* SMS Notifications */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notificationSettings.smsUrgenti || false}
+                onChange={(e) => setNotificationSettings(prev => ({ ...prev, smsUrgenti: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+            </label>
+          </div>
+          <h4 className="font-semibold text-gray-900 mb-1">SMS Urgenti</h4>
+          <p className="text-sm text-gray-600">SMS per eventi critici</p>
         </div>
+
+        {/* Promotional */}
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6 text-white" />
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notificationSettings.promozionali || false}
+                onChange={(e) => setNotificationSettings(prev => ({ ...prev, promozionali: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+          <h4 className="font-semibold text-gray-900 mb-1">Email Promozionali</h4>
+          <p className="text-sm text-gray-600">Aggiornamenti e novità</p>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => handleSave('notifications')}
+          disabled={loading}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Save className="h-5 w-5 mr-2" />
+          {loading ? 'Salvataggio...' : 'Salva Preferenze'}
+        </button>
       </div>
     </div>
   )
 
   const renderSecurityTab = () => (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Sicurezza Account</h3>
-
-        {twoFactorEnabled ? (
-          <div className="group bg-green-50 border border-green-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-1 rounded-lg bg-green-100 group-hover:scale-110 transition-transform mr-2">
-                <Shield className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-green-900">Account Sicuro</p>
-                <p className="text-sm text-green-700">Il tuo account è protetto con autenticazione a due fattori</p>
-              </div>
-            </div>
+      {/* Security Status Banner */}
+      <div className="bg-green-600 rounded-xl shadow-lg p-6 text-white">
+        <div className="flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mr-4">
+            <Shield className="h-6 w-6 text-white" />
           </div>
-        ) : (
-          <div className="group bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-1 rounded-lg bg-yellow-100 group-hover:scale-110 transition-transform mr-2">
-                <Shield className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="font-medium text-yellow-900">Sicurezza Base</p>
-                <p className="text-sm text-yellow-700">Ti consigliamo di attivare l'autenticazione a due fattori per maggiore sicurezza</p>
-              </div>
-            </div>
+          <div>
+            <h3 className="text-xl font-bold">Account Sicuro</h3>
+            <p className="text-green-100 text-sm">Il tuo account è protetto con le migliori misure di sicurezza</p>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Grid Layout per le card */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Card: Cambia Password */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-              <Shield className="h-5 w-5 text-primary-600 mr-2" />
-              Cambia Password
-            </h4>
+      {/* Grid Layout per le card */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Card: Cambia Password */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center mb-4">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="font-semibold text-gray-900">Cambia Password</h4>
+          </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -956,20 +1015,23 @@ export default function Impostazioni() {
                 <button
                   onClick={() => handleSave('password')}
                   disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  <Save className="h-4 w-4 mr-2" />
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Card: Autenticazione 2FA */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-              <Shield className="h-5 w-5 text-green-600 mr-2" />
-              Autenticazione a Due Fattori
-            </h4>
+        {/* Card: Autenticazione 2FA */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="font-semibold text-gray-900">Autenticazione a Due Fattori</h4>
+          </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
                 <div>
@@ -1010,12 +1072,14 @@ export default function Impostazioni() {
             </div>
           </div>
 
-          {/* Card: Timeout Sessione */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-              <Clock className="h-5 w-5 text-blue-600 mr-2" />
-              Timeout Sessione
-            </h4>
+        {/* Card: Timeout Sessione */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center mb-4">
+            <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
+              <Clock className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="font-semibold text-gray-900">Timeout Sessione</h4>
+          </div>
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -1045,23 +1109,25 @@ export default function Impostazioni() {
                 <button
                   onClick={handleSaveSessionTimeout}
                   disabled={loading}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm flex items-center disabled:opacity-50"
+                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50"
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save className="h-4 w-4 mr-2" />
                   Salva Timeout
                 </button>
               </div>
             </div>
           </div>
-        </div>
+      </div>
 
-        {/* Sessioni Attive - Full width */}
-        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <Shield className="h-5 w-5 text-green-600 mr-2" />
-              Sessioni Attive
-            </h4>
+      {/* Sessioni Attive - Full width */}
+      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="font-semibold text-gray-900">Sessioni Attive</h4>
+          </div>
               <div className="flex space-x-2">
                 <button
                   onClick={handleCleanupSessions}
@@ -1080,49 +1146,65 @@ export default function Impostazioni() {
                     Termina Tutte
                   </button>
                 )}
-              </div>
             </div>
-            {loadingSessions ? (
-              <p className="text-center text-gray-500 py-4">Caricamento sessioni...</p>
-            ) : sessions.length === 0 ? (
-              <p className="text-center text-gray-500 py-4">Nessuna sessione attiva</p>
-            ) : (
-              <div className="space-y-3">
-                {sessions.map((session) => {
-                  const lastActivity = new Date(session.lastActivity)
-                  const now = new Date()
-                  const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / 60000)
-                  const timeAgo = diffMinutes < 1 ? 'adesso' :
-                                  diffMinutes < 60 ? `${diffMinutes} minuti fa` :
-                                  diffMinutes < 1440 ? `${Math.floor(diffMinutes / 60)} ore fa` :
-                                  `${Math.floor(diffMinutes / 1440)} giorni fa`
+          </div>
 
-                  return (
-                    <div key={session.id} className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {session.browser} su {session.os}
-                          {session.isCurrent && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Corrente</span>}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {session.location} • {session.ip}
-                        </p>
-                        <p className="text-xs text-gray-500">Ultima attività: {timeAgo}</p>
-                      </div>
-                      {!session.isCurrent && (
-                        <button
-                          onClick={() => handleTerminateSession(session.id)}
-                          className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
-                        >
-                          Termina Sessione
-                        </button>
-                      )}
+          {loadingSessions ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
+              <p className="text-gray-600">Caricamento sessioni...</p>
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">Nessuna sessione attiva</p>
+              <p className="text-sm text-gray-500 mt-2">Le tue sessioni appariranno qui</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sessions.map((session) => {
+                const lastActivity = new Date(session.lastActivity)
+                const now = new Date()
+                const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / 60000)
+                const timeAgo = diffMinutes < 1 ? 'adesso' :
+                                diffMinutes < 60 ? `${diffMinutes} minuti fa` :
+                                diffMinutes < 1440 ? `${Math.floor(diffMinutes / 60)} ore fa` :
+                                `${Math.floor(diffMinutes / 1440)} giorni fa`
+
+                return (
+                  <div
+                    key={session.id}
+                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-300 ${
+                      session.isCurrent ? 'border-green-300 bg-green-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {session.browser} su {session.os}
+                        {session.isCurrent && (
+                          <span className="ml-2 text-xs text-green-600 font-medium">Corrente</span>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {session.location} • {session.ip}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Ultima attività: {timeAgo}
+                      </p>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-        </div>
+                    {!session.isCurrent && (
+                      <button
+                        onClick={() => handleTerminateSession(session.id)}
+                        className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                      >
+                        Termina Sessione
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
       </div>
     </div>
   )
@@ -1396,23 +1478,28 @@ export default function Impostazioni() {
       {/* Message feedback */}
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`group flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 hover:scale-105 ${
+              className={`p-4 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <tab.icon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-              {tab.name}
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-5 w-5" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
