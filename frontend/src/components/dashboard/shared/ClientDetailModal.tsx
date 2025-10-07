@@ -4,6 +4,8 @@ import Modal from '../../common/Modal'
 import apiService from '../../../services/api'
 import chatService from '../../../services/chat'
 import { useToast } from '../../../context/ToastContext'
+import ATECOAutocomplete from '../../common/ATECOAutocomplete'
+import AddressAutocomplete from '../../common/AddressAutocomplete'
 import type { User as UserType, ActivityLog } from '../../../types'
 
 interface ClientDetailModalProps {
@@ -66,10 +68,6 @@ export default function ClientDetailModal({
 
     if (editedClient.codiceAteco && !/^\d{2}\.\d{2}\.\d{2}$/.test(editedClient.codiceAteco)) {
       errors.codiceAteco = 'Il codice ATECO deve essere nel formato XX.XX.XX'
-    }
-
-    if (editedClient.aliquotaIva && !/^\d{1,2}%$/.test(editedClient.aliquotaIva)) {
-      errors.aliquotaIva = "L'aliquota IVA deve essere un numero seguito da % (es. 22%)"
     }
 
     if (editedClient.indirizzo && editedClient.indirizzo.trim().length < 5) {
@@ -264,14 +262,19 @@ export default function ClientDetailModal({
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Indirizzo</label>
                 {isEditMode ? (
-                  <div>
-                    <input
-                      type="text"
+                  <div className="mt-1">
+                    <AddressAutocomplete
                       value={editedClient?.indirizzo || ''}
-                      onChange={(e) => handleInputChange('indirizzo', e.target.value)}
-                      className={`mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm ${
-                        validationErrors.indirizzo ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      onChange={(value) => handleInputChange('indirizzo', value)}
+                      onAddressSelect={(address) => {
+                        if (editedClient) {
+                          setEditedClient({
+                            ...editedClient,
+                            indirizzo: address.full
+                          })
+                        }
+                      }}
+                      placeholder="Inizia a digitare l'indirizzo..."
                     />
                     {validationErrors.indirizzo && (
                       <p className="mt-1 text-xs text-red-600">{validationErrors.indirizzo}</p>
@@ -319,16 +322,14 @@ export default function ClientDetailModal({
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Codice ATECO</label>
                   {isEditMode ? (
-                    <div>
-                      <input
-                        type="text"
+                    <div className="mt-1">
+                      <ATECOAutocomplete
                         value={editedClient?.codiceAteco || ''}
-                        onChange={(e) => handleInputChange('codiceAteco', e.target.value)}
-                        className={`mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm ${
-                          validationErrors.codiceAteco ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="XX.XX.XX"
-                        maxLength={8}
+                        onChange={(value) => {
+                          handleInputChange('codiceAteco', value)
+                        }}
+                        error={validationErrors.codiceAteco}
+                        placeholder="Cerca per codice o descrizione"
                       />
                       {validationErrors.codiceAteco && (
                         <p className="mt-1 text-xs text-red-600">{validationErrors.codiceAteco}</p>
@@ -359,21 +360,18 @@ export default function ClientDetailModal({
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Aliquota IVA</label>
                   {isEditMode ? (
-                    <div>
-                      <input
-                        type="text"
-                        value={editedClient?.aliquotaIva || ''}
-                        onChange={(e) => handleInputChange('aliquotaIva', e.target.value)}
-                        className={`mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm ${
-                          validationErrors.aliquotaIva ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="22%"
-                        maxLength={3}
-                      />
-                      {validationErrors.aliquotaIva && (
-                        <p className="mt-1 text-xs text-red-600">{validationErrors.aliquotaIva}</p>
-                      )}
-                    </div>
+                    <select
+                      value={editedClient?.aliquotaIva || '5%'}
+                      onChange={(e) => handleInputChange('aliquotaIva', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    >
+                      <option value="">Seleziona aliquota</option>
+                      <option value="0%">0% - Esente</option>
+                      <option value="4%">4% - Ridotta (alimentari, libri)</option>
+                      <option value="5%">5% - Forfettario</option>
+                      <option value="10%">10% - Ridotta (turismo, edilizia)</option>
+                      <option value="22%">22% - Ordinaria</option>
+                    </select>
                   ) : (
                     <p className="mt-1 text-sm font-medium text-gray-900">{displayClient?.aliquotaIva || '5%'}</p>
                   )}

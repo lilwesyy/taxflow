@@ -27,7 +27,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout, userRole, userName, userEmail }: AdminDashboardProps) {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const { showToast } = useToast()
   const [activeSection, setActiveSection] = useState(() => {
     // Carica la sezione salvata o usa 'dashboard' come default
@@ -166,6 +166,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
       userRole={userRole}
       userName={userName}
       userEmail={userEmail}
+      userProfessionalRole={user?.professionalRole}
       sidebarItems={sidebarItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}

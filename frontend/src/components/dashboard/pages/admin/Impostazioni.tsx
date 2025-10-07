@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
+import AddressAutocomplete from '../../../common/AddressAutocomplete'
 
 interface Session {
   id: string
@@ -24,6 +25,7 @@ export default function Impostazioni() {
 
   const [profileData, setProfileData] = useState({
     nome: '',
+    cognome: '',
     email: '',
     telefono: '',
     ruolo: '',
@@ -49,8 +51,15 @@ export default function Impostazioni() {
           const data = await response.json()
           const userData = data.user
 
+          // Split name into first and last name
+          const fullName = userData.name || ''
+          const nameParts = fullName.trim().split(' ')
+          const firstName = nameParts[0] || ''
+          const lastName = nameParts.slice(1).join(' ') || ''
+
           setProfileData({
-            nome: userData.name || '',
+            nome: firstName,
+            cognome: lastName,
             email: userData.email || '',
             telefono: userData.phone || '',
             ruolo: userData.professionalRole || '',
@@ -479,7 +488,7 @@ export default function Impostazioni() {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            name: profileData.nome,
+            name: `${profileData.nome} ${profileData.cognome}`.trim(),
             email: profileData.email,
             phone: profileData.telefono,
             professionalRole: profileData.ruolo,
@@ -498,9 +507,16 @@ export default function Impostazioni() {
         const data = await response.json()
         updateUser(data.user)
 
+        // Split name into first and last name
+        const fullName = data.user.name || ''
+        const nameParts = fullName.trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
         // Aggiorna anche i campi del form con i nuovi dati
         setProfileData({
-          nome: data.user.name || '',
+          nome: firstName,
+          cognome: lastName,
           email: data.user.email || '',
           telefono: data.user.phone || '',
           ruolo: data.user.professionalRole || '',
@@ -578,7 +594,7 @@ export default function Impostazioni() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo *
+              Nome *
             </label>
             <input
               type="text"
@@ -586,6 +602,20 @@ export default function Impostazioni() {
               onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">Il tuo nome</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cognome *
+            </label>
+            <input
+              type="text"
+              value={profileData.cognome}
+              onChange={(e) => setProfileData(prev => ({ ...prev, cognome: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-1">Il tuo cognome</p>
           </div>
 
           <div>
@@ -598,18 +628,27 @@ export default function Impostazioni() {
               onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">Email per accedere alla piattaforma</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Telefono
             </label>
-            <input
-              type="tel"
-              value={profileData.telefono}
-              onChange={(e) => setProfileData(prev => ({ ...prev, telefono: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 font-medium">+39</span>
+              <input
+                type="tel"
+                value={profileData.telefono?.replace('+39', '').replace(/^\s+/, '') || ''}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d\s]/g, '')
+                  setProfileData(prev => ({ ...prev, telefono: `+39 ${value}` }))
+                }}
+                placeholder="XXX XXX XXXX"
+                className="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Numero di telefono italiano (10 cifre)</p>
           </div>
 
           <div>
@@ -621,7 +660,9 @@ export default function Impostazioni() {
               value={profileData.ruolo}
               onChange={(e) => setProfileData(prev => ({ ...prev, ruolo: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="es. Commercialista, Consulente Fiscale"
             />
+            <p className="text-xs text-gray-500 mt-1">Il tuo ruolo o specializzazione professionale</p>
           </div>
 
           <div>
@@ -633,19 +674,24 @@ export default function Impostazioni() {
               value={profileData.ordineIscrizione}
               onChange={(e) => setProfileData(prev => ({ ...prev, ordineIscrizione: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Numero iscrizione albo"
             />
+            <p className="text-xs text-gray-500 mt-1">Numero di iscrizione all'albo professionale</p>
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Codice Fiscale
             </label>
             <input
               type="text"
               value={profileData.codiceFiscale}
-              onChange={(e) => setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value }))}
+              onChange={(e) => setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value.toUpperCase() }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="RSSMRA85M01H501Z"
+              maxLength={16}
             />
+            <p className="text-xs text-gray-500 mt-1">Codice fiscale italiano di 16 caratteri</p>
           </div>
         </div>
 
@@ -653,12 +699,18 @@ export default function Impostazioni() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Indirizzo Studio
           </label>
-          <input
-            type="text"
+          <AddressAutocomplete
             value={profileData.indirizzo}
-            onChange={(e) => setProfileData(prev => ({ ...prev, indirizzo: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            onChange={(value) => setProfileData(prev => ({ ...prev, indirizzo: value }))}
+            onAddressSelect={(address) => {
+              setProfileData(prev => ({
+                ...prev,
+                indirizzo: address.full
+              }))
+            }}
+            placeholder="Inizia a digitare l'indirizzo dello studio..."
           />
+          <p className="text-xs text-gray-500 mt-1">L'indirizzo completo include via, CAP, città, provincia e paese</p>
         </div>
 
         <div className="mt-6">
@@ -672,6 +724,7 @@ export default function Impostazioni() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Descrivi la tua esperienza e specializzazioni..."
           />
+          <p className="text-xs text-gray-500 mt-1">Una breve descrizione della tua esperienza professionale e competenze</p>
         </div>
 
         <div className="mt-6 flex justify-end">

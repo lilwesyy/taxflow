@@ -1,5 +1,7 @@
 import { Router, Response } from 'express'
 import User from '../models/User'
+import Conversation from '../models/Conversation'
+import Document from '../models/Document'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
 
 const router = Router()
@@ -29,30 +31,44 @@ router.get('/list', authMiddleware, adminMiddleware, async (req: AuthRequest, re
       .select('-password -twoFactorSecret')
       .sort({ createdAt: -1 })
 
-    const formattedClients = clients.map(client => ({
-      id: client._id,
-      nome: client.name,
-      email: client.email,
-      telefono: client.phone || '',
-      company: client.company || '',
-      status: client.status || 'new',
-      piva: client.piva || 'Non disponibile',
-      codiceAteco: client.codiceAteco || '',
-      fatturato: client.fatturato || 0,
-      dataRegistrazione: client.createdAt,
-      ultimaAttivita: client.ultimaAttivita || client.updatedAt,
-      consulenze: client.consulenze || 0,
-      pendingRequests: client.pendingRequests || 0,
-      indirizzo: client.address || '',
-      codiceFiscale: client.fiscalCode || '',
-      regimeContabile: client.regimeContabile || 'Forfettario',
-      aliquotaIva: client.aliquotaIva || '5%',
-      fatturePagate: client.fatturePagate || 0,
-      fattureInAttesa: client.fattureInAttesa || 0,
-      documentiForniti: client.documentiForniti || 0,
-      prossimaTasse: client.prossimaTasse,
-      note: client.note || '',
-      attivitaRecenti: client.attivitaRecenti || []
+    // Calculate dynamic stats for each client
+    const formattedClients = await Promise.all(clients.map(async client => {
+      // Count conversations/consulenze
+      const consulenzeCount = await Conversation.countDocuments({
+        businessUserId: client._id
+      })
+
+      // Count documents
+      const documentiCount = await Document.countDocuments({
+        userId: client._id,
+        deleted: false
+      })
+
+      return {
+        id: client._id,
+        nome: client.name,
+        email: client.email,
+        telefono: client.phone || '',
+        company: client.company || '',
+        status: client.status || 'new',
+        piva: client.piva || 'Non disponibile',
+        codiceAteco: client.codiceAteco || '',
+        fatturato: client.fatturato || 0,
+        dataRegistrazione: client.createdAt,
+        ultimaAttivita: client.ultimaAttivita || client.updatedAt,
+        consulenze: consulenzeCount,
+        pendingRequests: client.pendingRequests || 0,
+        indirizzo: client.address || '',
+        codiceFiscale: client.fiscalCode || '',
+        regimeContabile: client.regimeContabile || 'Forfettario',
+        aliquotaIva: client.aliquotaIva || '5%',
+        fatturePagate: client.fatturePagate || 0,
+        fattureInAttesa: client.fattureInAttesa || 0,
+        documentiForniti: documentiCount,
+        prossimaTasse: client.prossimaTasse,
+        note: client.note || '',
+        attivitaRecenti: client.attivitaRecenti || []
+      }
     }))
 
     res.json({
@@ -76,6 +92,16 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
       return res.status(404).json({ error: 'Cliente non trovato' })
     }
 
+    // Calculate dynamic stats
+    const consulenzeCount = await Conversation.countDocuments({
+      businessUserId: client._id
+    })
+
+    const documentiCount = await Document.countDocuments({
+      userId: client._id,
+      deleted: false
+    })
+
     const formattedClient = {
       id: client._id,
       nome: client.name,
@@ -88,7 +114,7 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
       fatturato: client.fatturato || 0,
       dataRegistrazione: client.createdAt,
       ultimaAttivita: client.ultimaAttivita || client.updatedAt,
-      consulenze: client.consulenze || 0,
+      consulenze: consulenzeCount,
       pendingRequests: client.pendingRequests || 0,
       indirizzo: client.address || '',
       codiceFiscale: client.fiscalCode || '',
@@ -96,7 +122,7 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
       aliquotaIva: client.aliquotaIva || '5%',
       fatturePagate: client.fatturePagate || 0,
       fattureInAttesa: client.fattureInAttesa || 0,
-      documentiForniti: client.documentiForniti || 0,
+      documentiForniti: documentiCount,
       prossimaTasse: client.prossimaTasse,
       note: client.note || '',
       attivitaRecenti: client.attivitaRecenti || []

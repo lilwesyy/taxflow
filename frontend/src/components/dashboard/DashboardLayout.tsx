@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
   userName?: string
   userEmail?: string
   userCompany?: string
+  userProfessionalRole?: string
   children: ReactNode
   sidebarItems: Array<{
     id: string
@@ -28,6 +29,7 @@ export default function DashboardLayout({
   userName = 'Dr. Francesco Alberti',
   userEmail = 'francesco.alberti@taxflow.it',
   userCompany,
+  userProfessionalRole,
   children,
   sidebarItems,
   activeSection,
@@ -149,7 +151,7 @@ export default function DashboardLayout({
                 <p className="text-sm font-medium text-gray-900">{userName}</p>
                 <p className="text-xs text-gray-500">{userEmail}</p>
                 <p className="text-xs text-primary-600 capitalize">
-                  {userRole === 'admin' ? 'Consulente' : (userCompany || 'Cliente')}
+                  {userRole === 'admin' ? (userProfessionalRole || 'Consulente') : (userCompany || 'Cliente')}
                 </p>
               </div>
             </div>

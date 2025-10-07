@@ -10,6 +10,9 @@ interface AddressResult {
   country?: string
   housenumber?: string
   street?: string
+  state?: string
+  state_code?: string
+  county?: string
 }
 
 interface AddressAutocompleteProps {
@@ -107,20 +110,41 @@ export default function AddressAutocomplete({
 
   const handleSelectAddress = (result: AddressResult) => {
     // Build full address from components
-    let fullAddress = ''
+    let streetAddress = ''
     if (result.street) {
-      fullAddress = result.street
+      streetAddress = result.street
       if (result.housenumber) {
-        fullAddress += ` ${result.housenumber}`
+        streetAddress += ` ${result.housenumber}`
       }
     } else if (result.address_line1) {
-      fullAddress = result.address_line1
+      streetAddress = result.address_line1
     } else {
-      fullAddress = result.formatted.split(',')[0]
+      streetAddress = result.formatted.split(',')[0]
     }
 
     const city = result.city || ''
     const postcode = result.postcode || ''
+    const province = result.county || result.state_code || ''
+    const country = result.country || 'Italia'
+
+    // Build complete formatted address: Via Roma 10, 20121 Milano (MI), Italia
+    let fullAddress = streetAddress
+
+    if (postcode && city) {
+      fullAddress = `${streetAddress}, ${postcode} ${city}`
+      if (province) {
+        fullAddress += ` (${province})`
+      }
+    } else if (city) {
+      fullAddress = `${streetAddress}, ${city}`
+      if (province) {
+        fullAddress += ` (${province})`
+      }
+    }
+
+    if (country) {
+      fullAddress += `, ${country}`
+    }
 
     onChange(fullAddress)
     setIsOpen(false)

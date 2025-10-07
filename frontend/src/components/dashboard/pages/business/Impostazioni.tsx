@@ -28,7 +28,8 @@ export default function Impostazioni() {
   const [loadingSessions, setLoadingSessions] = useState(false)
 
   const [profileData, setProfileData] = useState({
-    nome: 'Mario Rossi',
+    nome: 'Mario',
+    cognome: 'Rossi',
     email: 'mario.rossi@gmail.com',
     telefono: '+39 338 987 6543',
     codiceFiscale: 'RSSMRA85M15F205Z',
@@ -111,16 +112,16 @@ export default function Impostazioni() {
   }
 
   // Formatting functions
-  const formatPhone = (phone: string): string => {
-    const cleaned = phone.replace(/\D/g, '')
-    if (cleaned.startsWith('39') && cleaned.length === 12) {
-      return `+39 ${cleaned.slice(2, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`
-    }
-    if (cleaned.length === 10) {
-      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`
-    }
-    return phone
-  }
+  // const formatPhone = (phone: string): string => {
+  //   const cleaned = phone.replace(/\D/g, '')
+  //   if (cleaned.startsWith('39') && cleaned.length === 12) {
+  //     return `+39 ${cleaned.slice(2, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`
+  //   }
+  //   if (cleaned.length === 10) {
+  //     return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`
+  //   }
+  //   return phone
+  // }
 
   const formatFiscalCode = (cf: string): string => {
     return cf.toUpperCase().replace(/\s/g, '')
@@ -137,9 +138,9 @@ export default function Impostazioni() {
     return cleaned
   }
 
-  const formatCAP = (cap: string): string => {
-    return cap.replace(/\D/g, '').slice(0, 5)
-  }
+  // const formatCAP = (cap: string): string => {
+  //   return cap.replace(/\D/g, '').slice(0, 5)
+  // }
 
 
   const validateProfile = (): boolean => {
@@ -147,6 +148,10 @@ export default function Impostazioni() {
 
     if (!profileData.nome.trim()) {
       errors.nome = 'Il nome è obbligatorio'
+    }
+
+    if (!profileData.cognome.trim()) {
+      errors.cognome = 'Il cognome è obbligatorio'
     }
 
     if (!profileData.email.trim()) {
@@ -240,8 +245,15 @@ export default function Impostazioni() {
         const data = await response.json()
         const userData = data.user
 
+        // Split name into first and last name
+        const fullName = userData.name || ''
+        const nameParts = fullName.trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
         setProfileData({
-          nome: userData.name || '',
+          nome: firstName,
+          cognome: lastName,
           email: userData.email || '',
           telefono: userData.phone || '',
           codiceFiscale: userData.fiscalCode || '',
@@ -487,7 +499,7 @@ export default function Impostazioni() {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            name: profileData.nome,
+            name: `${profileData.nome} ${profileData.cognome}`.trim(),
             email: profileData.email,
             phone: profileData.telefono,
             fiscalCode: profileData.codiceFiscale,
@@ -512,8 +524,15 @@ export default function Impostazioni() {
         const data = await response.json()
         updateUser(data.user)
 
+        // Split name into first and last name
+        const fullName = data.user.name || ''
+        const nameParts = fullName.trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
         setProfileData({
-          nome: data.user.name || '',
+          nome: firstName,
+          cognome: lastName,
           email: data.user.email || '',
           telefono: data.user.phone || '',
           codiceFiscale: data.user.fiscalCode || '',
@@ -592,14 +611,40 @@ export default function Impostazioni() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo *
+              Nome *
             </label>
             <input
               type="text"
               value={profileData.nome || ''}
               onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.nome ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {validationErrors.nome ? (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.nome}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Il tuo nome</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cognome *
+            </label>
+            <input
+              type="text"
+              value={profileData.cognome || ''}
+              onChange={(e) => setProfileData(prev => ({ ...prev, cognome: e.target.value }))}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                validationErrors.cognome ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {validationErrors.cognome ? (
+              <p className="text-sm text-red-600 mt-1">{validationErrors.cognome}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Il tuo cognome</p>
+            )}
           </div>
 
           <div>
@@ -619,8 +664,10 @@ export default function Impostazioni() {
                 validationErrors.email ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {validationErrors.email && (
+            {validationErrors.email ? (
               <p className="text-sm text-red-600 mt-1">{validationErrors.email}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Email per accedere alla piattaforma</p>
             )}
           </div>
 
@@ -628,27 +675,28 @@ export default function Impostazioni() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Telefono
             </label>
-            <input
-              type="tel"
-              value={profileData.telefono || ''}
-              onChange={(e) => {
-                setProfileData(prev => ({ ...prev, telefono: e.target.value }))
-                if (validationErrors.telefono) {
-                  setValidationErrors(prev => ({ ...prev, telefono: '' }))
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value) {
-                  setProfileData(prev => ({ ...prev, telefono: formatPhone(e.target.value) }))
-                }
-              }}
-              placeholder="+39 XXX XXX XXXX"
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                validationErrors.telefono ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {validationErrors.telefono && (
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 font-medium">+39</span>
+              <input
+                type="tel"
+                value={profileData.telefono?.replace('+39', '').replace(/^\s+/, '') || ''}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d\s]/g, '')
+                  setProfileData(prev => ({ ...prev, telefono: `+39 ${value}` }))
+                  if (validationErrors.telefono) {
+                    setValidationErrors(prev => ({ ...prev, telefono: '' }))
+                  }
+                }}
+                placeholder="XXX XXX XXXX"
+                className={`w-full pl-12 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  validationErrors.telefono ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+            </div>
+            {validationErrors.telefono ? (
               <p className="text-sm text-red-600 mt-1">{validationErrors.telefono}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Numero di telefono italiano (10 cifre)</p>
             )}
           </div>
 
@@ -676,8 +724,10 @@ export default function Impostazioni() {
                 validationErrors.codiceFiscale ? 'border-red-500' : 'border-gray-300'
               }`}
             />
-            {validationErrors.codiceFiscale && (
+            {validationErrors.codiceFiscale ? (
               <p className="text-sm text-red-600 mt-1">{validationErrors.codiceFiscale}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Codice fiscale italiano di 16 caratteri</p>
             )}
           </div>
 
@@ -691,6 +741,7 @@ export default function Impostazioni() {
               onChange={(e) => setProfileData(prev => ({ ...prev, professione: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">La tua professione o ruolo professionale</p>
           </div>
 
           <div>
@@ -703,6 +754,7 @@ export default function Impostazioni() {
               onChange={(e) => setProfileData(prev => ({ ...prev, settoreAttivita: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">Il settore economico in cui operi</p>
           </div>
         </div>
 
@@ -723,45 +775,7 @@ export default function Impostazioni() {
             }}
             placeholder="Inizia a digitare l'indirizzo (es. Via Milano 45, Milano)..."
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Città
-            </label>
-            <input
-              type="text"
-              value={profileData.citta || ''}
-              onChange={(e) => setProfileData(prev => ({ ...prev, citta: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              CAP
-            </label>
-            <input
-              type="text"
-              value={profileData.cap || ''}
-              onChange={(e) => {
-                const formatted = formatCAP(e.target.value)
-                setProfileData(prev => ({ ...prev, cap: formatted }))
-                if (validationErrors.cap) {
-                  setValidationErrors(prev => ({ ...prev, cap: '' }))
-                }
-              }}
-              maxLength={5}
-              placeholder="00100"
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                validationErrors.cap ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {validationErrors.cap && (
-              <p className="text-sm text-red-600 mt-1">{validationErrors.cap}</p>
-            )}
-          </div>
+          <p className="text-xs text-gray-500 mt-1">L'indirizzo completo include via, CAP, città, provincia e paese</p>
         </div>
 
         {/* Informazioni Aziendali */}
@@ -779,6 +793,7 @@ export default function Impostazioni() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Nome azienda o tuo nome"
               />
+              <p className="text-xs text-gray-500 mt-1">Nome della tua azienda o il tuo nome se lavori in proprio</p>
             </div>
 
             <div>
@@ -805,8 +820,10 @@ export default function Impostazioni() {
                   validationErrors.partitaIva ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
-              {validationErrors.partitaIva && (
+              {validationErrors.partitaIva ? (
                 <p className="text-sm text-red-600 mt-1">{validationErrors.partitaIva}</p>
+              ) : (
+                <p className="text-xs text-gray-500 mt-1">Partita IVA italiana (11 cifre con prefisso IT)</p>
               )}
             </div>
 
@@ -825,8 +842,10 @@ export default function Impostazioni() {
                 error={validationErrors.codiceAteco}
                 placeholder="Cerca per codice o descrizione (es. 62.02.00 o consulenza informatica)"
               />
-              {validationErrors.codiceAteco && (
+              {validationErrors.codiceAteco ? (
                 <p className="text-sm text-red-600 mt-1">{validationErrors.codiceAteco}</p>
+              ) : (
+                <p className="text-xs text-gray-500 mt-1">Codice che identifica la tua attività economica</p>
               )}
             </div>
 
@@ -843,6 +862,7 @@ export default function Impostazioni() {
                 <option value="Semplificato">Regime Semplificato</option>
                 <option value="Ordinario">Regime Ordinario</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">Il regime fiscale applicato alla tua attività</p>
             </div>
 
             <div>
@@ -861,6 +881,7 @@ export default function Impostazioni() {
                 <option value="10%">10% - Ridotta (turismo, edilizia)</option>
                 <option value="22%">22% - Ordinaria</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">Aliquota IVA applicata ai tuoi servizi/prodotti</p>
             </div>
           </div>
         </div>
