@@ -68,6 +68,72 @@ export default function Consulenza() {
     loadAIAssistant()
     loadConversations()
     loadConsultants()
+
+    // Poll for conversation updates every 5 seconds
+    const conversationPolling = setInterval(async () => {
+      try {
+        const data = await chatService.getConversations()
+        const transformed = data.map((conv): Conversation => {
+          const adminUser = typeof conv.adminUserId === 'object' && conv.adminUserId !== null
+            ? conv.adminUserId as { name?: string; professionalRole?: string; email?: string }
+            : null
+
+          return {
+            id: conv._id,
+            consulente: {
+              nome: adminUser?.name || 'Consulente non assegnato',
+              specializzazione: adminUser?.professionalRole || 'In attesa di assegnazione',
+              avatar: '👨‍💼',
+              email: adminUser?.email || ''
+            },
+            status: conv.status,
+            priority: conv.priority || 'medium',
+            ultimoMessaggio: conv.ultimoMessaggio,
+            orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
+            dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
+            messaggiNonLetti: conv.messaggiNonLetti,
+            tipo: conv.tipo,
+            argomento: conv.argomento,
+            durataConsulenza: conv.durataConsulenza,
+            rating: conv.rating,
+            fatturata: conv.fatturata,
+            importo: conv.importo ?? 0
+          }
+        })
+
+        // Only update if there are actual changes (count or IDs differ, or status/payment changed)
+        setConversazioni(prev => {
+          if (prev.length !== transformed.length) {
+            return transformed
+          }
+
+          const prevIds = prev.map(c => c.id).sort().join(',')
+          const newIds = transformed.map(c => c.id).sort().join(',')
+
+          if (prevIds !== newIds) {
+            return transformed
+          }
+
+          // Check for status or payment changes
+          const hasStatusChange = transformed.some(newConv => {
+            const oldConv = prev.find(c => c.id === newConv.id)
+            return oldConv && (
+              oldConv.status !== newConv.status ||
+              oldConv.fatturata !== newConv.fatturata ||
+              oldConv.importo !== newConv.importo
+            )
+          })
+
+          return hasStatusChange ? transformed : prev
+        })
+      } catch (error) {
+        console.error('Error polling conversations:', error)
+      }
+    }, 5000)
+
+    return () => {
+      clearInterval(conversationPolling)
+    }
   }, [])
 
   const loadAIAssistant = async () => {
@@ -75,8 +141,7 @@ export default function Consulenza() {
       const aiConv = await chatService.getAIConversation()
       setAiConversationId(aiConv.id)
 
-      // Set AI as default active chat
-      setActiveChat(aiConv.id)
+      // Don't auto-select AI anymore - let loadConversations handle it
     } catch (error) {
       console.error('Error loading AI assistant:', error)
     }
@@ -177,9 +242,24 @@ export default function Consulenza() {
 
       setConversazioni(transformed)
 
-      // Auto-select first conversation if none selected
-      if (!activeChat && transformed.length > 0) {
-        setActiveChat(transformed[0].id)
+      // Check if currently active chat still exists and is not archived
+      if (activeChat && activeChat !== aiConversationId) {
+        const activeConv = transformed.find(c => c.id === activeChat)
+        if (!activeConv || activeConv.fatturata) {
+          // Active chat was deleted/archived, reset selection
+          setActiveChat(null)
+        }
+      }
+
+      // Auto-select first active (non-archived) conversation if none selected
+      // If no active conversations, select AI assistant
+      if (!activeChat) {
+        const activeConversations = transformed.filter(c => !c.fatturata)
+        if (activeConversations.length > 0) {
+          setActiveChat(activeConversations[0].id)
+        } else if (aiConversationId) {
+          setActiveChat(aiConversationId)
+        }
       }
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -426,27 +506,21 @@ export default function Consulenza() {
       setShowPaymentModal(false)
       setPaymentClientSecret(null)
 
-      // Reload conversations to reflect updated payment status
-      await loadConversations()
+      // Wait a bit for webhook to process, then reload conversations
+      // Try multiple times with increasing delays to catch the update
+      const maxAttempts = 5
 
-      // Force refresh the active conversation state
-      if (activeChat) {
-        const updatedConversations = await chatService.getConversations()
-        const updated = updatedConversations.find((c) => c._id === activeChat)
-        if (updated) {
-          // Update the conversations list with new payment status
-          setConversazioni((prev) =>
-            prev.map((conv) => {
-              if (conv.id === activeChat) {
-                return {
-                  ...conv,
-                  fatturata: updated.fatturata,
-                  importo: updated.importo
-                }
-              }
-              return conv
-            })
-          )
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 500 : 1000))
+
+        // Fetch fresh data from server
+        const freshConversations = await chatService.getConversations()
+        const updatedConv = freshConversations.find((c) => c._id === activeChat)
+
+        if (updatedConv?.fatturata) {
+          // Payment confirmed, update state
+          await loadConversations()
+          break
         }
       }
     } catch (error) {

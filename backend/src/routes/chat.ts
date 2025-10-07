@@ -504,11 +504,14 @@ router.patch('/conversations/:conversationId/invoice', authenticateToken, async 
 
     // Verify conversation exists and belongs to this admin
     const conversation = await Conversation.findById(conversationId)
+      .populate('businessUserId', 'name email company')
+      .populate('adminUserId', 'name')
+
     if (!conversation) {
       return res.status(404).json({ error: 'Conversazione non trovata' })
     }
 
-    if (conversation.adminUserId?.toString() !== userId) {
+    if (conversation.adminUserId?._id?.toString() !== userId) {
       return res.status(403).json({ error: 'Non hai i permessi per modificare questa conversazione' })
     }
 
@@ -520,6 +523,55 @@ router.patch('/conversations/:conversationId/invoice', authenticateToken, async 
     // Update amount
     conversation.importo = importo
     await conversation.save()
+
+    // Check if there's already a pending invoice for this conversation
+    let invoice = await Invoice.findOne({
+      conversationId: conversation._id,
+      status: 'pending'
+    })
+
+    const formatItalianDate = (date: Date) => {
+      return new Date(date).toLocaleDateString('it-IT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+
+    if (invoice && importo > 0) {
+      // Update existing pending invoice
+      invoice.importo = importo
+      invoice.iva = importo * 0.22
+      invoice.totale = importo * 1.22
+      await invoice.save()
+    } else if (!invoice && importo > 0) {
+      // Create new pending invoice
+      const numeroFattura = await (Invoice as any).generateInvoiceNumber()
+
+      invoice = new Invoice({
+        conversationId: conversation._id,
+        numero: numeroFattura,
+        businessUserId: (conversation.businessUserId as any)._id,
+        adminUserId: (conversation.adminUserId as any)._id,
+        cliente: (conversation.businessUserId as any).name,
+        clienteEmail: (conversation.businessUserId as any).email,
+        azienda: (conversation.businessUserId as any).company || '',
+        consulente: (conversation.adminUserId as any).name || 'TaxFlow',
+        servizio: conversation.argomento,
+        tipo: conversation.tipo,
+        importo: importo,
+        iva: importo * 0.22,
+        totale: importo * 1.22,
+        status: 'pending',
+        dataEmissione: formatItalianDate(new Date()),
+        metodoPagamento: 'Carta di credito (Stripe)'
+      })
+
+      await invoice.save()
+    } else if (invoice && importo === 0) {
+      // Delete invoice if amount is set to 0
+      await Invoice.deleteOne({ _id: invoice._id })
+    }
 
     res.json({ message: 'Importo aggiornato con successo', importo })
   } catch (error) {
@@ -584,16 +636,16 @@ router.get('/conversations/paid/list', authenticateToken, async (req: AuthReques
       return `${day}/${month}/${year}`
     }
 
-    // Get all paid invoices (from Invoice model)
-    const paidInvoices = await Invoice.find({
-      adminUserId: userId,
-      status: 'paid'
+    // Get all invoices (both paid and pending from Invoice model)
+    const allInvoices = await Invoice.find({
+      adminUserId: userId
     })
       .sort({ createdAt: -1 })
       .lean()
 
-    const paidTransactions = paidInvoices.map((invoice) => ({
+    const allTransactions = allInvoices.map((invoice) => ({
       id: invoice._id,
+      conversationId: invoice.conversationId,
       numero: invoice.numero,
       cliente: invoice.cliente,
       email: invoice.clienteEmail,
@@ -609,46 +661,10 @@ router.get('/conversations/paid/list', authenticateToken, async (req: AuthReques
       dataEmissione: invoice.dataEmissione,
       dataScadenza: invoice.dataEmissione,
       dataPagamento: invoice.dataPagamento,
-      metodoPagamento: 'carta',
+      metodoPagamento: invoice.metodoPagamento || 'carta',
       stripePaymentIntentId: invoice.stripePaymentIntentId,
       stripePaymentStatus: invoice.stripePaymentStatus
     }))
-
-    // Get pending invoices (from Conversation model - not yet paid)
-    const pendingConversations = await Conversation.find({
-      adminUserId: userId,
-      fatturata: false,
-      importo: { $gt: 0 }
-    })
-      .populate('businessUserId', 'name email company')
-      .populate('adminUserId', 'name')
-      .sort({ createdAt: -1 })
-      .lean()
-
-    const pendingTransactions = pendingConversations.map((conv) => ({
-      id: conv._id,
-      numero: `INV-${conv._id.toString().slice(-6).toUpperCase()}-PENDING`,
-      cliente: (conv.businessUserId as any)?.name || 'Cliente sconosciuto',
-      email: (conv.businessUserId as any)?.email || '',
-      clienteEmail: (conv.businessUserId as any)?.email || '',
-      azienda: (conv.businessUserId as any)?.company || 'Non specificata',
-      consulente: (conv.adminUserId as any)?.name || 'Non assegnato',
-      servizio: conv.argomento,
-      tipo: conv.tipo,
-      importo: conv.importo,
-      iva: conv.importo * 0.22,
-      totale: conv.importo * 1.22,
-      status: 'pending',
-      dataEmissione: formatItalianDate(conv.createdAt),
-      dataScadenza: formatItalianDate(conv.createdAt),
-      dataPagamento: null,
-      metodoPagamento: 'carta',
-      stripePaymentIntentId: conv.stripePaymentIntentId,
-      stripePaymentStatus: conv.stripePaymentStatus || 'pending'
-    }))
-
-    // Combine and sort by date (newest first)
-    const allTransactions = [...paidTransactions, ...pendingTransactions]
 
     res.json(allTransactions)
   } catch (error) {

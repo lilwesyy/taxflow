@@ -72,6 +72,123 @@ export default function Consulenze() {
     loadAIAssistant()
     loadConversations()
     loadRevenueStats()
+
+    // Poll for conversation updates every 5 seconds
+    const conversationPolling = setInterval(async () => {
+      try {
+        const data = await chatService.getConversations()
+        const transformed = data
+          .filter(conv => conv.tipo !== 'AI Assistant')
+          .map((conv): Conversation => {
+            const businessUser = typeof conv.businessUserId === 'object' && conv.businessUserId !== null
+              ? conv.businessUserId as { name?: string; email?: string }
+              : null
+
+            return {
+              id: conv._id,
+              cliente: {
+                nome: businessUser?.name || 'Cliente sconosciuto',
+                email: businessUser?.email || '',
+                azienda: '',
+                avatar: '👤'
+              },
+              consulente: user?.name || 'Admin',
+              status: conv.status,
+              priority: conv.priority || 'medium',
+              ultimoMessaggio: conv.ultimoMessaggio,
+              orarioUltimoMessaggio: conv.orarioUltimoMessaggio,
+              dataUltimaAttivita: new Date(conv.lastMessageAt).toLocaleDateString('it-IT'),
+              messaggiNonLetti: conv.messaggiNonLetti,
+              tipo: conv.tipo,
+              argomento: conv.argomento,
+              durataConsulenza: conv.durataConsulenza,
+              rating: conv.rating,
+              fatturata: conv.fatturata,
+              importo: conv.importo ?? 0
+            }
+          })
+
+        // Only update if there are actual changes (count or IDs differ, or status/payment changed)
+        setConversazioni(prev => {
+          if (prev.length !== transformed.length) {
+            // Check if active chat became archived when updating
+            if (activeChat && activeChat !== aiConversationId) {
+              const activeConv = transformed.find(c => c.id === activeChat)
+              if (!activeConv || activeConv.fatturata) {
+                // Active chat was deleted/archived, select AI or first active
+                const activeConversations = transformed.filter(c => !c.fatturata)
+                if (activeConversations.length > 0) {
+                  setActiveChat(activeConversations[0].id)
+                } else if (aiConversationId) {
+                  setActiveChat(aiConversationId)
+                } else {
+                  setActiveChat(null)
+                }
+              }
+            }
+            return transformed
+          }
+
+          const prevIds = prev.map(c => c.id).sort().join(',')
+          const newIds = transformed.map(c => c.id).sort().join(',')
+
+          if (prevIds !== newIds) {
+            // Check if active chat became archived when updating
+            if (activeChat && activeChat !== aiConversationId) {
+              const activeConv = transformed.find(c => c.id === activeChat)
+              if (!activeConv || activeConv.fatturata) {
+                // Active chat was deleted/archived, select AI or first active
+                const activeConversations = transformed.filter(c => !c.fatturata)
+                if (activeConversations.length > 0) {
+                  setActiveChat(activeConversations[0].id)
+                } else if (aiConversationId) {
+                  setActiveChat(aiConversationId)
+                } else {
+                  setActiveChat(null)
+                }
+              }
+            }
+            return transformed
+          }
+
+          // Check for status or payment changes
+          const hasStatusChange = transformed.some(newConv => {
+            const oldConv = prev.find(c => c.id === newConv.id)
+            return oldConv && (
+              oldConv.status !== newConv.status ||
+              oldConv.fatturata !== newConv.fatturata ||
+              oldConv.importo !== newConv.importo
+            )
+          })
+
+          if (hasStatusChange) {
+            // Check if active chat became archived
+            if (activeChat && activeChat !== aiConversationId) {
+              const activeConv = transformed.find(c => c.id === activeChat)
+              if (!activeConv || activeConv.fatturata) {
+                // Active chat was deleted/archived, select AI or first active
+                const activeConversations = transformed.filter(c => !c.fatturata)
+                if (activeConversations.length > 0) {
+                  setActiveChat(activeConversations[0].id)
+                } else if (aiConversationId) {
+                  setActiveChat(aiConversationId)
+                } else {
+                  setActiveChat(null)
+                }
+              }
+            }
+          }
+
+          return hasStatusChange ? transformed : prev
+        })
+      } catch (error) {
+        console.error('Error polling conversations:', error)
+      }
+    }, 5000)
+
+    return () => {
+      clearInterval(conversationPolling)
+    }
   }, [])
 
   const loadAIAssistant = async () => {
@@ -217,9 +334,24 @@ export default function Consulenze() {
 
       setConversazioni(transformed)
 
-      // Auto-select first conversation if none selected
-      if (!activeChat && transformed.length > 0) {
-        setActiveChat(transformed[0].id)
+      // Check if currently active chat still exists and is not archived
+      if (activeChat && activeChat !== aiConversationId) {
+        const activeConv = transformed.find(c => c.id === activeChat)
+        if (!activeConv || activeConv.fatturata) {
+          // Active chat was deleted/archived, reset selection
+          setActiveChat(null)
+        }
+      }
+
+      // Auto-select first active (non-archived) conversation if none selected
+      // If no active conversations, select AI assistant
+      if (!activeChat) {
+        const activeConversations = transformed.filter(c => !c.fatturata)
+        if (activeConversations.length > 0) {
+          setActiveChat(activeConversations[0].id)
+        } else if (aiConversationId) {
+          setActiveChat(aiConversationId)
+        }
       }
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -566,10 +698,15 @@ export default function Consulenze() {
     return amount % 1 === 0 ? `€ ${amount.toFixed(0)}` : `€ ${amount.toFixed(2)}`
   }
 
+  // Calculate stats excluding AI Assistant (only real client conversations)
+  const activeNonArchivedConversations = conversazioni.filter(c => !c.fatturata)
+  const activeStatusConversations = activeNonArchivedConversations.filter(c => c.status === 'active')
+  const pendingConversations = conversazioni.filter(c => c.status === 'pending')
+
   const stats = [
     { title: 'Consulenze Totali', value: conversazioni.length.toString(), icon: MessageSquare, color: 'text-blue-600' },
-    { title: 'Attive', value: conversazioni.filter(c => c.status === 'active').length.toString(), icon: Users, color: 'text-green-600' },
-    { title: 'In Attesa', value: conversazioni.filter(c => c.status === 'pending').length.toString(), icon: Clock, color: 'text-yellow-600' },
+    { title: 'Attive', value: activeStatusConversations.length.toString(), icon: Users, color: 'text-green-600' },
+    { title: 'In Attesa', value: pendingConversations.length.toString(), icon: Clock, color: 'text-yellow-600' },
     { title: 'Fatturato Mensile', value: loading ? '...' : formatRevenue(monthlyRevenue), icon: TrendingUp, color: 'text-purple-600' }
   ]
 

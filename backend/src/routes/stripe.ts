@@ -531,31 +531,48 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       return `${day}/${month}/${year}`
     }
 
-    // Create permanent invoice record
-    const invoice = new Invoice({
-      conversationId: (conversation._id as any),
-      businessUserId: conversation.businessUserId._id,
-      adminUserId: conversation.adminUserId!._id,
-      numero: `INV-${(conversation._id as any).toString().slice(-6).toUpperCase()}`,
-      cliente: (conversation.businessUserId as any).name || 'Cliente sconosciuto',
-      clienteEmail: (conversation.businessUserId as any).email || '',
-      azienda: (conversation.businessUserId as any).company || 'Non specificata',
-      consulente: (conversation.adminUserId as any).name || 'Non assegnato',
-      servizio: conversation.argomento,
-      tipo: conversation.tipo,
-      importo: conversation.importo,
-      iva: conversation.importo * 0.22,
-      totale: conversation.importo * 1.22,
-      status: 'paid',
-      dataEmissione: formatItalianDate(conversation.paidAt || new Date()),
-      dataPagamento: formatItalianDate(conversation.paidAt || new Date()),
-      stripePaymentIntentId: paymentIntent.id,
-      stripePaymentStatus: 'succeeded'
+    // Check if there's already a pending invoice for this conversation
+    let invoice = await Invoice.findOne({
+      conversationId: conversation._id,
+      status: 'pending'
     })
 
-    await invoice.save()
+    if (invoice) {
+      // Update existing pending invoice to paid
+      invoice.status = 'paid'
+      invoice.dataPagamento = formatItalianDate(conversation.paidAt || new Date())
+      invoice.stripePaymentIntentId = paymentIntent.id
+      invoice.stripePaymentStatus = 'succeeded'
+      invoice.metodoPagamento = 'Carta di credito (Stripe)'
+      await invoice.save()
+      console.log('✅ Payment succeeded and invoice updated to paid:', conversationId)
+    } else {
+      // Create permanent invoice record if no pending invoice exists (backward compatibility)
+      invoice = new Invoice({
+        conversationId: (conversation._id as any),
+        businessUserId: conversation.businessUserId._id,
+        adminUserId: conversation.adminUserId!._id,
+        numero: await (Invoice as any).generateInvoiceNumber(),
+        cliente: (conversation.businessUserId as any).name || 'Cliente sconosciuto',
+        clienteEmail: (conversation.businessUserId as any).email || '',
+        azienda: (conversation.businessUserId as any).company || 'Non specificata',
+        consulente: (conversation.adminUserId as any).name || 'Non assegnato',
+        servizio: conversation.argomento,
+        tipo: conversation.tipo,
+        importo: conversation.importo,
+        iva: conversation.importo * 0.22,
+        totale: conversation.importo * 1.22,
+        status: 'paid',
+        dataEmissione: formatItalianDate(conversation.paidAt || new Date()),
+        dataPagamento: formatItalianDate(conversation.paidAt || new Date()),
+        stripePaymentIntentId: paymentIntent.id,
+        stripePaymentStatus: 'succeeded',
+        metodoPagamento: 'Carta di credito (Stripe)'
+      })
 
-    console.log('✅ Payment succeeded and invoice created:', conversationId)
+      await invoice.save()
+      console.log('✅ Payment succeeded and invoice created:', conversationId)
+    }
   } catch (error) {
     console.error('Error handling payment success:', error)
   }
