@@ -227,7 +227,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
 
       {/* Tab Content */}
       {activeTab === 'pending' ? (
-        <PendingRegistrations />
+        <PendingRegistrations onCountChange={(count) => setPendingCount(count)} />
       ) : (
         <>
           {/* Stats Cards */}

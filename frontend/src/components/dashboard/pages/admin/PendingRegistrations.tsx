@@ -15,7 +15,11 @@ interface PendingUser {
   note?: string
 }
 
-export default function PendingRegistrations() {
+interface PendingRegistrationsProps {
+  onCountChange?: (count: number) => void
+}
+
+export default function PendingRegistrations({ onCountChange }: PendingRegistrationsProps = {}) {
   const { showToast } = useToast()
   const [users, setUsers] = useState<PendingUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +38,10 @@ export default function PendingRegistrations() {
       const response = await apiService.getPendingRegistrations()
       if (response.success) {
         setUsers(response.users)
+        // Notify parent component of count change
+        if (onCountChange) {
+          onCountChange(response.users?.length || 0)
+        }
       }
     } catch (error) {
       console.error('Error fetching pending registrations:', error)
@@ -220,7 +228,9 @@ export default function PendingRegistrations() {
               </div>
               <div>
                 <label className="text-sm text-gray-600">Telefono</label>
-                <p className="font-medium text-gray-900">{selectedUser.phone || '-'}</p>
+                <p className="font-medium text-gray-900">
+                  {selectedUser.phone ? (selectedUser.phone.startsWith('+39') ? selectedUser.phone : `+39 ${selectedUser.phone}`) : '-'}
+                </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Data Registrazione</label>

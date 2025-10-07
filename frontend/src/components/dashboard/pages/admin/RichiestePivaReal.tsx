@@ -56,9 +56,11 @@ export default function RichiestePivaReal() {
   const [actionLoading, setActionLoading] = useState(false)
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [pendingAction, setPendingAction] = useState<{ userId: string; approved: boolean } | null>(null)
+  const [totalClients, setTotalClients] = useState(0)
 
   useEffect(() => {
     fetchRequests()
+    fetchTotalClients()
   }, [])
 
   const fetchRequests = async () => {
@@ -73,6 +75,17 @@ export default function RichiestePivaReal() {
       console.error('Error fetching P.IVA requests:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTotalClients = async () => {
+    try {
+      const response = await apiService.getClients()
+      if (response.success) {
+        setTotalClients(response.clients.length)
+      }
+    } catch (error) {
+      console.error('Error fetching clients count:', error)
     }
   }
 
@@ -167,7 +180,7 @@ export default function RichiestePivaReal() {
   const stats = [
     { title: 'Richieste Totali', value: requests.length.toString(), icon: Building2, color: 'text-blue-600' },
     { title: 'In Attesa', value: requests.filter(r => r.pivaApprovalStatus === 'pending' || !r.pivaApprovalStatus).length.toString(), icon: Clock, color: 'text-yellow-600' },
-    { title: 'Approvate', value: requests.filter(r => r.pivaApprovalStatus === 'approved').length.toString(), icon: CheckCircle, color: 'text-green-600' },
+    { title: 'Approvate', value: totalClients.toString(), icon: CheckCircle, color: 'text-green-600' },
     { title: 'Respinte', value: requests.filter(r => r.pivaApprovalStatus === 'rejected').length.toString(), icon: XCircle, color: 'text-red-600' }
   ]
 
@@ -295,9 +308,6 @@ export default function RichiestePivaReal() {
                           title="Visualizza dettagli"
                         >
                           <Eye className="h-4 w-4" />
-                        </button>
-                        <button className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 transition-all" title="Chat cliente">
-                          <MessageSquare className="h-4 w-4" />
                         </button>
                       </div>
                     </td>

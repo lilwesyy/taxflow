@@ -18,7 +18,13 @@ interface AddressResult {
 interface AddressAutocompleteProps {
   value: string
   onChange: (value: string) => void
-  onAddressSelect?: (address: { full: string; city: string; postcode: string }) => void
+  onAddressSelect?: (address: {
+    full: string
+    city: string
+    postcode: string
+    county?: string
+    state_code?: string
+  }) => void
   placeholder?: string
   error?: string
   className?: string
@@ -155,7 +161,9 @@ export default function AddressAutocomplete({
       onAddressSelect({
         full: fullAddress,
         city,
-        postcode
+        postcode,
+        county: result.county,
+        state_code: result.state_code
       })
     }
   }

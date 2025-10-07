@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { FileText, AlertCircle } from 'lucide-react'
+import AddressAutocomplete from './common/AddressAutocomplete'
+import ATECOAutocomplete from './common/ATECOAutocomplete'
 
 interface PivaRequestFormProps {
   onSubmit: (data: PivaRequestData) => Promise<void>
@@ -311,57 +313,48 @@ export default function PivaRequestForm({ onSubmit, onCancel, userName }: PivaRe
             <h3 className="text-lg font-semibold text-gray-900">Residenza</h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo *</label>
-              <input
-                type="text"
-                name="residenceAddress"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo Completo *</label>
+              <AddressAutocomplete
                 value={formData.residenceAddress}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, residenceAddress: value }))}
+                onAddressSelect={(address) => {
+                  // Estrai città, CAP e provincia dall'indirizzo completo
+                  const city = address.city || ''
+                  const postcode = address.postcode || ''
+                  const province = address.county || address.state_code || ''
+
+                  setFormData(prev => ({
+                    ...prev,
+                    residenceAddress: address.full,
+                    residenceCity: city,
+                    residenceCAP: postcode,
+                    residenceProvince: province.toUpperCase().slice(0, 2)
+                  }))
+                }}
+                placeholder="Inizia a digitare l'indirizzo (es. Via Roma 10, Milano)..."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                L'indirizzo completo includerà via, CAP, città e provincia
+              </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Città *</label>
-                <input
-                  type="text"
-                  name="residenceCity"
-                  value={formData.residenceCity}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  required
-                />
+            {/* Campi di riepilogo (compilati automaticamente) */}
+            {(formData.residenceCity || formData.residenceCAP || formData.residenceProvince) && (
+              <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Città</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.residenceCity || '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">CAP</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.residenceCAP || '-'}</p>
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Provincia</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.residenceProvince || '-'}</p>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CAP *</label>
-                <input
-                  type="text"
-                  name="residenceCAP"
-                  value={formData.residenceCAP}
-                  onChange={handleChange}
-                  maxLength={5}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Provincia *</label>
-              <input
-                type="text"
-                name="residenceProvince"
-                value={formData.residenceProvince}
-                onChange={handleChange}
-                maxLength={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 uppercase"
-                placeholder="Es: RM, MI, TO..."
-                required
-              />
-            </div>
+            )}
           </div>
         )
 
@@ -385,17 +378,13 @@ export default function PivaRequestForm({ onSubmit, onCancel, userName }: PivaRe
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Codice ATECO *</label>
-              <input
-                type="text"
-                name="codiceAteco"
+              <ATECOAutocomplete
                 value={formData.codiceAteco}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                placeholder="Es: 62.01.00"
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, codiceAteco: value }))}
+                placeholder="Cerca per codice o descrizione (es. 62.02.00 o consulenza informatica)"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Se non conosci il codice ATECO, il consulente ti aiuterà a trovarlo
+                Cerca il codice che meglio identifica la tua attività economica
               </p>
             </div>
 
@@ -413,51 +402,47 @@ export default function PivaRequestForm({ onSubmit, onCancel, userName }: PivaRe
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo sede (opzionale)</label>
-              <input
-                type="text"
-                name="businessAddress"
-                value={formData.businessAddress}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              <AddressAutocomplete
+                value={formData.businessAddress || ''}
+                onChange={(value) => setFormData(prev => ({ ...prev, businessAddress: value }))}
+                onAddressSelect={(address) => {
+                  // Estrai città, CAP e provincia dall'indirizzo completo
+                  const city = address.city || ''
+                  const postcode = address.postcode || ''
+                  const province = address.county || address.state_code || ''
+
+                  setFormData(prev => ({
+                    ...prev,
+                    businessAddress: address.full,
+                    businessCity: city,
+                    businessCAP: postcode,
+                    businessProvince: province.toUpperCase().slice(0, 2)
+                  }))
+                }}
+                placeholder="Inizia a digitare l'indirizzo della sede (opzionale)..."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Se diverso dalla residenza, specifica l'indirizzo della sede operativa
+              </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Città sede</label>
-                <input
-                  type="text"
-                  name="businessCity"
-                  value={formData.businessCity}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
+            {/* Campi di riepilogo (compilati automaticamente) */}
+            {(formData.businessCity || formData.businessCAP || formData.businessProvince) && (
+              <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Città sede</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.businessCity || '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">CAP</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.businessCAP || '-'}</p>
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Provincia sede</label>
+                  <p className="text-sm font-medium text-gray-900">{formData.businessProvince || '-'}</p>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CAP</label>
-                <input
-                  type="text"
-                  name="businessCAP"
-                  value={formData.businessCAP}
-                  onChange={handleChange}
-                  maxLength={5}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Provincia sede</label>
-              <input
-                type="text"
-                name="businessProvince"
-                value={formData.businessProvince}
-                onChange={handleChange}
-                maxLength={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 uppercase"
-              />
-            </div>
+            )}
           </div>
         )
 
