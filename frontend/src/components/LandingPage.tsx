@@ -914,27 +914,44 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                 Chi Siamo
               </h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                TaxFlow è una piattaforma innovativa nata per semplificare la gestione fiscale e bancaria delle partite IVA forfettarie.
-                Utilizziamo metodologie bancarie professionali e standard normativi per offrirti un servizio di eccellenza.
+                TaxFlow è una piattaforma innovativa progettata per semplificare la gestione fiscale delle partite IVA.
+                Con soluzioni intuitive e sicure, supporta i giovani imprenditori nel rispetto delle normative e nell'ottimizzazione
+                della gestione delle loro attività.
               </p>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Il nostro team di esperti fiscali e consulenti finanziari lavora quotidianamente per ottimizzare la tua posizione creditizia
-                e garantirti la massima conformità normativa secondo i criteri di Banca d'Italia e gli Accordi di Basilea III.
+                Il nostro team di esperti lavora quotidianamente per rendere i processi fiscali più semplici, consentendo ai
+                clienti di concentrarsi sulla crescita delle loro imprese semplificando la gestione burocratica.
               </p>
+
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-6 mb-6 rounded-r-lg">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Una Visionaria Dietro TaxFlow</h3>
+                <p className="text-gray-700 mb-3">
+                  <strong>Teresa Marrari</strong>, commercialista con studio a Torino da oltre 25 anni, è la
+                  fondatrice della piattaforma innovativa. Dal 1998 gestisce il proprio studio professionale, distinguendosi
+                  come figura poliedrica nella consulenza fiscale, tributaria e societaria e del lavoro oltre alla formazione
+                  individuale dell'imprenditore.
+                </p>
+                <p className="text-gray-700">
+                  Con TaxFlow, Teresa ha voluto creare uno strumento innovativo per supportare i giovani imprenditori,
+                  rendendo più semplice la gestione fiscale e fornendo loro le basi per costruire attività solide e di successo.
+                  La sua passione e competenza hanno trasformato TaxFlow in una realtà al servizio di chi desidera avviare e
+                  gestire la propria impresa con sicurezza ed efficienza.
+                </p>
+              </div>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-6 mt-8">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-600 mb-2">500+</div>
-                  <div className="text-sm text-gray-600">Clienti Attivi</div>
+                  <div className="text-3xl font-bold text-primary-600 mb-2">25+</div>
+                  <div className="text-sm text-gray-600">Anni Esperienza</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-600 mb-2">98%</div>
-                  <div className="text-sm text-gray-600">Soddisfazione</div>
+                  <div className="text-3xl font-bold text-primary-600 mb-2">250+</div>
+                  <div className="text-sm text-gray-600">Imprenditori</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-600 mb-2">24/7</div>
-                  <div className="text-sm text-gray-600">Supporto</div>
+                  <div className="text-3xl font-bold text-primary-600 mb-2">100%</div>
+                  <div className="text-sm text-gray-600">Conformità</div>
                 </div>
               </div>
             </div>
