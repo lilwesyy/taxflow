@@ -29,12 +29,28 @@ interface IUser extends mongoose.Document {
   regimeContabile?: 'Forfettario' | 'Ordinario' | 'Semplificato'
   aliquotaIva?: string
   fatturato?: number
-  status?: 'active' | 'pending' | 'new' | 'inactive' | 'rejected'
+  status?: 'active' | 'pending' | 'new' | 'inactive' | 'rejected' | 'pending_payment'
 
   // Two-step approval process
   registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'  // First approval: can login
   pivaFormSubmitted?: boolean  // Has submitted P.IVA form
   pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'  // Second approval: full access
+
+  // Stripe & Subscription
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  selectedPlan?: {
+    id: string
+    stripePriceId: string
+    name: string
+    price: number
+    type: 'annual' | 'monthly'
+    interval: 'year' | 'month'
+  }
+  subscriptionStatus?: 'pending_payment' | 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid'
+  subscriptionCurrentPeriodStart?: Date
+  subscriptionCurrentPeriodEnd?: Date
+  subscriptionCancelAtPeriodEnd?: boolean
 
   // P.IVA Request Data
   pivaRequestData?: {
@@ -62,6 +78,10 @@ interface IUser extends mongoose.Document {
     expectedRevenue: number
     hasOtherIncome: boolean
     otherIncomeDetails?: string
+
+    // P.IVA esistente
+    hasExistingPiva?: boolean
+    existingPivaNumber?: string
 
     // Documenti
     hasIdentityDocument: boolean
@@ -121,12 +141,31 @@ const UserSchema = new mongoose.Schema({
   regimeContabile: { type: String, enum: ['Forfettario', 'Ordinario', 'Semplificato'], default: 'Forfettario' },
   aliquotaIva: { type: String, default: '5%' },
   fatturato: { type: Number, default: 0 },
-  status: { type: String, enum: ['active', 'pending', 'new', 'inactive'], default: 'new' },
+  status: { type: String, enum: ['active', 'pending', 'new', 'inactive', 'pending_payment'], default: 'new' },
 
   // Two-step approval process
   registrationApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   pivaFormSubmitted: { type: Boolean, default: false },
   pivaApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'] },
+
+  // Stripe & Subscription
+  stripeCustomerId: { type: String },
+  stripeSubscriptionId: { type: String },
+  selectedPlan: {
+    id: String,
+    stripePriceId: String,
+    name: String,
+    price: Number,
+    type: { type: String, enum: ['annual', 'monthly'] },
+    interval: { type: String, enum: ['year', 'month'] }
+  },
+  subscriptionStatus: {
+    type: String,
+    enum: ['pending_payment', 'active', 'past_due', 'canceled', 'trialing', 'incomplete', 'incomplete_expired', 'unpaid']
+  },
+  subscriptionCurrentPeriodStart: { type: Date },
+  subscriptionCurrentPeriodEnd: { type: Date },
+  subscriptionCancelAtPeriodEnd: { type: Boolean, default: false },
 
   // P.IVA Request Data
   pivaRequestData: {
@@ -214,5 +253,7 @@ UserSchema.index({ role: 1 })
 UserSchema.index({ registrationApprovalStatus: 1 })
 UserSchema.index({ pivaApprovalStatus: 1 })
 UserSchema.index({ role: 1, registrationApprovalStatus: 1 }) // Compound index for admin queries
+UserSchema.index({ stripeCustomerId: 1 })
+UserSchema.index({ stripeSubscriptionId: 1 })
 
 export default mongoose.model<IUser>('User', UserSchema)

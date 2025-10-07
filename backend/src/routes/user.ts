@@ -47,6 +47,14 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
         pivaFormSubmitted: user.pivaFormSubmitted,
         pivaApprovalStatus: user.pivaApprovalStatus,
         registrationApprovalStatus: user.registrationApprovalStatus,
+        // Subscription fields
+        stripeCustomerId: user.stripeCustomerId,
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        selectedPlan: user.selectedPlan,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionCurrentPeriodStart: user.subscriptionCurrentPeriodStart,
+        subscriptionCurrentPeriodEnd: user.subscriptionCurrentPeriodEnd,
+        subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
@@ -338,8 +346,9 @@ router.post('/piva-requests/:userId/approve', authMiddleware, async (req: AuthRe
       if (pivaData.businessName) targetUser.company = pivaData.businessName
       if (pivaData.existingPivaNumber) targetUser.piva = pivaData.existingPivaNumber
 
-      // Set status to active when approved
-      targetUser.status = 'active'
+      // Set status to pending payment - user needs to choose plan and pay
+      targetUser.status = 'pending_payment'
+      targetUser.subscriptionStatus = 'pending_payment'
     }
 
     await targetUser.save()

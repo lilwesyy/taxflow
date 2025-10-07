@@ -1,118 +1,150 @@
-import { Building2, CheckCircle, Clock, AlertTriangle, Eye, MessageSquare, Download, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Building2, CheckCircle, Clock, AlertTriangle, Eye, MessageSquare, Download, Filter, Search, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
+import type { SubscriptionPlan } from '../../../../types'
+
+// Available subscription plans
+const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    id: 'piva-forfettari-annual',
+    stripePriceId: 'price_annual_placeholder',
+    name: 'Piano Annuale',
+    price: 368.90,
+    originalPrice: 420.00,
+    discount: 'Risparmia €51 rispetto al piano mensile',
+    type: 'annual',
+    interval: 'year',
+    features: [
+      'Setup creditizio',
+      'Regime forfettario',
+      'Rating optimization',
+      'Adempimenti fiscali',
+      'Dashboard integrata cassetto fiscale e previdenziale (INPS-INAIL)',
+      'Supporto prioritario'
+    ],
+    description: 'Pagamento unico annuale'
+  },
+  {
+    id: 'piva-forfettari-monthly',
+    stripePriceId: 'price_monthly_placeholder',
+    name: 'Piano Mensile',
+    price: 35.00,
+    type: 'monthly',
+    interval: 'month',
+    features: [
+      'Setup creditizio',
+      'Regime forfettario',
+      'Rating optimization',
+      'Adempimenti fiscali',
+      'Dashboard integrata cassetto fiscale e previdenziale (INPS-INAIL)',
+      'Supporto standard'
+    ],
+    description: 'Pagamento mensile automatico'
+  }
+]
 
 export default function RichiestePiva() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRequest, setSelectedRequest] = useState<any>(null)
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
+  const [approvingRequest, setApprovingRequest] = useState<any>(null)
+  const [richieste, setRichieste] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  // Load real P.IVA requests from backend
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch('http://localhost:3000/api/clients/piva-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setRichieste(data.requests || [])
+        } else {
+          console.error('Failed to fetch P.IVA requests')
+        }
+      } catch (error) {
+        console.error('Error fetching P.IVA requests:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRequests()
+  }, [])
 
   const closeModal = () => {
     setSelectedRequest(null)
   }
 
-  const richieste = [
-    {
-      id: 'REQ-2024-001',
-      cliente: {
-        nome: 'Mario Rossi',
-        email: 'mario.rossi@email.com',
-        telefono: '+39 123 456 7890',
-        codiceFiscale: 'RSSMRA80A01H501Z'
-      },
-      azienda: {
-        ragioneSociale: 'Rossi Consulting',
-        attivita: 'Consulenza informatica',
-        codiceAteco: '62.02.00',
-        fatturatoPrevisto: 35000
-      },
-      status: 'in_review',
-      priority: 'high',
-      dataRichiesta: '15/01/2024',
-      dataUltimaModifica: '20/01/2024',
-      consulente: 'Dr. Marco Bianchi',
-      documentazione: ['Documento identità', 'Codice fiscale', 'Visura camerale'],
-      note: 'Cliente ha esperienza pregressa nel settore. Richiesta urgente per avvio attività.',
-      step: 3,
-      totalSteps: 5
-    },
-    {
-      id: 'REQ-2024-002',
-      cliente: {
-        nome: 'Laura Bianchi',
-        email: 'laura.bianchi@email.com',
-        telefono: '+39 234 567 8901',
-        codiceFiscale: 'BNCLRA85B02F205X'
-      },
-      azienda: {
-        ragioneSociale: 'Bianchi Design',
-        attivita: 'Attività di design',
-        codiceAteco: '74.10.10',
-        fatturatoPrevisto: 28000
-      },
-      status: 'approved',
-      priority: 'medium',
-      dataRichiesta: '10/01/2024',
-      dataUltimaModifica: '18/01/2024',
-      consulente: 'Dr. Laura Verdi',
-      documentazione: ['Documento identità', 'Codice fiscale', 'Autocertificazione'],
-      note: 'Pratica completata con successo. P.IVA attivata.',
-      step: 5,
-      totalSteps: 5
-    },
-    {
-      id: 'REQ-2024-003',
-      cliente: {
-        nome: 'Giuseppe Verdi',
-        email: 'giuseppe.verdi@email.com',
-        telefono: '+39 345 678 9012',
-        codiceFiscale: 'VRDGPP75C03H501W'
-      },
-      azienda: {
-        ragioneSociale: 'Verdi Solutions',
-        attivita: 'Consulenza marketing',
-        codiceAteco: '73.11.00',
-        fatturatoPrevisto: 45000
-      },
-      status: 'pending',
-      priority: 'medium',
-      dataRichiesta: '22/01/2024',
-      dataUltimaModifica: '22/01/2024',
-      consulente: 'Dr. Marco Bianchi',
-      documentazione: ['Documento identità'],
-      note: 'In attesa documentazione aggiuntiva dal cliente.',
-      step: 2,
-      totalSteps: 5
-    },
-    {
-      id: 'REQ-2024-004',
-      cliente: {
-        nome: 'Anna Neri',
-        email: 'anna.neri@email.com',
-        telefono: '+39 456 789 0123',
-        codiceFiscale: 'NRANNA90D04H501Y'
-      },
-      azienda: {
-        ragioneSociale: 'Neri Marketing',
-        attivita: 'Servizi di marketing',
-        codiceAteco: '73.11.00',
-        fatturatoPrevisto: 32000
-      },
-      status: 'rejected',
-      priority: 'low',
-      dataRichiesta: '18/01/2024',
-      dataUltimaModifica: '25/01/2024',
-      consulente: 'Dr. Laura Verdi',
-      documentazione: ['Documento identità', 'Codice fiscale'],
-      note: 'Richiesta respinta: fatturato previsto supera i limiti per forfettario.',
-      step: 2,
-      totalSteps: 5
+  const openApprovalModal = (request: any) => {
+    setApprovingRequest(request)
+    setSelectedPlan(SUBSCRIPTION_PLANS[0]) // Default to annual plan
+    setShowApprovalModal(true)
+  }
+
+  const closeApprovalModal = () => {
+    setShowApprovalModal(false)
+    setApprovingRequest(null)
+    setSelectedPlan(null)
+  }
+
+  const handleApproveWithPlan = async () => {
+    if (!approvingRequest || !selectedPlan) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:3000/stripe/approve-with-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: approvingRequest.id,
+          planId: selectedPlan.id
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert(`✅ Richiesta approvata con ${selectedPlan.name}!\n\nIl cliente riceverà una notifica e dovrà completare il pagamento per attivare il servizio.`)
+        closeApprovalModal()
+        // Refresh page to update list
+        window.location.reload()
+      } else {
+        alert(`❌ Errore: ${data.error || 'Impossibile approvare la richiesta'}`)
+      }
+    } catch (error) {
+      console.error('Error approving request:', error)
+      alert('❌ Errore di connessione durante l\'approvazione')
     }
-  ]
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Caricamento richieste P.IVA...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Removed mock data - now using real data from backend loaded via useEffect
 
   const filteredRichieste = richieste.filter(richiesta => {
     const matchesSearch = richiesta.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -543,8 +575,15 @@ export default function RichiestePiva() {
               {/* Actions */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                    Approva
+                  <button
+                    onClick={() => {
+                      closeModal()
+                      openApprovalModal(selectedRequest)
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approva con Piano
                   </button>
                   <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:shadow-lg">
                     Respingi
@@ -564,6 +603,137 @@ export default function RichiestePiva() {
               </div>
             </div>
           )}
+      </Modal>
+
+      {/* Approval with Plan Modal */}
+      <Modal
+        isOpen={showApprovalModal}
+        onClose={closeApprovalModal}
+        title="Approva richiesta P.IVA con Piano Abbonamento"
+        maxWidth="3xl"
+      >
+        {approvingRequest && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-2">Cliente: {approvingRequest.cliente.nome}</h4>
+              <p className="text-blue-700 text-sm">
+                Seleziona il piano di abbonamento da assegnare al cliente. Il cliente riceverà una notifica
+                e dovrà completare il pagamento per attivare il servizio.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4">Seleziona Piano Abbonamento</h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                {SUBSCRIPTION_PLANS.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan)}
+                    className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg ${
+                      selectedPlan?.id === plan.id
+                        ? 'border-green-500 bg-green-50 shadow-md'
+                        : 'border-gray-200 hover:border-green-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h5 className="font-bold text-lg text-gray-900">{plan.name}</h5>
+                        <p className="text-sm text-gray-600">{plan.description}</p>
+                      </div>
+                      {selectedPlan?.id === plan.id && (
+                        <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                      )}
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="flex items-baseline">
+                        <span className="text-3xl font-bold text-primary-600">€{plan.price}</span>
+                        <span className="text-gray-600 ml-2">/{plan.interval === 'year' ? 'anno' : 'mese'}</span>
+                      </div>
+                      {plan.originalPrice && (
+                        <div className="flex items-center mt-1">
+                          <span className="text-sm text-gray-400 line-through mr-2">€{plan.originalPrice}</span>
+                          <span className="text-xs text-green-600 font-medium">{plan.discount}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {plan.features.slice(0, 4).map((feature, idx) => (
+                        <div key={idx} className="flex items-start text-sm">
+                          <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-700">{feature}</span>
+                        </div>
+                      ))}
+                      {plan.features.length > 4 && (
+                        <div className="text-sm text-gray-500 italic">
+                          +{plan.features.length - 4} altre funzionalità
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Setup Fee Info */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <CreditCard className="h-5 w-5 text-amber-600 mr-3 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h5 className="font-semibold text-amber-900 mb-1">Costo di Setup</h5>
+                  <p className="text-sm text-amber-800">
+                    Oltre all'abbonamento, verrà addebitato un costo unico di apertura P.IVA di <strong>€129,90</strong> (invece di €169,90).
+                    <br />
+                    <span className="text-xs">Offerta lancio valida fino al 31/12/2025</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {selectedPlan && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h5 className="font-semibold text-gray-900 mb-2">Riepilogo</h5>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Piano selezionato:</span>
+                    <span className="font-medium text-gray-900">{selectedPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Costo abbonamento:</span>
+                    <span className="font-medium text-gray-900">€{selectedPlan.price}/{selectedPlan.interval === 'year' ? 'anno' : 'mese'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Costo setup (una tantum):</span>
+                    <span className="font-medium text-gray-900">€129,90</span>
+                  </div>
+                  <div className="border-t border-gray-300 pt-2 mt-2 flex justify-between">
+                    <span className="text-gray-900 font-semibold">Primo pagamento:</span>
+                    <span className="text-lg font-bold text-primary-600">€{(selectedPlan.price + 129.90).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={closeApprovalModal}
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleApproveWithPlan}
+                disabled={!selectedPlan}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Approva con {selectedPlan?.name || 'Piano'}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

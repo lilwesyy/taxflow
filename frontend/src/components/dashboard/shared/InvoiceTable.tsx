@@ -61,7 +61,7 @@ export default function InvoiceTable({
               const StatusIcon = statusInfo.icon
 
               return (
-                <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={invoice._id || invoice.id || invoice.numero} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center">
                       <FileText className="h-4 w-4 text-gray-400 mr-2" />

@@ -214,6 +214,7 @@ export default function Impostazioni() {
     { id: 'profile', name: 'Profilo', icon: User },
     { id: 'notifications', name: 'Notifiche', icon: Bell },
     { id: 'security', name: 'Sicurezza', icon: Shield },
+    { id: 'subscription', name: 'Abbonamento', icon: CreditCard },
     { id: 'payment', name: 'Pagamenti', icon: CreditCard }
   ]
 
@@ -1495,6 +1496,165 @@ export default function Impostazioni() {
   )
 
 
+  const renderSubscriptionTab = () => {
+    // Get user's selected plan details
+    const userPlan = user?.selectedPlan
+    const planName = userPlan?.name || 'Piano P.IVA Forfettari'
+    const planPrice = userPlan?.price || 0
+    const planInterval = userPlan?.interval === 'year' ? 'anno' : 'mese'
+
+    // Calculate next renewal date based on interval
+    const getNextRenewalDate = () => {
+      if (!paymentSettings.autoRinnovo) {
+        return 'Non programmato'
+      }
+      const nextRenewal = new Date()
+      if (userPlan?.interval === 'year') {
+        nextRenewal.setFullYear(nextRenewal.getFullYear() + 1)
+      } else {
+        nextRenewal.setMonth(nextRenewal.getMonth() + 1)
+      }
+      return nextRenewal.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    }
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Gestione Abbonamento</h3>
+
+          {/* Current Subscription Status */}
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center mb-2">
+                  <CreditCard className="h-6 w-6 text-blue-600 mr-2" />
+                  <h4 className="text-xl font-semibold text-blue-900">{planName}</h4>
+                </div>
+                <p className="text-blue-700 mb-4">
+                  Il tuo abbonamento è attivo e include tutte le funzionalità premium per gestire la tua partita IVA forfettaria.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="bg-white/50 rounded-lg p-3">
+                    <p className="text-sm text-blue-600 font-medium">Stato</p>
+                    <p className="text-lg font-semibold text-blue-900">Attivo</p>
+                  </div>
+                  <div className="bg-white/50 rounded-lg p-3">
+                    <p className="text-sm text-blue-600 font-medium">Prossimo rinnovo</p>
+                    <p className="text-lg font-semibold text-blue-900">{getNextRenewalDate()}</p>
+                  </div>
+                  <div className="bg-white/50 rounded-lg p-3">
+                    <p className="text-sm text-blue-600 font-medium">Prezzo</p>
+                    <p className="text-lg font-semibold text-blue-900">€{planPrice}/{planInterval}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        {/* Subscription Features */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <h4 className="font-semibold text-gray-900 mb-4">Funzionalità Incluse</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 text-xs">✓</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">Fatturazione Elettronica</p>
+                <p className="text-xs text-gray-600">Creazione e invio illimitato</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 text-xs">✓</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">Consulenza Fiscale</p>
+                <p className="text-xs text-gray-600">Chat illimitata con consulenti</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 text-xs">✓</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">Gestione Documenti</p>
+                <p className="text-xs text-gray-600">Archiviazione cloud sicura</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 text-xs">✓</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">Simulazione Imposte</p>
+                <p className="text-xs text-gray-600">Calcolo per codice ATECO</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Subscription Actions */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h4 className="font-semibold text-gray-900 mb-4">Azioni Abbonamento</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="font-medium text-gray-900">Auto-rinnovo</p>
+                <p className="text-sm text-gray-600">Il tuo abbonamento si rinnoverà automaticamente</p>
+              </div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={paymentSettings.autoRinnovo}
+                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, autoRinnovo: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+            </div>
+
+            <button className="w-full p-4 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left">
+              <p className="font-medium text-blue-900">Cambia Piano</p>
+              <p className="text-sm text-blue-700">Esplora altri piani disponibili</p>
+            </button>
+
+            <button className="w-full p-4 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors text-left">
+              <p className="font-medium text-orange-900">Sospendi Abbonamento</p>
+              <p className="text-sm text-orange-700">Sospendi temporaneamente il tuo abbonamento</p>
+            </button>
+
+            <button className="w-full p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-left">
+              <p className="font-medium text-red-900">Cancella Abbonamento</p>
+              <p className="text-sm text-red-700">Termina il tuo abbonamento</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Billing History */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mt-6">
+          <h4 className="font-semibold text-gray-900 mb-4">Storico Fatture</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-900">Abbonamento Annuale 2024</p>
+                <p className="text-sm text-gray-600">01/01/2024</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-gray-900">€299.00</p>
+                <button className="text-sm text-primary-600 hover:text-primary-700">Scarica PDF</button>
+              </div>
+            </div>
+
+            <div className="text-center py-4 text-gray-500 text-sm">
+              Nessuna altra fattura disponibile
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    )
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
@@ -1503,6 +1663,8 @@ export default function Impostazioni() {
         return renderNotificationsTab()
       case 'security':
         return renderSecurityTab()
+      case 'subscription':
+        return renderSubscriptionTab()
       case 'payment':
         return renderPaymentTab()
       default:

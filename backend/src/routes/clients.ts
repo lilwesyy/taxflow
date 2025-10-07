@@ -2,6 +2,7 @@ import { Router, Response } from 'express'
 import User from '../models/User'
 import Conversation from '../models/Conversation'
 import Document from '../models/Document'
+import Invoice from '../models/Invoice'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
 
 const router = Router()
@@ -19,6 +20,51 @@ const adminMiddleware = async (req: AuthRequest, res: Response, next: Function) 
     res.status(500).json({ error: 'Errore interno del server' })
   }
 }
+
+// Get P.IVA requests (pending approvals) - Admin only
+router.get('/piva-requests', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const requests = await User.find({
+      role: 'business',
+      pivaFormSubmitted: true,
+      pivaApprovalStatus: { $in: ['pending', null, undefined] }
+    })
+      .select('-password -twoFactorSecret')
+      .sort({ createdAt: -1 })
+
+    const formattedRequests = requests.map(user => ({
+      id: user._id,
+      cliente: {
+        nome: user.name,
+        email: user.email,
+        telefono: user.phone || '',
+        codiceFiscale: user.pivaRequestData?.fiscalCode || user.fiscalCode || ''
+      },
+      azienda: {
+        ragioneSociale: user.pivaRequestData?.businessName || user.company || '',
+        attivita: user.pivaRequestData?.businessActivity || '',
+        codiceAteco: user.pivaRequestData?.codiceAteco || user.codiceAteco || '',
+        fatturatoPrevisto: user.pivaRequestData?.expectedRevenue || 0
+      },
+      status: 'in_review',
+      priority: 'high',
+      dataRichiesta: user.pivaRequestData?.submittedAt || user.createdAt,
+      dataUltimaModifica: user.updatedAt,
+      pivaRequestData: user.pivaRequestData,
+      registrationApprovalStatus: user.registrationApprovalStatus,
+      pivaApprovalStatus: user.pivaApprovalStatus,
+      pivaFormSubmitted: user.pivaFormSubmitted
+    }))
+
+    res.json({
+      success: true,
+      requests: formattedRequests
+    })
+  } catch (error) {
+    console.error('Get P.IVA requests error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
 
 // Get all clients (business users) - Admin only
 router.get('/list', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
@@ -77,6 +123,64 @@ router.get('/list', authMiddleware, adminMiddleware, async (req: AuthRequest, re
     })
   } catch (error) {
     console.error('Get clients error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Get all invoices (consulenze + abbonamenti) - Admin only
+router.get('/invoices', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    // Get invoices from Invoice model (subscriptions + setup fees)
+    const modelInvoices = await Invoice.find()
+      .populate('businessUserId', 'name email company')
+      .sort({ createdAt: -1 })
+
+    // Get all paid/pending conversations (consulenze chat)
+    const paidConversations = await Conversation.find({
+      paymentStatus: { $in: ['paid', 'pending', 'requires_payment_method', 'processing'] },
+      $or: [
+        { stripePaymentIntentId: { $exists: true } },
+        { paymentStatus: 'pending' }
+      ]
+    })
+      .populate('businessUserId', 'name email company')
+      .populate('adminUserId', 'name')
+      .sort({ createdAt: -1 })
+
+    // Format paid conversations as invoices
+    const conversationInvoices = paidConversations.map((conv: any) => ({
+      _id: conv._id,
+      numero: conv.invoiceNumber || `CHAT-${conv._id.toString().slice(-6)}`,
+      businessUserId: conv.businessUserId,
+      adminUserId: conv.adminUserId,
+      cliente: conv.businessUserId?.name || 'Unknown',
+      clienteEmail: conv.businessUserId?.email || '',
+      azienda: conv.businessUserId?.company || '',
+      consulente: conv.adminUserId?.name || 'TaxFlow',
+      servizio: 'Consulenza AI',
+      tipo: 'Consulenza',
+      importo: conv.amount || 0,
+      iva: 0,
+      totale: conv.amount || 0,
+      status: conv.paymentStatus,
+      dataEmissione: conv.paidAt ? new Date(conv.paidAt).toISOString().split('T')[0] : new Date(conv.createdAt).toISOString().split('T')[0],
+      dataPagamento: conv.paidAt ? new Date(conv.paidAt).toISOString().split('T')[0] : undefined,
+      stripePaymentIntentId: conv.stripePaymentIntentId,
+      createdAt: conv.createdAt,
+      updatedAt: conv.updatedAt
+    }))
+
+    // Merge and sort by creation date
+    const allInvoices = [...modelInvoices, ...conversationInvoices].sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    res.json({
+      success: true,
+      invoices: allInvoices
+    })
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
     res.status(500).json({ error: 'Errore interno del server' })
   }
 })

@@ -6,12 +6,12 @@ import { useToast } from '../context/ToastContext'
 
 interface LoginRegisterProps {
   onBack: () => void
-  onLogin: () => void
+  onLogin?: () => void
   onRegistrationSuccess?: (email: string) => void
   initialMode?: boolean
 }
 
-export default function LoginRegister({ onBack, onLogin, onRegistrationSuccess, initialMode = true }: LoginRegisterProps) {
+export default function LoginRegister({ onBack, onRegistrationSuccess, initialMode = true }: LoginRegisterProps) {
   const { login } = useAuth()
   const { showToast } = useToast()
   const [isLogin, setIsLogin] = useState(initialMode)
@@ -94,7 +94,8 @@ export default function LoginRegister({ onBack, onLogin, onRegistrationSuccess, 
         }
 
         showToast('Accesso eseguito con successo', 'success')
-        onLogin()
+        // Don't call onLogin() - let the useEffect in App.tsx handle navigation
+        // This ensures the user data is fully loaded before deciding where to navigate
       } else {
         // Registration
         if (formData.password !== formData.confirmPassword) {

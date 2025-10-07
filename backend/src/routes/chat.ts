@@ -735,7 +735,7 @@ router.get('/invoices/:invoiceId/pdf', authenticateToken, async (req: AuthReques
     // Verify user has access
     if (
       (userRole === 'business' && invoice.businessUserId._id.toString() !== userId) ||
-      (userRole === 'admin' && invoice.adminUserId._id.toString() !== userId)
+      (userRole === 'admin' && invoice.adminUserId && invoice.adminUserId._id.toString() !== userId)
     ) {
       return res.status(403).json({ error: 'Non autorizzato' })
     }
@@ -813,8 +813,10 @@ router.get('/invoices/:invoiceId/pdf', authenticateToken, async (req: AuthReques
     }
 
     // Consultant info
-    doc.fontSize(10).fillColor(lightGray).text('CONSULENTE', 50, 280)
-    doc.fontSize(12).fillColor(textColor).text(invoice.consulente, 50, 300)
+    if (invoice.consulente) {
+      doc.fontSize(10).fillColor(lightGray).text('CONSULENTE', 50, 280)
+      doc.fontSize(12).fillColor(textColor).text(invoice.consulente, 50, 300)
+    }
 
     // Service details section
     const tableTop = 350

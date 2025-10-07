@@ -90,29 +90,53 @@ export default function RichiestePivaReal() {
   }
 
   const handleApproveClick = (userId: string, approved: boolean) => {
-    setPendingAction({ userId, approved })
-    setShowNoteModal(true)
+    if (approved) {
+      // Se approva, esegue direttamente l'approvazione
+      handleApprovePending(userId)
+    } else {
+      // Se respinge, mostra il modale delle note
+      setPendingAction({ userId, approved })
+      setShowNoteModal(true)
+    }
   }
 
-  const handleConfirmApprove = async (note: string) => {
+  const handleApprovePending = async (userId: string) => {
+    try {
+      setActionLoading(true)
+      const response = await apiService.approvePivaRequest(userId, true)
+
+      if (response.success) {
+        await fetchRequests()
+        setSelectedRequest(null)
+        showToast('Utente approvato! Il cliente può ora scegliere il piano e completare il pagamento.', 'success')
+      }
+    } catch (error) {
+      console.error('Error approving request:', error)
+      showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleConfirmReject = async (note: string) => {
     if (!pendingAction) return
 
     try {
       setActionLoading(true)
       const response = await apiService.approvePivaRequest(
         pendingAction.userId,
-        pendingAction.approved,
+        false,
         note || undefined
       )
 
       if (response.success) {
         await fetchRequests()
         setSelectedRequest(null)
-        showToast(pendingAction.approved ? 'Utente approvato con successo!' : 'Utente respinto', 'success')
+        showToast('Utente respinto', 'success')
       }
     } catch (error) {
-      console.error('Error approving request:', error)
-      showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
+      console.error('Error rejecting request:', error)
+      showToast(error instanceof Error ? error.message : 'Errore durante il rifiuto', 'error')
     } finally {
       setActionLoading(false)
       setPendingAction(null)
@@ -635,12 +659,13 @@ export default function RichiestePivaReal() {
           setShowNoteModal(false)
           setPendingAction(null)
         }}
-        onConfirm={handleConfirmApprove}
-        title={pendingAction?.approved ? 'Aggiungi una nota' : 'Motivo del rifiuto'}
-        placeholder={pendingAction?.approved ? 'Aggiungi una nota (opzionale)...' : 'Motivo del rifiuto (opzionale)...'}
-        confirmButtonText={pendingAction?.approved ? 'Approva' : 'Respingi'}
-        confirmButtonColor={pendingAction?.approved ? 'green' : 'red'}
+        onConfirm={handleConfirmReject}
+        title="Motivo del rifiuto"
+        placeholder="Motivo del rifiuto (opzionale)..."
+        confirmButtonText="Respingi"
+        confirmButtonColor="red"
       />
+
     </div>
   )
 }

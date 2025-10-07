@@ -3,6 +3,7 @@ import LandingPage from './components/LandingPage'
 import LoginRegister from './components/LoginRegister'
 import RegistrationSuccess from './components/RegistrationSuccess'
 import Dashboard from './components/Dashboard'
+import PaymentPending from './components/PaymentPending'
 import { useAuth } from './context/AuthContext'
 
 function App() {
@@ -15,7 +16,16 @@ function App() {
   // Recupera lo stato di login dal AuthContext
   useEffect(() => {
     if (user) {
-      setCurrentPage('dashboard')
+      // Check if user needs payment - don't set currentPage to dashboard
+      if (
+        user.role === 'business' &&
+        user.pivaApprovalStatus === 'approved' &&
+        user.subscriptionStatus === 'pending_payment'
+      ) {
+        setCurrentPage('payment-pending')
+      } else {
+        setCurrentPage('dashboard')
+      }
     } else {
       setCurrentPage('landing')
     }
@@ -54,7 +64,8 @@ function App() {
   }
 
   const handleLogin = () => {
-    setCurrentPage('dashboard')
+    // Don't set currentPage here - let the useEffect handle it based on user state
+    // This prevents briefly showing the dashboard before redirecting to payment
   }
 
   if (showLoading) {
@@ -70,6 +81,10 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  if (currentPage === 'payment-pending' && user) {
+    return <PaymentPending onLogout={showLandingPage} />
   }
 
   if (currentPage === 'dashboard' && user) {

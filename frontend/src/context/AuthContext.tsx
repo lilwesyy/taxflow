@@ -14,6 +14,7 @@ interface AuthContextType {
   logout: () => void
   isLoading: boolean
   updateUser: (userData: Partial<User>) => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -23,6 +24,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Refresh user data from backend
+  const refreshUser = async () => {
+    const savedToken = localStorage.getItem('token')
+    if (!savedToken) return
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+      const response = await fetch(`${API_URL}/user/me`, {
+        headers: {
+          'Authorization': `Bearer ${savedToken}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const freshUser = data.user || data
+        setUser(freshUser)
+        localStorage.setItem('user', JSON.stringify(freshUser))
+        console.log('✅ User data refreshed from backend:', freshUser)
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error)
+    }
+  }
+
   useEffect(() => {
     // Carica token e utente da localStorage all'avvio
     const savedToken = localStorage.getItem('token')
@@ -31,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (savedToken && savedUser) {
       setToken(savedToken)
       setUser(JSON.parse(savedUser))
+      // Refresh data from backend on mount
+      refreshUser()
     }
 
     setIsLoading(false)
@@ -64,11 +92,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Normal login flow
+    // Save token first
     setToken(data.token)
-    setUser(data.user)
-
     localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify(data.user))
+
+    // Don't set user yet - wait for fresh data from /user/me
+    // This prevents showing dashboard before we know subscription status
+
+    // Get fresh user data with subscription status
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+      const response = await fetch(`${API_URL}/user/me`, {
+        headers: {
+          'Authorization': `Bearer ${data.token}`
+        }
+      })
+
+      if (response.ok) {
+        const freshData = await response.json()
+        const freshUser = freshData.user || freshData
+        setUser(freshUser)
+        localStorage.setItem('user', JSON.stringify(freshUser))
+        console.log('✅ Login complete with fresh user data:', freshUser)
+      } else {
+        // Fallback to original user data if refresh fails
+        setUser(data.user)
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    } catch (error) {
+      console.error('Error fetching fresh user data:', error)
+      // Fallback to original user data
+      setUser(data.user)
+      localStorage.setItem('user', JSON.stringify(data.user))
+    }
   }
 
   const logout = () => {
@@ -87,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, updateUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -30,21 +30,21 @@ export default function Fatturazione() {
   const loadTransactions = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/conversations/paid/list`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/clients/invoices`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch transactions')
+        throw new Error('Failed to fetch invoices')
       }
 
       const data = await response.json()
-      setInvoices(data)
+      setInvoices(data.invoices || [])
     } catch (error) {
-      console.error('Error loading transactions:', error)
-      showToast('Errore nel caricamento delle transazioni', 'error')
+      console.error('Error loading invoices:', error)
+      showToast('Errore nel caricamento delle fatture', 'error')
     } finally {
       setLoading(false)
     }

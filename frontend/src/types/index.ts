@@ -6,6 +6,21 @@
 // User & Authentication Types
 // ============================================
 
+export type SubscriptionPlanType = 'annual' | 'monthly'
+
+export interface SubscriptionPlan {
+  id: string // Internal ID
+  stripePriceId: string // Stripe Price ID
+  name: string
+  price: number // Price in euros
+  originalPrice?: number
+  discount?: string
+  type: SubscriptionPlanType
+  interval: 'year' | 'month'
+  features: string[]
+  description?: string
+}
+
 export interface PivaRequestData {
   // Dati Anagrafici
   firstName: string
@@ -31,6 +46,10 @@ export interface PivaRequestData {
   expectedRevenue: number
   hasOtherIncome: boolean
   otherIncomeDetails?: string
+
+  // P.IVA esistente
+  hasExistingPiva?: boolean
+  existingPivaNumber?: string
 
   // Documenti
   hasIdentityDocument: boolean
@@ -78,6 +97,15 @@ export interface User {
   pivaFormSubmitted?: boolean
   pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'
   pivaRequestData?: PivaRequestData
+
+  // Subscription & Stripe
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  selectedPlan?: SubscriptionPlan
+  subscriptionStatus?: 'pending_payment' | 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid'
+  subscriptionCurrentPeriodStart?: Date
+  subscriptionCurrentPeriodEnd?: Date
+  subscriptionCancelAtPeriodEnd?: boolean
 
   // Stats
   pendingRequests?: number
@@ -178,6 +206,7 @@ export interface DocumentEvent {
 // ============================================
 
 export interface Invoice {
+  _id?: string
   id: string
   conversationId: string
   businessUserId: string
