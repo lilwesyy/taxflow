@@ -853,14 +853,16 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                         </div>
 
                         {/* Guarantee Badge */}
-                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <div className="flex items-center">
-                            <Shield className="h-4 w-4 text-green-600 mr-2" />
-                            <span className="text-green-800 font-medium text-xs">
-                              60gg soddisfatto o rimborsato
-                            </span>
+                        {service.title === "P.IVA Forfettari" && (
+                          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center">
+                              <Shield className="h-4 w-4 text-green-600 mr-2" />
+                              <span className="text-green-800 font-medium text-xs">
+                                14gg soddisfatto o rimborsato (solo se apertura avviene dopo 14gg)
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        )}
 
                         <a
                           href={service.learnMoreUrl}
