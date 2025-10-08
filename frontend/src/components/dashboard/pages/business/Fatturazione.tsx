@@ -170,30 +170,45 @@ export default function Fatturazione() {
   )
 
   const tabs = [
-    { id: 'fatture', name: 'Fatture', icon: FileText },
-    { id: 'clienti', name: 'Clienti', icon: Building }
+    {
+      id: 'fatture',
+      name: 'Fatture',
+      icon: FileText,
+      description: 'Gestisci e monitora le tue fatture'
+    },
+    {
+      id: 'clienti',
+      name: 'Clienti',
+      icon: Building,
+      description: 'Elenco dei tuoi clienti'
+    }
   ]
 
   return (
     <div className="space-y-8">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 gap-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+              className={`p-4 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.name}</span>
+              <div className="flex items-center space-x-2 mb-1">
+                <tab.icon className="h-5 w-5" />
+                <span className="font-medium text-sm">{tab.name}</span>
+              </div>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                {tab.description}
+              </p>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
