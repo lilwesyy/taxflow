@@ -4,6 +4,7 @@ import LoginRegister from './components/LoginRegister'
 import RegistrationSuccess from './components/RegistrationSuccess'
 import Dashboard from './components/Dashboard'
 import PaymentPending from './components/PaymentPending'
+import CookieBanner from './components/common/CookieBanner'
 import { useAuth } from './context/AuthContext'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [loginMode, setLoginMode] = useState(true)
   const [showLoading, setShowLoading] = useState(true)
   const [registeredEmail, setRegisteredEmail] = useState('')
+  const [showCookiePolicy, setShowCookiePolicy] = useState(false)
 
   // Recupera lo stato di login dal AuthContext
   useEffect(() => {
@@ -106,7 +108,17 @@ function App() {
     return <RegistrationSuccess userEmail={registeredEmail} onBackToLogin={showLoginPage} />
   }
 
-  return <LandingPage onShowLogin={showLoginPage} onShowRegister={showRegisterPage} />
+  return (
+    <>
+      <LandingPage
+        onShowLogin={showLoginPage}
+        onShowRegister={showRegisterPage}
+        showCookieModal={showCookiePolicy}
+        setShowCookieModal={setShowCookiePolicy}
+      />
+      <CookieBanner onOpenCookiePolicy={() => setShowCookiePolicy(true)} />
+    </>
+  )
 }
 
 export default App

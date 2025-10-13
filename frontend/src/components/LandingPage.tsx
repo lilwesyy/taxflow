@@ -30,19 +30,22 @@ import {
   ArrowRight,
   ChevronDown
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import Logo from './common/Logo'
+import { useCookieConsent } from '../hooks/useCookieConsent'
 
 interface LandingPageProps {
   onShowLogin: () => void
   onShowRegister: () => void
+  showCookieModal?: boolean
+  setShowCookieModal?: (show: boolean) => void
 }
 
-export default function LandingPage({ onShowLogin, onShowRegister }: LandingPageProps) {
+export default function LandingPage({ onShowLogin, onShowRegister, showCookieModal = false, setShowCookieModal }: LandingPageProps) {
+  const { showBanner } = useCookieConsent()
   const [visibleSections, setVisibleSections] = useState(new Set<string>())
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
-  const [showCookieModal, setShowCookieModal] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   // States for closing animations
@@ -118,14 +121,17 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     return () => observer.disconnect()
   }, [])
 
-  // Carousel auto-rotation
+  // Carousel auto-rotation - only when cookies are accepted and modals are closed
   useEffect(() => {
+    // Don't auto-rotate if cookie banner is visible or any modal is open
+    if (showBanner || showCookieModal || showPrivacyModal || showTermsModal) return
+
     const interval = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length)
     }, 10000) // Change every 10 seconds
 
     return () => clearInterval(interval)
-  }, [])
+  }, [showBanner, showCookieModal, showPrivacyModal, showTermsModal])
 
   const setSectionRef = (id: string) => (el: Element | null) => {
     sectionRefs.current[id] = el
@@ -140,29 +146,29 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
   }
 
   // Modal closing functions with animation
-  const closePrivacyModal = () => {
+  const closePrivacyModal = useCallback(() => {
     setIsClosingPrivacy(true)
     setTimeout(() => {
       setShowPrivacyModal(false)
       setIsClosingPrivacy(false)
     }, 300)
-  }
+  }, [])
 
-  const closeTermsModal = () => {
+  const closeTermsModal = useCallback(() => {
     setIsClosingTerms(true)
     setTimeout(() => {
       setShowTermsModal(false)
       setIsClosingTerms(false)
     }, 300)
-  }
+  }, [])
 
-  const closeCookieModal = () => {
+  const closeCookieModal = useCallback(() => {
     setIsClosingCookie(true)
     setTimeout(() => {
-      setShowCookieModal(false)
+      setShowCookieModal?.(false)
       setIsClosingCookie(false)
     }, 300)
-  }
+  }, [setShowCookieModal])
 
   // Modal component
   const Modal = ({ isOpen, onClose, title, children, isClosing }: {
@@ -175,7 +181,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     if (!isOpen) return null
 
     return (
-      <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="fixed inset-0 z-[80] overflow-hidden">
         <div className="flex items-center justify-center min-h-screen p-4">
           <div
             className={`fixed inset-0 transition-opacity bg-gray-900 bg-opacity-50 ${
@@ -183,7 +189,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             }`}
             onClick={onClose}
           ></div>
-          <div className={`relative w-full max-w-4xl h-full max-h-screen bg-white shadow-2xl rounded-2xl flex flex-col ${
+          <div className={`relative w-full max-w-4xl max-h-[90vh] bg-white shadow-2xl rounded-2xl flex flex-col ${
             isClosing ? 'animate-scale-out' : 'animate-scale-in'
           }`}>
             <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
@@ -195,7 +201,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               {children}
             </div>
           </div>
@@ -1560,7 +1566,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                   Termini di Servizio
                 </button>
                 <button
-                  onClick={() => setShowCookieModal(true)}
+                  onClick={() => setShowCookieModal?.(true)}
                   className="text-gray-400 hover:text-white transition-colors text-sm"
                 >
                   Cookie Policy
@@ -1575,36 +1581,102 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       <Modal isOpen={showPrivacyModal} onClose={closePrivacyModal} title="Privacy Policy" isClosing={isClosingPrivacy}>
         <div className="prose prose-sm max-w-none">
           <h4 className="text-lg font-semibold mb-3">Informativa sulla Privacy</h4>
-          <p className="mb-4">
-            TaxFlow rispetta la tua privacy e si impegna a proteggere i tuoi dati personali.
-            Questa informativa descrive come raccogliamo, utilizziamo e proteggiamo le tue informazioni.
+          <p className="mb-4 text-sm">
+            Ai sensi del Regolamento UE 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018,
+            TaxFlow informa gli utenti circa il trattamento dei dati personali.
           </p>
 
-          <h5 className="font-semibold mb-2">Dati che raccogliamo:</h5>
-          <ul className="list-disc pl-5 mb-4 space-y-1">
-            <li>Informazioni di contatto (nome, email, telefono)</li>
-            <li>Dati fiscali necessari per i servizi</li>
-            <li>Informazioni sull'utilizzo del sito</li>
-            <li>Cookie tecnici e di preferenze</li>
+          <h5 className="font-semibold mb-2 mt-6">1. Titolare del Trattamento</h5>
+          <p className="mb-4 text-sm">
+            <strong>TaxFlow</strong><br />
+            Titolare: Teresa Marrari<br />
+            Sede: Torino, Italia<br />
+            Email: info@taxflow.it<br />
+            Email Privacy: privacy@taxflow.it
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">2. Tipologie di Dati Raccolti</h5>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">2.1 Dati forniti dall'utente</h6>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Dati anagrafici:</strong> nome, cognome, data e luogo di nascita, codice fiscale</li>
+            <li><strong>Dati di contatto:</strong> email, telefono, indirizzo di residenza (via, città, CAP, provincia)</li>
+            <li><strong>Dati fiscali:</strong> Partita IVA, codice ATECO, regime contabile, fatturato previsto, ragione sociale, sede legale</li>
+            <li><strong>Dati finanziari:</strong> informazioni pagamento tramite Stripe, piano abbonamento, stato abbonamento</li>
+            <li><strong>Documenti:</strong> documento d'identità, codice fiscale, dichiarazioni fiscali</li>
           </ul>
 
-          <h5 className="font-semibold mb-2">Come utilizziamo i tuoi dati:</h5>
-          <ul className="list-disc pl-5 mb-4 space-y-1">
-            <li>Fornitura dei servizi di consulenza fiscale</li>
-            <li>Comunicazioni relative al servizio</li>
-            <li>Miglioramento dell'esperienza utente</li>
-            <li>Adempimenti legali e fiscali</li>
+          <h6 className="font-semibold text-sm mb-2 mt-4">2.2 Dati raccolti automaticamente</h6>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Dati di navigazione:</strong> indirizzo IP, browser, sistema operativo</li>
+            <li><strong>Cookie:</strong> tecnici, di preferenze e analytics (vedi Cookie Policy)</li>
+            <li><strong>Log di sistema:</strong> data/ora accesso, azioni effettuate</li>
           </ul>
 
-          <h5 className="font-semibold mb-2">I tuoi diritti:</h5>
-          <p className="mb-4">
-            Hai il diritto di accedere, modificare, cancellare i tuoi dati e limitarne il trattamento.
-            Puoi contattarci all'indirizzo privacy@taxflow.it per esercitare i tuoi diritti.
+          <h6 className="font-semibold text-sm mb-2 mt-4">2.3 Dati generati dal servizio</h6>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Consulenze:</strong> contenuto chat, allegati</li>
+            <li><strong>Fatture:</strong> numero, importo, IVA, stato pagamento</li>
+            <li><strong>Feedback:</strong> rating, commenti</li>
+            <li><strong>Analisi:</strong> Business Plan, rating creditizio Basel IV</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">3. Finalità e Base Giuridica</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Consulenza fiscale e gestione P.IVA → Esecuzione contratto (art. 6.1.b GDPR)</li>
+            <li>Gestione registrazione e profilo → Esecuzione contratto (art. 6.1.b GDPR)</li>
+            <li>Elaborazione pagamenti → Esecuzione contratto (art. 6.1.b GDPR)</li>
+            <li>Adempimenti fiscali → Obbligo legale (art. 6.1.c GDPR)</li>
+            <li>Assistenza clienti → Interesse legittimo (art. 6.1.f GDPR)</li>
+            <li>Marketing → Consenso (art. 6.1.a GDPR)</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">4. Destinatari dei Dati</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Personale autorizzato:</strong> consulenti fiscali, amministratori</li>
+            <li><strong>Fornitori:</strong> Stripe (pagamenti), MongoDB (database), Vercel (hosting), Google (analytics)</li>
+            <li><strong>Autorità:</strong> Agenzia Entrate, GdF su richiesta legale</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">5. Conservazione</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Dati contrattuali: 10 anni</li>
+            <li>Fatturazione: 10 anni</li>
+            <li>Log navigazione: 6 mesi</li>
+            <li>Marketing: fino a revoca o 24 mesi inattività</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">6. Diritti dell'Interessato</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Accesso, rettifica, cancellazione dati</li>
+            <li>Limitazione, portabilità, opposizione trattamento</li>
+            <li>Revoca consenso, reclamo al Garante</li>
+          </ul>
+          <p className="mb-4 text-sm">
+            Contatta: <strong>privacy@taxflow.it</strong> (risposta entro 30 giorni)
           </p>
 
-          <p className="text-sm text-gray-600">
-            Ultimo aggiornamento: Gennaio 2025
+          <h5 className="font-semibold mb-2 mt-6">7. Sicurezza</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Crittografia TLS/SSL</li>
+            <li>Password hashate (bcrypt)</li>
+            <li>Autenticazione JWT</li>
+            <li>Backup regolari</li>
+            <li>Accesso limitato</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">8. Reclami</h5>
+          <p className="mb-4 text-sm">
+            <strong>Garante Privacy</strong><br />
+            Piazza Venezia, 11 - 00187 Roma<br />
+            Tel: +39 06.696771<br />
+            <a href="https://www.garanteprivacy.it" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.garanteprivacy.it</a>
           </p>
+
+          <div className="bg-gray-50 p-4 rounded-lg mt-6">
+            <p className="text-sm font-semibold mb-1">Ultimo aggiornamento: 13 Ottobre 2025</p>
+            <p className="text-xs text-gray-600">Versione 1.0</p>
+          </div>
         </div>
       </Modal>
 
@@ -1612,45 +1684,157 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
       <Modal isOpen={showTermsModal} onClose={closeTermsModal} title="Termini di Servizio" isClosing={isClosingTerms}>
         <div className="prose prose-sm max-w-none">
           <h4 className="text-lg font-semibold mb-3">Termini e Condizioni di Servizio</h4>
-          <p className="mb-4">
-            Benvenuto su TaxFlow. Utilizzando i nostri servizi, accetti i seguenti termini e condizioni.
+          <p className="mb-4 text-sm">
+            I presenti Termini e Condizioni di Servizio ("Termini") regolano l'accesso e l'utilizzo della piattaforma TaxFlow
+            e dei relativi servizi professionali. Utilizzando la piattaforma, l'utente accetta integralmente i presenti Termini.
           </p>
 
-          <h5 className="font-semibold mb-2">1. Servizi Offerti</h5>
-          <p className="mb-4">
-            TaxFlow fornisce servizi di consulenza fiscale, apertura partita IVA forfettaria,
-            gestione contabilità e supporto per adempimenti fiscali.
-          </p>
-
-          <h5 className="font-semibold mb-2">2. Responsabilità del Cliente</h5>
-          <ul className="list-disc pl-5 mb-4 space-y-1">
-            <li>Fornire informazioni accurate e complete</li>
-            <li>Rispettare i termini di pagamento</li>
-            <li>Collaborare per la corretta erogazione dei servizi</li>
-            <li>Comunicare tempestivamente eventuali variazioni</li>
+          <h5 className="font-semibold mb-2 mt-6">1. Definizioni</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>"Piattaforma":</strong> il sito web www.taxflow.it e l'applicazione web</li>
+            <li><strong>"Servizi":</strong> tutti i servizi professionali offerti da TaxFlow</li>
+            <li><strong>"Utente":</strong> persona fisica o giuridica che utilizza la Piattaforma</li>
+            <li><strong>"Cliente" o "Business":</strong> utente che sottoscrive un abbonamento</li>
+            <li><strong>"Consulente" o "Admin":</strong> commercialista abilitato che eroga i servizi</li>
           </ul>
 
-          <h5 className="font-semibold mb-2">3. Tariffe e Pagamenti</h5>
-          <p className="mb-4">
-            Le tariffe sono indicate sul sito e possono variare in base ai servizi richiesti.
-            I pagamenti sono dovuti secondo le modalità concordate.
+          <h5 className="font-semibold mb-2 mt-6">2. Servizi Offerti</h5>
+          <p className="mb-2 text-sm">TaxFlow fornisce i seguenti servizi professionali:</p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Consulenza fiscale specializzata</strong> in regime forfettario, ordinario e semplificato</li>
+            <li><strong>Apertura e gestione Partita IVA</strong> con supporto documentale completo</li>
+            <li><strong>Fatturazione elettronica</strong> con integrazione Sistema di Interscambio (SDI)</li>
+            <li><strong>Adempimenti fiscali ordinari:</strong> modello Unico, dichiarazione redditi, F24, comunicazioni obbligatorie</li>
+            <li><strong>Business Plan personalizzati</strong> e analisi di fattibilità</li>
+            <li><strong>Analisi AI avanzate:</strong> rating creditizio Basel IV, analisi SWOT, simulazione imposte</li>
+            <li><strong>Gestione documentale:</strong> archiviazione sicura documenti fiscali e dichiarazioni</li>
+            <li><strong>Reports e analytics:</strong> dashboard in tempo reale con KPI fiscali e finanziari</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">3. Registrazione e Approvazione</h5>
+          <p className="mb-2 text-sm">Il processo di attivazione del servizio prevede:</p>
+          <ol className="list-decimal pl-5 mb-4 space-y-1 text-sm">
+            <li>Registrazione utente con email e password sicura</li>
+            <li>Approvazione registrazione da parte del Consulente</li>
+            <li>Compilazione form richiesta apertura P.IVA (se applicabile)</li>
+            <li>Approvazione pratica P.IVA da parte del Consulente</li>
+            <li>Sottoscrizione abbonamento tramite pagamento sicuro Stripe</li>
+            <li>Attivazione completa servizi</li>
+          </ol>
+          <p className="mb-4 text-sm">
+            TaxFlow si riserva il diritto di rifiutare o sospendere registrazioni in caso di informazioni incomplete,
+            false o per violazione dei presenti Termini.
           </p>
 
-          <h5 className="font-semibold mb-2">4. Limitazioni di Responsabilità</h5>
-          <p className="mb-4">
-            TaxFlow si impegna a fornire servizi professionali ma non può garantire
-            risultati specifici. La responsabilità è limitata all'importo pagato per i servizi.
+          <h5 className="font-semibold mb-2 mt-6">4. Obblighi dell'Utente</h5>
+          <p className="mb-2 text-sm">L'Utente si impegna a:</p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Fornire dati anagrafici e fiscali <strong>veritieri, accurati e completi</strong></li>
+            <li>Comunicare tempestivamente variazioni di dati fiscali, P.IVA, residenza, fatturato</li>
+            <li>Conservare le credenziali di accesso con la massima riservatezza</li>
+            <li>Rispettare le <strong>scadenze fiscali</strong> indicate dal Consulente</li>
+            <li>Fornire <strong>documentazione richiesta</strong> entro i termini concordati</li>
+            <li>Pagare gli abbonamenti secondo le modalità e tempistiche pattuite</li>
+            <li>Collaborare attivamente per la corretta erogazione dei servizi</li>
+            <li>Non utilizzare la Piattaforma per scopi illeciti o contrari alla legge</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">5. Abbonamenti e Pagamenti</h5>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">5.1 Piani di Abbonamento</h6>
+          <p className="mb-4 text-sm">
+            TaxFlow offre piani di abbonamento <strong>mensili e annuali</strong> con tariffe pubblicate sul sito.
+            Il piano include tutti gli adempimenti fiscali ordinari relativi alla Partita IVA e al modello Unico.
           </p>
 
-          <h5 className="font-semibold mb-2">5. Risoluzione Controversie</h5>
-          <p className="mb-4">
-            Eventuali controversie saranno risolte secondo la legge italiana.
-            Foro competente: Tribunale di Milano.
+          <h6 className="font-semibold text-sm mb-2 mt-4">5.2 Modalità di Pagamento</h6>
+          <p className="mb-4 text-sm">
+            I pagamenti vengono elaborati tramite <strong>Stripe</strong>, processore di pagamenti certificato PCI-DSS Level 1.
+            TaxFlow non memorizza dati di carte di credito sui propri server. Metodi accettati: carta di credito, carta di debito.
           </p>
 
-          <p className="text-sm text-gray-600">
-            Ultimo aggiornamento: Gennaio 2025
+          <h6 className="font-semibold text-sm mb-2 mt-4">5.3 Rinnovo e Cancellazione</h6>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>L'abbonamento si rinnova <strong>automaticamente</strong> alla scadenza</li>
+            <li>L'utente può cancellare in qualsiasi momento dalle Impostazioni</li>
+            <li>La cancellazione ha effetto al termine del periodo già pagato</li>
+            <li>Non sono previsti rimborsi parziali per periodi non utilizzati</li>
+          </ul>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">5.4 Garanzia Soddisfatti o Rimborsati</h6>
+          <p className="mb-4 text-sm">
+            TaxFlow offre <strong>garanzia 30 giorni</strong> soddisfatti o rimborsati. Se non sei soddisfatto entro 30 giorni
+            dalla sottoscrizione, puoi richiedere rimborso completo senza fornire spiegazioni. Contatta: info@taxflow.it
           </p>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">5.5 Servizi Extra</h6>
+          <p className="mb-4 text-sm">
+            Alcuni servizi non sono inclusi nell'abbonamento base e sono fatturati separatamente (vedi sezione "Servizi Extra" sul sito):
+            variazioni INAIL, Business Plan personalizzati, analisi SWOT evolute, valutazioni d'azienda, operazioni straordinarie.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">6. Esclusioni dal Servizio</h5>
+          <p className="mb-2 text-sm">L'abbonamento <strong>NON include:</strong></p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Spese vive, diritti e bolli per pratiche presso enti (INPS, Camera di Commercio, ecc.)</li>
+            <li>Per aziende senza dipendenti: autoliquidazione INAIL, chiusura/variazioni posizione INAIL, denunce infortuni</li>
+            <li>Business Plan e valutazioni d'azienda (Swot Evolution)</li>
+            <li>Operazioni straordinarie: fusioni, scissioni, liquidazioni, cessioni quote</li>
+            <li>Comunicazione dati sistema tessera sanitaria (professioni sanitarie)</li>
+            <li>Calcolo IMU per immobili non intestati al Cliente</li>
+            <li>Fiscalità internazionale</li>
+            <li>Visto di conformità</li>
+            <li>Rateizzazione e analisi avvisi bonari</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">7. Proprietà Intellettuale</h5>
+          <p className="mb-4 text-sm">
+            Tutti i contenuti della Piattaforma (testi, grafiche, loghi, software, analytics) sono di proprietà esclusiva di
+            TaxFlow o dei suoi licenzianti. È vietata la riproduzione, copia, distribuzione o modifica senza autorizzazione scritta.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">8. Limitazioni di Responsabilità</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>TaxFlow si impegna a fornire servizi professionali con diligenza ma <strong>non garantisce risultati fiscali specifici</strong></li>
+            <li>Il Consulente non è responsabile per danni derivanti da <strong>informazioni incomplete, errate o tardive</strong> fornite dal Cliente</li>
+            <li>TaxFlow non è responsabile per <strong>malfunzionamenti temporanei</strong> della Piattaforma dovuti a manutenzione, cause di forza maggiore o attacchi informatici</li>
+            <li>La responsabilità di TaxFlow è <strong>limitata all'importo</strong> dell'abbonamento pagato dal Cliente nell'anno corrente</li>
+            <li>Sono escluse responsabilità per <strong>danni indiretti, lucro cessante o perdite</strong> di opportunità</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">9. Sospensione e Risoluzione</h5>
+          <p className="mb-2 text-sm">TaxFlow può sospendere o risolvere il contratto in caso di:</p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Mancato pagamento dell'abbonamento</li>
+            <li>Violazione dei presenti Termini</li>
+            <li>Condotta fraudolenta o illecita</li>
+            <li>Mancata collaborazione del Cliente</li>
+            <li>Fornitura ripetuta di informazioni false</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">10. Modifiche ai Termini</h5>
+          <p className="mb-4 text-sm">
+            TaxFlow si riserva il diritto di modificare i presenti Termini in qualsiasi momento. Le modifiche saranno comunicate
+            via email con <strong>30 giorni di preavviso</strong>. L'uso continuato della Piattaforma costituisce accettazione delle modifiche.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">11. Legge Applicabile e Foro Competente</h5>
+          <p className="mb-4 text-sm">
+            I presenti Termini sono regolati dalla <strong>legge italiana</strong>.<br />
+            Per ogni controversia, sarà competente in via esclusiva il <strong>Foro di Torino</strong>.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">12. Contatti</h5>
+          <p className="mb-4 text-sm">
+            Per informazioni sui Termini di Servizio:<br />
+            Email: <strong>info@taxflow.it</strong><br />
+            Email Legale: <strong>legal@taxflow.it</strong>
+          </p>
+
+          <div className="bg-gray-50 p-4 rounded-lg mt-6">
+            <p className="text-sm font-semibold mb-1">Ultimo aggiornamento: 13 Ottobre 2025</p>
+            <p className="text-xs text-gray-600">Versione 1.0</p>
+          </div>
         </div>
       </Modal>
 
@@ -1659,46 +1843,184 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
         <div className="prose prose-sm max-w-none">
           <h4 className="text-lg font-semibold mb-3">Informativa sui Cookie</h4>
           <p className="mb-4">
-            Questo sito utilizza cookie per migliorare l'esperienza di navigazione e fornire servizi personalizzati.
+            La presente Cookie Policy ha lo scopo di informare gli utenti del sito www.taxflow.it
+            sull'utilizzo dei cookie e di altre tecnologie di tracciamento in conformità con il
+            Regolamento UE 2016/679 (GDPR) e la normativa italiana in materia di protezione dei dati personali.
           </p>
 
-          <h5 className="font-semibold mb-2">Cosa sono i Cookie</h5>
+          <h5 className="font-semibold mb-2 mt-6">1. Titolare del Trattamento</h5>
           <p className="mb-4">
-            I cookie sono piccoli file di testo che vengono memorizzati sul tuo dispositivo
-            quando visiti un sito web per ricordare le tue preferenze.
+            <strong>TaxFlow</strong><br />
+            Titolare: Teresa Marrari<br />
+            Sede: Torino, Italia<br />
+            Email: info@taxflow.it<br />
+            Email Privacy: privacy@taxflow.it
           </p>
 
-          <h5 className="font-semibold mb-2">Tipi di Cookie utilizzati:</h5>
-          <ul className="list-disc pl-5 mb-4 space-y-2">
-            <li>
-              <strong>Cookie Tecnici:</strong> Necessari per il funzionamento del sito
-            </li>
-            <li>
-              <strong>Cookie di Preferenze:</strong> Memorizzano le tue scelte (lingua, tema)
-            </li>
-            <li>
-              <strong>Cookie Analitici:</strong> Ci aiutano a capire come viene utilizzato il sito
-            </li>
-            <li>
-              <strong>Cookie di Marketing:</strong> Per mostrare contenuti personalizzati
-            </li>
+          <h5 className="font-semibold mb-2 mt-6">2. Cosa sono i Cookie</h5>
+          <p className="mb-4">
+            I cookie sono piccoli file di testo che vengono memorizzati sul dispositivo dell'utente
+            (computer, tablet, smartphone) quando visita un sito web. I cookie permettono al sito di
+            riconoscere il dispositivo e memorizzare alcune informazioni sulle preferenze o azioni passate.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">3. Tipologie di Cookie Utilizzati</h5>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">3.1 Cookie Tecnici (Necessari)</h6>
+          <p className="mb-2 text-sm">
+            Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso dell'utente
+            ai sensi dell'art. 122 del Codice Privacy italiano.
+          </p>
+          <div className="overflow-x-auto mb-4">
+            <table className="min-w-full text-xs border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Nome</th>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Finalità</th>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Durata</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-gray-200 px-2 py-1">taxflow_token</td>
+                  <td className="border border-gray-200 px-2 py-1">Autenticazione utente</td>
+                  <td className="border border-gray-200 px-2 py-1">30 giorni</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-200 px-2 py-1">taxflow_user</td>
+                  <td className="border border-gray-200 px-2 py-1">Dati profilo utente</td>
+                  <td className="border border-gray-200 px-2 py-1">30 giorni</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-200 px-2 py-1">taxflow_cookie_consent</td>
+                  <td className="border border-gray-200 px-2 py-1">Memorizzazione consenso cookie</td>
+                  <td className="border border-gray-200 px-2 py-1">12 mesi</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">3.2 Cookie Analitici</h6>
+          <p className="mb-2 text-sm">
+            Utilizzati per raccogliere informazioni sull'utilizzo del sito in forma aggregata e anonima.
+            Richiedono il consenso dell'utente.
+          </p>
+          <div className="overflow-x-auto mb-4">
+            <table className="min-w-full text-xs border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Nome</th>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Fornitore</th>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Finalità</th>
+                  <th className="border border-gray-200 px-2 py-1 text-left">Durata</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-gray-200 px-2 py-1">_ga, _gid</td>
+                  <td className="border border-gray-200 px-2 py-1">Google Analytics</td>
+                  <td className="border border-gray-200 px-2 py-1">Analisi traffico e comportamento utenti</td>
+                  <td className="border border-gray-200 px-2 py-1">24 mesi / 24 ore</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mb-4 text-xs">
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              Privacy Policy Google Analytics
+            </a>
+          </p>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">3.3 Cookie di Marketing</h6>
+          <p className="mb-4 text-sm">
+            Utilizzati per tracciare i visitatori sui siti web al fine di mostrare annunci pubblicitari
+            pertinenti e coinvolgenti. Richiedono il consenso esplicito dell'utente.
+          </p>
+
+          <h5 className="font-semibold mb-2 mt-6">4. Base Giuridica del Trattamento</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Cookie Tecnici:</strong> Interesse legittimo del Titolare (art. 6.1.f GDPR)</li>
+            <li><strong>Cookie Analitici e Marketing:</strong> Consenso dell'utente (art. 6.1.a GDPR)</li>
           </ul>
 
-          <h5 className="font-semibold mb-2">Gestione dei Cookie</h5>
-          <p className="mb-4">
-            Puoi gestire le preferenze dei cookie attraverso le impostazioni del tuo browser.
-            Disabilitare alcuni cookie potrebbe limitare alcune funzionalità del sito.
+          <h5 className="font-semibold mb-2 mt-6">5. Durata dei Cookie</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li><strong>Cookie di sessione:</strong> Vengono cancellati automaticamente alla chiusura del browser</li>
+            <li><strong>Cookie persistenti:</strong> Rimangono memorizzati fino alla scadenza o cancellazione manuale</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">6. Gestione delle Preferenze Cookie</h5>
+          <p className="mb-2 text-sm">
+            L'utente può gestire le proprie preferenze sui cookie in qualsiasi momento:
+          </p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Attraverso il banner cookie presente alla prima visita del sito</li>
+            <li>Dalle impostazioni del proprio browser web</li>
+            <li>Contattando il Titolare all'indirizzo privacy@taxflow.it</li>
+          </ul>
+
+          <h6 className="font-semibold text-sm mb-2 mt-4">Impostazioni Browser</h6>
+          <p className="mb-2 text-xs">
+            Guide per la gestione dei cookie nei principali browser:
+          </p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-xs">
+            <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Chrome</a></li>
+            <li><a href="https://support.mozilla.org/it/kb/Gestione%20dei%20cookie" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Mozilla Firefox</a></li>
+            <li><a href="https://support.apple.com/it-it/HT201265" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Safari</a></li>
+            <li><a href="https://support.microsoft.com/it-it/microsoft-edge" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Microsoft Edge</a></li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">7. Diritti dell'Utente</h5>
+          <p className="mb-2 text-sm">
+            Ai sensi degli artt. 15-22 del GDPR, l'utente ha diritto di:
+          </p>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">
+            <li>Accedere ai propri dati personali</li>
+            <li>Rettificare dati inesatti</li>
+            <li>Cancellare i dati ("diritto all'oblio")</li>
+            <li>Limitare il trattamento</li>
+            <li>Portabilità dei dati</li>
+            <li>Opporsi al trattamento</li>
+            <li>Revocare il consenso in qualsiasi momento</li>
+            <li>Proporre reclamo al Garante per la Protezione dei Dati Personali</li>
+          </ul>
+
+          <p className="mb-4 text-sm">
+            Per esercitare i propri diritti, l'utente può contattare:<br />
+            Email: <strong>privacy@taxflow.it</strong>
           </p>
 
-          <h5 className="font-semibold mb-2">Cookie di Terze Parti</h5>
-          <p className="mb-4">
-            Utilizziamo servizi di terze parti come Google Analytics per analizzare il traffico
-            e migliorare i nostri servizi.
+          <h5 className="font-semibold mb-2 mt-6">8. Reclami</h5>
+          <p className="mb-4 text-sm">
+            In caso di violazione della normativa sulla protezione dei dati, l'utente ha il diritto di
+            proporre reclamo all'autorità di controllo competente:<br /><br />
+            <strong>Garante per la Protezione dei Dati Personali</strong><br />
+            Piazza Venezia, 11 - 00187 Roma<br />
+            Tel: +39 06.696771<br />
+            Email: garante@gpdp.it<br />
+            PEC: protocollo@pec.gpdp.it<br />
+            Web: <a href="https://www.garanteprivacy.it" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.garanteprivacy.it</a>
           </p>
 
-          <p className="text-sm text-gray-600">
-            Ultimo aggiornamento: Gennaio 2025
+          <h5 className="font-semibold mb-2 mt-6">9. Riferimenti Normativi</h5>
+          <ul className="list-disc pl-5 mb-4 space-y-1 text-xs">
+            <li>Regolamento UE 2016/679 (GDPR)</li>
+            <li>D.Lgs. 196/2003 (Codice Privacy italiano) come modificato dal D.Lgs. 101/2018</li>
+            <li>Direttiva 2002/58/CE (ePrivacy)</li>
+            <li>Provvedimento del Garante Privacy del 10 giugno 2021, n. 231</li>
+            <li>Linee guida cookie e altri strumenti di tracciamento - 4 giugno 2021</li>
+          </ul>
+
+          <h5 className="font-semibold mb-2 mt-6">10. Modifiche alla Cookie Policy</h5>
+          <p className="mb-4 text-sm">
+            Il Titolare si riserva il diritto di modificare o aggiornare la presente Cookie Policy in qualsiasi momento.
+            Le modifiche saranno pubblicate su questa pagina con indicazione della data di ultimo aggiornamento.
           </p>
+
+          <div className="bg-gray-50 p-4 rounded-lg mt-6">
+            <p className="text-sm font-semibold mb-1">Ultimo aggiornamento: 13 Ottobre 2025</p>
+            <p className="text-xs text-gray-600">Versione 1.0</p>
+          </div>
         </div>
       </Modal>
     </div>
