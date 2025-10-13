@@ -1,4 +1,4 @@
-import { User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2 } from 'lucide-react'
+import { User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2, FileText, CheckCircle, XCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -341,6 +341,11 @@ export default function Impostazioni() {
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
 
+  // Aruba states
+  const [arubaStatus, setArubaStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [arubaMessage, setArubaMessage] = useState('')
+  const [testingAruba, setTestingAruba] = useState(false)
+
   const tabs = [
     {
       id: 'profile',
@@ -493,6 +498,51 @@ export default function Impostazioni() {
       loadSessions()
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    }
+  }
+
+  const handleTestArubaAuth = async () => {
+    setTestingAruba(true)
+    setArubaStatus('testing')
+    setArubaMessage('Connessione ad Aruba in corso...')
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/aruba/authenticate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setArubaStatus('success')
+        let message = `Connesso con successo! Servizio: ${data.service || 'Aruba Business'}`
+
+        if (data.feApiAccess !== undefined) {
+          if (data.feApiAccess) {
+            message += ` ✓ API Fatturazione Elettronica: Accessibile (${data.environment})`
+          } else {
+            message += ` ✗ API Fatturazione Elettronica: Non accessibile`
+          }
+        }
+
+        setArubaMessage(message)
+        showToast(data.feApiAccess ? 'Aruba completamente configurato!' : 'Aruba autenticato (FE API non accessibile)', data.feApiAccess ? 'success' : 'warning')
+      } else {
+        setArubaStatus('error')
+        setArubaMessage(data.message || 'Errore di autenticazione')
+        showToast('Errore nell\'autenticazione Aruba', 'error')
+      }
+    } catch (error) {
+      setArubaStatus('error')
+      setArubaMessage('Errore di connessione al server')
+      showToast('Errore di connessione', 'error')
+    } finally {
+      setTestingAruba(false)
     }
   }
 
@@ -1304,7 +1354,64 @@ export default function Impostazioni() {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Servizi Esterni</h4>
+            <h4 className="font-medium text-gray-900 mb-4">Fatturazione Elettronica</h4>
+            <div className="space-y-3">
+              <div className="group border-2 border-orange-300 bg-orange-50 rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Aruba Fatturazione Elettronica</p>
+                      <p className="text-sm text-gray-600">Invio fatture elettroniche tramite SDI</p>
+                    </div>
+                  </div>
+                  {arubaStatus === 'success' && (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  )}
+                  {arubaStatus === 'error' && (
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  )}
+                </div>
+
+                {arubaMessage && (
+                  <div className={`mb-4 p-3 rounded-lg text-sm ${
+                    arubaStatus === 'success' ? 'bg-green-100 text-green-800' :
+                    arubaStatus === 'error' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {arubaMessage}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleTestArubaAuth}
+                  disabled={testingAruba}
+                  className="w-full bg-orange-600 text-white px-4 py-2.5 rounded-lg hover:bg-orange-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {testingAruba ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Connessione in corso...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Testa Connessione Aruba
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-gray-600 mt-3">
+                  Verifica la connessione con il servizio di fatturazione elettronica Aruba
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            <h4 className="font-medium text-gray-900 mb-4">Altri Servizi</h4>
             <div className="space-y-3">
               <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
                 <div className="flex items-center">

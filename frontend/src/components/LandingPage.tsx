@@ -273,7 +273,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
     },
     {
       icon: TrendingUp,
-      title: "Basel III Compliant",
+      title: "Basel IV Compliant",
       description: "Sistema allineato agli accordi di Basilea per massima credibilità bancaria",
       learnMoreUrl: "https://www.bis.org/basel_framework/",
       learnMoreText: "Framework Basilea III"
@@ -690,7 +690,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             <div className="flex items-center justify-center h-16 bg-white rounded-lg shadow-sm border border-gray-100">
               <div className="flex items-center space-x-2">
                 <Shield className="h-6 w-6 text-green-600" />
-                <span className="font-semibold text-gray-700">Basel III</span>
+                <span className="font-semibold text-gray-700">Basel IV</span>
               </div>
             </div>
 
@@ -913,15 +913,6 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
                 Chi Siamo
               </h2>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                TaxFlow è una piattaforma innovativa progettata per semplificare la gestione fiscale delle partite IVA.
-                Con soluzioni intuitive e sicure, supporta i giovani imprenditori nel rispetto delle normative e nell'ottimizzazione
-                della gestione delle loro attività.
-              </p>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Il nostro team di esperti lavora quotidianamente per rendere i processi fiscali più semplici, consentendo ai
-                clienti di concentrarsi sulla crescita delle loro imprese semplificando la gestione burocratica.
-              </p>
 
               <div className="bg-blue-50 border-l-4 border-blue-600 p-6 mb-6 rounded-r-lg">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Una Visionaria Dietro TaxFlow</h3>
@@ -1015,13 +1006,38 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
         className="py-20 bg-white"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className={`text-3xl md:text-4xl font-bold text-gray-900 mb-4 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl md:text-4xl font-bold text-gray-900 mb-6 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}>
               Perché scegliere TaxFlow
             </h2>
-            <p className={`text-xl text-gray-600 max-w-3xl mx-auto ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.2s'} : {}}>
-              Metodologie bancarie professionali per ottimizzare il tuo rating creditizio
+            <p className={`text-xl text-gray-600 max-w-3xl mx-auto mb-8 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.2s'} : {}}>
+              Dashboard intuitiva per il controllo completo della tua fiscalità in tempo reale
             </p>
+
+            {/* Key highlights */}
+            <div className={`grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.3s'} : {}}>
+              <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
+                <Laptop className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Dashboard Avanzata</h3>
+                <p className="text-sm text-gray-600">Cassetto fiscale e previdenziale con visione quotidiana del tuo andamento</p>
+              </div>
+
+              <div className="bg-green-50 rounded-xl p-6 border border-green-100">
+                <BookOpen className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Formazione Continua</h3>
+                <p className="text-sm text-gray-600">Tutorial, video e guide pratiche per la tua crescita professionale</p>
+              </div>
+
+              <div className="bg-purple-50 rounded-xl p-6 border border-purple-100">
+                <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Esperienza Bancaria</h3>
+                <p className="text-sm text-gray-600">25 anni di esperienza creditizia per ottimizzare il tuo rating</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mb-16">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Metodologie Applicate ai Nostri Servizi</h3>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1126,7 +1142,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
             </div>
 
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-              <h3 className="font-bold text-gray-900 mb-2">Basel III</h3>
+              <h3 className="font-bold text-gray-900 mb-2">Basel IV</h3>
               <p className="text-sm text-gray-600 mb-4">Accordi internazionali sulla regolamentazione bancaria</p>
               <a
                 href="https://www.bis.org/basel_framework/"
@@ -1289,28 +1305,28 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
           <div className="space-y-6">
             {[
               {
-                question: "Cos'è il rating creditizio e perché è importante?",
-                answer: "Il rating creditizio è una valutazione della tua affidabilità finanziaria secondo i criteri di Banca d'Italia (ICAS). Un buon rating ti permette di ottenere finanziamenti a tassi più vantaggiosi e condizioni migliori."
+                question: "Quali adempimenti sono compresi nell'abbonamento?",
+                answer: "È compreso il modello Unico completo di ogni reddito e tutti i servizi ed adempimenti fiscali ordinari relativi alla tua Partita IVA."
               },
               {
-                question: "Come migliora TaxFlow il mio rating creditizio?",
-                answer: "TaxFlow organizza la tua documentazione fiscale secondo gli standard Basel III, implementa sistemi di early warning conformi al D.Lgs. 14/2019 e ottimizza la tua posizione nella Centrale Rischi di Banca d'Italia."
+                question: "Se non mi trovo bene, posso ricevere il rimborso?",
+                answer: "Sì! Se non ti trovi bene con il nostro abbonamento, hai fino a 30 giorni per richiedere un rimborso completo, senza bisogno di spiegazioni. La tua soddisfazione viene prima di tutto."
               },
               {
-                question: "Quanto tempo serve per vedere miglioramenti?",
-                answer: "I primi miglioramenti sono visibili entro 3-6 mesi dall'implementazione. Il rating creditizio viene aggiornato trimestralmente dalle banche, quindi i benefici completi si vedono nel medio termine."
+                question: "Come posso contattare il mio consulente?",
+                answer: "Puoi contattare il tuo commercialista aprendo una consulenza in app oppure via telefono, video-call e chat. Tramite la piattaforma avrai il collegamento diretto alla sua agenda e potrei fissare con lui appuntamenti ogni qual volta lo reputi necessario."
               },
               {
-                question: "È compatibile con il regime forfettario?",
-                answer: "Assolutamente sì. TaxFlow è stato progettato specificamente per ottimizzare la gestione fiscale forfettaria mantenendo la conformità normativa e preparando al meglio per relazioni bancarie future."
+                question: "Le consulenze sono illimitate?",
+                answer: "Si, la consulenza relativa alla gestione ordinaria della tua Partita IVA e a tutti i redditi da dichiarare nel modello unico sono compresi."
               },
               {
-                question: "Quali documenti devo fornire?",
-                answer: "Ti serviranno: visure camerali, bilanci/dichiarazioni degli ultimi 3 anni, estratti conto bancari e la documentazione fiscale corrente. Il nostro team ti guiderà passo dopo passo."
+                question: "Cosa non è compreso nel mio abbonamento?",
+                answer: "L'abbonamento comprende tutti gli adempimenti previsti nella gestione ordinaria della tua attività. Non sono compresi: Tutto ciò che puoi trovare tra i servizi extra del tuo piano; le spese vive, diritti e bolli di segreteria per le pratiche presso i vari enti; per le aziende senza dipendenti, autoliquidazione INAIL annuale, chiusura della posizione INAIL, variazioni della posizione INAIL (cambio socio lavoratore, cambio sede, variazione attività), e denunce di infortuni INAIL; Business Plan; Valutazioni d'azienda (Swot Evolutio); Tutte le operazioni straordinarie (fusioni, scissioni, ricorsi, cessioni, partecipazioni, liquidazione); Comunicazione dati al sistema tessera sanitaria per le professioni sanitarie; Calcolo IMU per immobili non intestati alla società, al libero professionista o ditta individuale che ha acquistato il servizio; Fiscalità internazionale; Visto di conformità; Rateizzazione ed analisi avvisi bonari."
               },
               {
-                question: "C'è una garanzia sui risultati?",
-                answer: "Sì, garantiamo la conformità normativa al 100%. Se non sei soddisfatto dei risultati entro i primi 6 mesi, ti rimborsiamo integralmente il servizio."
+                question: "Quanti codici ATECO gestisce Taxflow?",
+                answer: "Taxflow gestisce fino a 3 codici ATECO per ciascun cliente, che è il massimo consentito per una Partita IVA. Siamo in grado di assisterti anche se i codici appartengono a settori con casse previdenziali differenti, offrendo una gestione completa e personalizzata per ogni esigenza fiscale."
               }
             ].map((faq, index) => (
               <div key={index} className="group bg-gray-50 rounded-xl p-6 hover:bg-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border border-transparent hover:border-blue-200">
@@ -1354,6 +1370,73 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
         </div>
       </section>
 
+      {/* Servizi Extra Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Servizi Extra
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Servizi aggiuntivi disponibili per completare la gestione della tua attività
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+              <div className="divide-y divide-gray-200">
+                {[
+                  {
+                    service: "Variazione da comunicare agli enti, compresa la SCIAA (artigiani e commercianti)",
+                    note: "Non sono comprese le spese vive",
+                    price: "150 €"
+                  },
+                  {
+                    service: "Domanda riduzione contributi INPS",
+                    price: "35 €"
+                  },
+                  {
+                    service: "Variazione da comunicare agli enti",
+                    note: "Non sono comprese le spese vive",
+                    price: "100 €"
+                  },
+                  {
+                    service: "Risoluzione comunicazione dinanzi alla Agenzia delle Entrate",
+                    price: "75 €"
+                  },
+                  {
+                    service: "Dichiarazione dei redditi anno precedente",
+                    price: "200 €"
+                  },
+                  {
+                    service: "Ravvedimento e DURC",
+                    price: "20 €"
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="flex justify-between items-start p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex-1 pr-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.service}</h3>
+                      {item.note && (
+                        <p className="text-sm text-gray-600 italic">{item.note}</p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-2xl font-bold text-blue-600">{item.price}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 italic">
+                * Prezzi IVA esclusa
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer id="footer" className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -1374,7 +1457,7 @@ export default function LandingPage({ onShowLogin, onShowRegister }: LandingPage
                 </div>
                 <div className="flex items-center text-sm text-gray-400">
                   <FileCheck className="h-4 w-4 text-blue-400 mr-2" />
-                  <span>Basel III Framework</span>
+                  <span>Basel IV Framework</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-400">
                   <TrendingUp className="h-4 w-4 text-blue-400 mr-2" />

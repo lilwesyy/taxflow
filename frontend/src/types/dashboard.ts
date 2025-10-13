@@ -39,6 +39,13 @@ export interface Client {
   lastActivity?: string
   revenue?: string
   partitaIva?: string
+
+  // Campi aggiuntivi per Fatturazione Elettronica Aruba
+  cap?: string
+  comune?: string
+  provincia?: string
+  pec?: string
+  codiceDestinatario?: string
 }
 
 export interface RecentActivity {

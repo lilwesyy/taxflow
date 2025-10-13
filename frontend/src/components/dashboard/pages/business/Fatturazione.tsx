@@ -4,6 +4,7 @@ import { StatsGrid } from '../../shared/StatsCard'
 import InvoiceTable from '../../shared/InvoiceTable'
 import InvoiceDetailModal from '../../shared/InvoiceDetailModal'
 import InvoiceCreateModal from '../../shared/InvoiceCreateModal'
+import ClientCreateModal from '../../shared/ClientCreateModal'
 import { mockInvoices, mockClients } from '../../../../data/mockData'
 import type { StatItem } from '../../shared/StatsCard'
 import type { Invoice, Client } from '../../../../types/dashboard'
@@ -15,7 +16,7 @@ export default function Fatturazione() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [showNewInvoice, setShowNewInvoice] = useState(false)
-  // const [showNewClient, setShowNewClient] = useState(false) // Unused for now
+  const [showNewClient, setShowNewClient] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
 
@@ -35,6 +36,12 @@ export default function Fatturazione() {
   const handleCreateInvoice = (formData: unknown) => {
     console.log('Creating business invoice:', formData)
     setShowNewInvoice(false)
+  }
+
+  const handleCreateClient = (formData: unknown) => {
+    console.log('Creating new client:', formData)
+    setShowNewClient(false)
+    // TODO: Integrate with backend API to save client
   }
 
   const handleViewInvoice = (invoice: Invoice) => {
@@ -124,7 +131,7 @@ export default function Fatturazione() {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Anagrafica Clienti</h3>
         <button
-          onClick={() => console.log('New client functionality not implemented')}
+          onClick={() => setShowNewClient(true)}
           className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -231,6 +238,13 @@ export default function Fatturazione() {
         onDownloadInvoice={handleDownloadInvoice}
         onSendInvoice={handleSendInvoice}
         onEditInvoice={handleEditInvoice}
+      />
+
+      {/* Client Create Modal */}
+      <ClientCreateModal
+        isOpen={showNewClient}
+        onClose={() => setShowNewClient(false)}
+        onSubmit={handleCreateClient}
       />
 
       {/* Client Details Modal */}
