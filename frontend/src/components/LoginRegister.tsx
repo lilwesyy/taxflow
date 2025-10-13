@@ -23,6 +23,9 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
   const [tempUserId, setTempUserId] = useState('')
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -37,6 +40,45 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!forgotPasswordEmail) {
+      showToast('Inserisci la tua email', 'warning')
+      return
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore durante l\'invio')
+      }
+
+      setForgotPasswordSent(true)
+      showToast(data.message, 'success')
+
+      // In development, show the reset link
+      if (data.resetToken) {
+        console.log('Reset Token:', data.resetToken)
+        console.log('Reset URL:', data.resetUrl)
+        showToast('Token di reset copiato nella console (development)', 'info')
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'invio'
+      showToast(errorMessage, 'error')
+    }
   }
 
   const handleVerify2FA = async (e: React.FormEvent) => {
@@ -157,11 +199,20 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
             <Logo className="h-10" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {requires2FA ? 'Autenticazione a Due Fattori' : isLogin ? 'Accedi al tuo account' : 'Crea il tuo account'}
+            {requires2FA
+              ? 'Autenticazione a Due Fattori'
+              : showForgotPassword
+              ? 'Recupera Password'
+              : isLogin
+              ? 'Accedi al tuo account'
+              : 'Crea il tuo account'
+            }
           </h2>
           <p className="text-gray-600 text-sm">
             {requires2FA
               ? 'Inserisci il codice dalla tua app di autenticazione'
+              : showForgotPassword
+              ? 'Inserisci la tua email per reimpostare la password'
               : isLogin
               ? 'Gestisci la tua partita IVA forfettaria'
               : 'Inizia a gestire la tua partita IVA forfettaria'
@@ -209,6 +260,72 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
                 ← Torna al login
               </button>
             </form>
+          ) : showForgotPassword ? (
+            // Forgot Password Form
+            <>
+              {forgotPasswordSent ? (
+                <div className="text-center py-4">
+                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Email Inviata!</h4>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Se l'email esiste nel nostro sistema, riceverai le istruzioni per reimpostare la password entro pochi minuti.
+                    Controlla anche la cartella spam.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false)
+                      setForgotPasswordEmail('')
+                      setForgotPasswordSent(false)
+                    }}
+                    className="w-full px-4 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+                  >
+                    Torna al Login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="animate-fade-in-up" style={{animationDelay: '0s'}}>
+                    <label htmlFor="forgotEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      id="forgotEmail"
+                      type="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      placeholder="mario.rossi@email.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-primary-600 text-white py-2.5 px-4 rounded-md font-medium hover:bg-primary-700 hover:shadow-lg hover:scale-105 transition-all duration-300 transform animate-fade-in-up"
+                    style={{animationDelay: '0.1s'}}
+                  >
+                    Invia Link di Reset
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false)
+                      setForgotPasswordEmail('')
+                      setForgotPasswordSent(false)
+                    }}
+                    className="w-full text-gray-600 py-2 text-sm hover:text-gray-900 transition-colors"
+                  >
+                    ← Torna al login
+                  </button>
+                </form>
+              )}
+            </>
           ) : (
             <>
               {/* Toggle buttons */}
@@ -365,9 +482,13 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
             {/* Forgot password link (only for login) */}
             {isLogin && (
               <div className="text-right animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-                <a href="#" className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300"
+                >
                   Password dimenticata?
-                </a>
+                </button>
               </div>
             )}
 

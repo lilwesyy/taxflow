@@ -114,6 +114,8 @@ interface IUser extends mongoose.Document {
   }
   twoFactorEnabled: boolean
   twoFactorSecret?: string
+  resetPasswordToken?: string
+  resetPasswordExpires?: Date
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
@@ -226,7 +228,9 @@ const UserSchema = new mongoose.Schema({
     }
   },
   twoFactorEnabled: { type: Boolean, default: false },
-  twoFactorSecret: { type: String }
+  twoFactorSecret: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date }
 }, { timestamps: true, strict: false })
 
 // Hash password before saving

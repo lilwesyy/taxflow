@@ -4,6 +4,7 @@ import LoginRegister from './components/LoginRegister'
 import RegistrationSuccess from './components/RegistrationSuccess'
 import Dashboard from './components/Dashboard'
 import PaymentPending from './components/PaymentPending'
+import ResetPassword from './components/ResetPassword'
 import CookieBanner from './components/common/CookieBanner'
 import { useAuth } from './context/AuthContext'
 
@@ -15,8 +16,27 @@ function App() {
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [showCookiePolicy, setShowCookiePolicy] = useState(false)
 
+  // Check for reset password token in URL and set initial page
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const resetToken = urlParams.get('token')
+
+    if (resetToken) {
+      setCurrentPage('reset-password')
+    }
+  }, [])
+
   // Recupera lo stato di login dal AuthContext
   useEffect(() => {
+    // Check if we're on reset password page by checking URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const hasResetToken = urlParams.get('token')
+
+    // Don't override if we have a reset token in URL
+    if (hasResetToken) {
+      return
+    }
+
     if (user) {
       // Check if user needs payment - don't set currentPage to dashboard
       if (
@@ -29,7 +49,10 @@ function App() {
         setCurrentPage('dashboard')
       }
     } else {
-      setCurrentPage('landing')
+      // Only set to landing if not on reset-password page
+      if (currentPage !== 'reset-password') {
+        setCurrentPage('landing')
+      }
     }
   }, [user])
 
@@ -98,6 +121,10 @@ function App() {
         userEmail={user.email}
       />
     )
+  }
+
+  if (currentPage === 'reset-password') {
+    return <ResetPassword onBack={showLandingPage} onSuccess={showLoginPage} />
   }
 
   if (currentPage === 'login') {

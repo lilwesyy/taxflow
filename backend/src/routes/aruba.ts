@@ -1,6 +1,6 @@
 import express from 'express'
 import axios from 'axios'
-import { authMiddleware } from '../middleware/auth'
+import { authMiddleware, AuthRequest } from '../middleware/auth'
 import { generateFatturaPAXML, validateInvoiceData } from '../utils/fatturaPA'
 
 const router = express.Router()
@@ -80,7 +80,7 @@ async function getArubaToken(): Promise<string> {
  * POST /api/aruba/authenticate
  * Test Aruba authentication and FE API access (admin only)
  */
-router.post('/authenticate', authMiddleware, async (req, res) => {
+router.post('/authenticate', authMiddleware, async (req: AuthRequest, res) => {
   try {
     // Only allow admin users
     if (req.user?.role !== 'admin') {
@@ -137,7 +137,7 @@ router.post('/authenticate', authMiddleware, async (req, res) => {
  * POST /api/aruba/invoice/send
  * Generate FatturaPA XML and send invoice to Aruba FE (protected - requires auth)
  */
-router.post('/invoice/send', authMiddleware, async (req, res) => {
+router.post('/invoice/send', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { invoiceData, cedenteData } = req.body
 
@@ -203,7 +203,7 @@ router.post('/invoice/send', authMiddleware, async (req, res) => {
  * GET /api/aruba/invoice/status/:uploadFileName
  * Get invoice status from Aruba FE by upload filename
  */
-router.get('/invoice/status/:uploadFileName', authMiddleware, async (req, res) => {
+router.get('/invoice/status/:uploadFileName', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { uploadFileName } = req.params
 
@@ -245,7 +245,7 @@ router.get('/invoice/status/:uploadFileName', authMiddleware, async (req, res) =
  * GET /api/aruba/invoices
  * Get list of sent invoices from Aruba FE
  */
-router.get('/invoices', authMiddleware, async (req, res) => {
+router.get('/invoices', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { fromDate, toDate, limit = 50 } = req.query
 

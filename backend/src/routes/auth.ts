@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import speakeasy from 'speakeasy'
+import crypto from 'crypto'
 import User from '../models/User'
 import Session from '../models/Session'
 import { UAParser } from 'ua-parser-js'
 import { validate } from '../middleware/validate'
 import { loginSchema, registerSchema, verify2FASchema } from '../validators/auth'
+import { sendPasswordResetEmail } from '../utils/emailService'
 
 const router = Router()
 
@@ -271,6 +273,117 @@ router.post('/register', async (req: Request, res: Response) => {
     if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return res.status(409).json({ error: 'Esiste già un utente con questa email' })
     }
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Forgot Password - Request password reset
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email è obbligatoria' })
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ error: 'Formato email non valido' })
+    }
+
+    const user = await User.findOne({ email: normalizedEmail })
+
+    // For security reasons, always return success even if email doesn't exist
+    // This prevents email enumeration attacks
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'Se l\'email esiste nel nostro sistema, riceverai le istruzioni per il reset della password'
+      })
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+
+    // Save hashed token and expiration (1 hour)
+    user.resetPasswordToken = hashedToken
+    user.resetPasswordExpires = new Date(Date.now() + 3600000) // 1 hour
+    await user.save()
+
+    // Generate reset URL
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`
+
+    // Send email with reset link
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl)
+      console.log('Password reset email sent to:', user.email)
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError)
+      // Don't reveal to user that email sending failed for security reasons
+      // But log the token for development/debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Password Reset URL:', resetUrl)
+        console.log('Reset Token:', resetToken)
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Se l\'email esiste nel nostro sistema, riceverai le istruzioni per il reset della password',
+      // In development, include token for testing
+      ...(process.env.NODE_ENV === 'development' && { resetToken, resetUrl })
+    })
+  } catch (error) {
+    console.error('Forgot password error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
+// Reset Password - Set new password with token
+router.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body
+
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token e nuova password sono obbligatori' })
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password)
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error })
+    }
+
+    // Hash the token from URL to compare with database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+
+    // Find user with valid token
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    })
+
+    if (!user) {
+      return res.status(400).json({ error: 'Token non valido o scaduto' })
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = password
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+    await user.save()
+
+    // Invalidate all existing sessions for security
+    await Session.deleteMany({ userId: user._id })
+
+    res.json({
+      success: true,
+      message: 'Password reimpostata con successo. Puoi ora effettuare il login.'
+    })
+  } catch (error) {
+    console.error('Reset password error:', error)
     res.status(500).json({ error: 'Errore interno del server' })
   }
 })
