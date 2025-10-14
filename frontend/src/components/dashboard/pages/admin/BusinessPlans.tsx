@@ -1,7 +1,9 @@
-import { Briefcase, Eye, Search, Filter, AlertTriangle, CheckCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Briefcase, Eye, Search, Filter, AlertTriangle, CheckCircle, Clock, ChevronLeft, ChevronRight, X, User, Pause, Play } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
+
+const MAX_OPEN_TABS = 4
 
 interface PurchasedService {
   _id: string
@@ -18,6 +20,11 @@ interface PurchasedService {
   completedBy?: {
     name: string
   }
+  assignedToConsultant?: {
+    _id: string
+    name: string
+    email: string
+  }
   businessPlanContent?: {
     executiveSummary: string
     objective: string
@@ -28,6 +35,8 @@ interface PurchasedService {
     pdfUrl?: string
   }
 }
+
+type ActiveTab = 'overview' | string // 'overview' or service._id
 
 export default function BusinessPlans() {
   const { showToast } = useToast()
@@ -41,6 +50,21 @@ export default function BusinessPlans() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
+  // Tab management - basato su dati da server (assignedToConsultant)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+
+  // Form data for each tab
+  const [tabFormData, setTabFormData] = useState<Record<string, {
+    executiveSummary: string
+    objective: string
+    marketAnalysis: string
+    timeSeriesForecasting: string
+    budgetSimulation: string
+    alertsAndWarnings: string
+    pdfUrl: string
+  }>>({})
+
   const [formData, setFormData] = useState({
     executiveSummary: '',
     objective: '',
@@ -52,8 +76,59 @@ export default function BusinessPlans() {
   })
 
   useEffect(() => {
+    // Get current user ID from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    // AuthContext stores it as 'id', not '_id'
+    setCurrentUserId(user.id || user._id || '')
+
     loadServices()
   }, [])
+
+  // Initialize form data for in_progress services assigned to current consultant
+  useEffect(() => {
+    if (loading || !currentUserId) return
+
+    // Initialize form data for services assigned to this consultant
+    services.filter(s =>
+      s.status === 'in_progress' &&
+      s.assignedToConsultant?._id?.toString() === currentUserId.toString()
+    ).forEach(service => {
+      if (!tabFormData[service._id]) {
+        setTabFormData(prev => ({
+          ...prev,
+          [service._id]: {
+            executiveSummary: service.businessPlanContent?.executiveSummary || '',
+            objective: service.businessPlanContent?.objective || '',
+            marketAnalysis: service.businessPlanContent?.marketAnalysis || '',
+            timeSeriesForecasting: service.businessPlanContent?.timeSeriesForecasting || '',
+            budgetSimulation: service.businessPlanContent?.budgetSimulation || '',
+            alertsAndWarnings: service.businessPlanContent?.alertsAndWarnings || '',
+            pdfUrl: service.businessPlanContent?.pdfUrl || ''
+          }
+        }))
+      }
+    })
+
+    // Remove form data for services that are no longer assigned to this consultant
+    Object.keys(tabFormData).forEach(serviceId => {
+      const service = services.find(s => s._id === serviceId)
+      if (!service || service.status === 'completed' || service.assignedToConsultant?._id?.toString() !== currentUserId.toString()) {
+        setTabFormData(prev => {
+          const newData = { ...prev }
+          delete newData[serviceId]
+          return newData
+        })
+      }
+    })
+
+    // Validate active tab - switch to overview if no longer valid
+    if (activeTab !== 'overview' && services.length > 0) {
+      const activeService = services.find(s => s._id === activeTab)
+      if (!activeService || activeService.status === 'completed' || activeService.assignedToConsultant?._id?.toString() !== currentUserId.toString()) {
+        setActiveTab('overview')
+      }
+    }
+  }, [services, loading, currentUserId, activeTab, tabFormData])
 
   const loadServices = async () => {
     try {
@@ -93,34 +168,86 @@ export default function BusinessPlans() {
   }
 
   const handleViewService = (service: PurchasedService) => {
-    setSelectedService(service)
+    // If service is completed, open modal to view
+    if (service.status === 'completed') {
+      setSelectedService(service)
+      if (service.businessPlanContent) {
+        setFormData({
+          executiveSummary: service.businessPlanContent.executiveSummary || '',
+          objective: service.businessPlanContent.objective || '',
+          marketAnalysis: service.businessPlanContent.marketAnalysis || '',
+          timeSeriesForecasting: service.businessPlanContent.timeSeriesForecasting || '',
+          budgetSimulation: service.businessPlanContent.budgetSimulation || '',
+          alertsAndWarnings: service.businessPlanContent.alertsAndWarnings || '',
+          pdfUrl: service.businessPlanContent.pdfUrl || ''
+        })
+      }
+      return
+    }
 
-    // Load existing content if available
-    if (service.businessPlanContent) {
-      setFormData({
-        executiveSummary: service.businessPlanContent.executiveSummary || '',
-        objective: service.businessPlanContent.objective || '',
-        marketAnalysis: service.businessPlanContent.marketAnalysis || '',
-        timeSeriesForecasting: service.businessPlanContent.timeSeriesForecasting || '',
-        budgetSimulation: service.businessPlanContent.budgetSimulation || '',
-        alertsAndWarnings: service.businessPlanContent.alertsAndWarnings || '',
-        pdfUrl: service.businessPlanContent.pdfUrl || ''
-      })
-    } else {
-      setFormData({
-        executiveSummary: '',
-        objective: '',
-        marketAnalysis: '',
-        timeSeriesForecasting: '',
-        budgetSimulation: '',
-        alertsAndWarnings: '',
-        pdfUrl: ''
-      })
+    // If pending, open modal to start
+    if (service.status === 'pending') {
+      setSelectedService(service)
+      return
+    }
+
+    // If in_progress, switch to that tab
+    if (service.status === 'in_progress') {
+      setActiveTab(service._id)
     }
   }
 
-  const handleUpdateStatus = async (status: 'pending' | 'in_progress' | 'completed') => {
-    if (!selectedService) return
+  const handleStartWork = async (service: PurchasedService) => {
+    try {
+      setIsUpdating(true)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/services/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          serviceId: service._id,
+          status: 'in_progress'
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        if (response.status === 409) {
+          // Another consultant is already working on this
+          showToast(error.error || 'Un altro consulente sta già lavorando su questo business plan', 'error')
+          return
+        }
+        throw new Error(error.error || 'Errore nell\'aggiornamento dello stato')
+      }
+
+      showToast('Lavorazione iniziata!', 'success')
+      closeModal()
+      await loadServices()
+
+      // Check if we can open the tab
+      const currentOpenTabs = getOpenTabs()
+      if (currentOpenTabs.length < MAX_OPEN_TABS) {
+        setActiveTab(service._id)
+      } else {
+        showToast('Tab non aperta automaticamente. Limite massimo raggiunto.', 'info')
+      }
+    } catch (error) {
+      console.error('Error starting work:', error)
+      showToast(error instanceof Error ? error.message : 'Errore nell\'iniziare la lavorazione', 'error')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleResumeWork = async (serviceId: string) => {
+    const currentOpenTabs = getOpenTabs()
+    if (currentOpenTabs.length >= MAX_OPEN_TABS) {
+      showToast(`Puoi avere massimo ${MAX_OPEN_TABS} tab aperte contemporaneamente`, 'error')
+      return
+    }
 
     try {
       setIsUpdating(true)
@@ -132,35 +259,79 @@ export default function BusinessPlans() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          serviceId: selectedService._id,
-          status
+          serviceId,
+          status: 'in_progress'
         })
       })
 
       if (!response.ok) {
         const error = await response.json()
+        if (response.status === 409) {
+          // Another consultant is already working on this
+          showToast(error.error || 'Un altro consulente sta già lavorando su questo business plan', 'error')
+          await loadServices()
+          return
+        }
         throw new Error(error.error || 'Errore nell\'aggiornamento dello stato')
       }
 
-      showToast('Stato aggiornato con successo!', 'success')
+      showToast('Lavoro ripreso!', 'success')
       await loadServices()
-
-      // Update selectedService
-      const updatedService = { ...selectedService, status }
-      setSelectedService(updatedService)
+      setActiveTab(serviceId)
     } catch (error) {
-      console.error('Error updating status:', error)
-      showToast(error instanceof Error ? error.message : 'Errore nell\'aggiornamento dello stato', 'error')
+      console.error('Error resuming work:', error)
+      showToast(error instanceof Error ? error.message : 'Errore nel riprendere la lavorazione', 'error')
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const handleCompleteService = async () => {
-    if (!selectedService) return
+  const handleSuspendWork = async (serviceId: string) => {
+    try {
+      setIsUpdating(true)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/services/suspend-work`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          serviceId
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella sospensione del lavoro')
+      }
+
+      showToast('Lavoro sospeso. Altri consulenti possono riprenderlo.', 'info')
+
+      // If this was the active tab, switch to overview
+      if (activeTab === serviceId) {
+        setActiveTab('overview')
+      }
+
+      await loadServices()
+    } catch (error) {
+      console.error('Error suspending work:', error)
+      showToast(error instanceof Error ? error.message : 'Errore nella sospensione del lavoro', 'error')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCompleteService = async (serviceId?: string) => {
+    // Use serviceId from parameter (for tabs) or selectedService (for modal)
+    const targetServiceId = serviceId || selectedService?._id
+    if (!targetServiceId) return
+
+    // Get form data from tab or modal
+    const data = serviceId ? tabFormData[serviceId] : formData
 
     // Validate required fields
-    if (!formData.executiveSummary || !formData.objective || !formData.marketAnalysis) {
+    if (!data || !data.executiveSummary || !data.objective || !data.marketAnalysis) {
       showToast('Compila almeno Executive Summary, Obiettivo e Analisi di Mercato', 'error')
       return
     }
@@ -175,9 +346,9 @@ export default function BusinessPlans() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          serviceId: selectedService._id,
-          content: formData,
-          pdfUrl: formData.pdfUrl
+          serviceId: targetServiceId,
+          content: data,
+          pdfUrl: data.pdfUrl
         })
       })
 
@@ -188,13 +359,55 @@ export default function BusinessPlans() {
 
       showToast('Business Plan completato con successo!', 'success')
       await loadServices()
-      closeModal()
+
+      // Close modal if open, or switch to overview if in tab
+      if (selectedService) {
+        closeModal()
+      } else if (serviceId) {
+        setActiveTab('overview')
+      }
     } catch (error) {
       console.error('Error completing service:', error)
       showToast(error instanceof Error ? error.message : 'Errore nel completamento del servizio', 'error')
     } finally {
       setIsUpdating(false)
     }
+  }
+
+  const updateTabFormData = (serviceId: string, field: string, value: string) => {
+    setTabFormData(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field]: value
+      }
+    }))
+  }
+
+  // Get open tabs (services assigned to current consultant)
+  const getOpenTabs = (): string[] => {
+    if (!currentUserId) return []
+
+    return services
+      .filter(s => {
+        const isInProgress = s.status === 'in_progress'
+        const hasAssignment = !!s.assignedToConsultant
+        const assignedId = s.assignedToConsultant?._id?.toString()
+        const currentId = currentUserId.toString()
+        const isMatch = assignedId === currentId
+
+        return isInProgress && hasAssignment && isMatch
+      })
+      .map(s => s._id)
+  }
+
+  const openTabs = getOpenTabs()
+
+  const closeTab = (serviceId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation()
+    }
+    handleSuspendWork(serviceId)
   }
 
   const filteredServices = services.filter(service => {
@@ -252,24 +465,290 @@ export default function BusinessPlans() {
     { title: 'In Attesa', value: services.filter(s => s.status === 'pending').length.toString(), icon: AlertTriangle, color: 'text-blue-600' }
   ]
 
-  const renderOverviewTab = () => (
+  const renderTabContent = () => {
+    if (activeTab === 'overview') {
+      return renderOverviewTab()
+    }
+
+    // Render business plan editor for specific service
+    const service = services.find(s => s._id === activeTab)
+    if (!service) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-600">Business plan non trovato</p>
+        </div>
+      )
+    }
+
+    const formData = tabFormData[activeTab as string] || {
+      executiveSummary: '',
+      objective: '',
+      marketAnalysis: '',
+      timeSeriesForecasting: '',
+      budgetSimulation: '',
+      alertsAndWarnings: '',
+      pdfUrl: ''
+    }
+
+    return renderBusinessPlanEditor(service, formData)
+  }
+
+  const renderBusinessPlanEditor = (service: PurchasedService, data: typeof formData) => (
     <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
-            <div className="flex items-center">
-              <div className={`p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-yellow-50'} group-hover:scale-110 transition-transform`}>
-                <stat.icon className={`h-8 w-8 ${stat.color}`} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+      {/* Client Info Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-1">Cliente</p>
+            <p className="font-medium text-gray-900">{service.userId.name}</p>
+            <p className="text-xs text-gray-500">{service.userId.email}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-1">Status</p>
+            <span className={`inline-flex items-center px-3 py-1 text-sm rounded-full ${getStatusColor(service.status)}`}>
+              {getStatusIcon(service.status)}
+              <span className="ml-2">{getStatusText(service.status)}</span>
+            </span>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-1">Importo Pagato</p>
+            <p className="font-semibold text-blue-600">€{(service.amountPaid / 100).toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Fields */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Contenuto Business Plan</h3>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Executive Summary <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={data.executiveSummary}
+            onChange={(e) => updateTabFormData(service._id, 'executiveSummary', e.target.value)}
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Sintesi esecutiva del business plan..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Obiettivi <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={data.objective}
+            onChange={(e) => updateTabFormData(service._id, 'objective', e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Obiettivi principali del business..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Analisi di Mercato <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={data.marketAnalysis}
+            onChange={(e) => updateTabFormData(service._id, 'marketAnalysis', e.target.value)}
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Analisi del mercato di riferimento..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Time Series Forecasting
+          </label>
+          <textarea
+            value={data.timeSeriesForecasting}
+            onChange={(e) => updateTabFormData(service._id, 'timeSeriesForecasting', e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Previsioni temporali e trend..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Simulazione Budget
+          </label>
+          <textarea
+            value={data.budgetSimulation}
+            onChange={(e) => updateTabFormData(service._id, 'budgetSimulation', e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Simulazione finanziaria e budget..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Alert e Avvisi
+          </label>
+          <textarea
+            value={data.alertsAndWarnings}
+            onChange={(e) => updateTabFormData(service._id, 'alertsAndWarnings', e.target.value)}
+            rows={2}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Avvisi importanti e note..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            URL PDF (opzionale)
+          </label>
+          <input
+            type="url"
+            value={data.pdfUrl}
+            onChange={(e) => updateTabFormData(service._id, 'pdfUrl', e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://example.com/business-plan.pdf"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <button
+            onClick={() => handleSuspendWork(service._id)}
+            disabled={isUpdating}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2"
+          >
+            <Pause className="h-4 w-4" />
+            <span>Sospendi Lavoro</span>
+          </button>
+          <button
+            onClick={() => handleCompleteService(service._id)}
+            disabled={isUpdating || !data.executiveSummary || !data.objective || !data.marketAnalysis}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>{isUpdating ? 'Pubblicazione...' : 'Completa e Pubblica'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderOverviewTab = () => {
+    // Get suspended services (in_progress but no consultant assigned)
+    const suspendedServices = services.filter(s =>
+      s.status === 'in_progress' && !s.assignedToConsultant
+    )
+
+    // Get services assigned to other consultants
+    const otherConsultantServices = services.filter(s => {
+      if (s.status !== 'in_progress' || !s.assignedToConsultant) return false
+
+      const assignedId = s.assignedToConsultant._id?.toString()
+      const currentId = currentUserId?.toString()
+
+      return assignedId !== currentId
+    })
+
+    return (
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+              <div className="flex items-center">
+                <div className={`p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-yellow-50'} group-hover:scale-110 transition-transform`}>
+                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-gray-600">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Suspended Work Section */}
+        {suspendedServices.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <Pause className="h-6 w-6 text-yellow-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-900">Business Plan in Sospeso</h3>
+                  <p className="text-sm text-yellow-700">
+                    {suspendedServices.length} business plan in lavorazione ma non aperti (max {MAX_OPEN_TABS} tab contemporanee)
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {suspendedServices.map(service => (
+                <div key={service._id} className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5 text-gray-600" />
+                      <span className="font-medium text-gray-900">{service.userId.name}</span>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                      Sospeso
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">{service.userId.email}</p>
+                  <button
+                    onClick={() => handleResumeWork(service._id)}
+                    disabled={openTabs.length >= MAX_OPEN_TABS}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Play className="h-4 w-4" />
+                    <span>{openTabs.length >= MAX_OPEN_TABS ? 'Tab piene' : 'Riprendi Lavoro'}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        )}
+
+        {/* Other Consultants Section */}
+        {otherConsultantServices.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <User className="h-6 w-6 text-blue-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">In Lavorazione da Altri Consulenti</h3>
+                  <p className="text-sm text-blue-700">
+                    {otherConsultantServices.length} business plan assegnati ad altri consulenti
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {otherConsultantServices.map(service => (
+                <div key={service._id} className="bg-white rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Briefcase className="h-5 w-5 text-gray-600" />
+                      <span className="font-medium text-gray-900">{service.userId.name}</span>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                      In Lavorazione
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">{service.userId.email}</p>
+                  <div className="flex items-center space-x-2 mt-3 p-2 bg-blue-50 rounded">
+                    <User className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-blue-700">
+                      Assegnato a: <span className="font-medium">{service.assignedToConsultant?.name}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
@@ -446,12 +925,83 @@ export default function BusinessPlans() {
       )}
     </div>
   )
+  }
 
   return (
     <div className="space-y-6">
-      {renderOverviewTab()}
+      {/* Tabs Navigation - Box Style */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Overview Tab */}
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`p-4 rounded-lg text-left transition-all duration-200 ${
+              activeTab === 'overview'
+                ? 'bg-primary-600 text-white shadow-md'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <div className="flex items-center space-x-2 mb-1">
+              <Briefcase className="h-5 w-5" />
+              <span className="font-medium text-sm">Panoramica</span>
+            </div>
+            <p className={`text-xs ${activeTab === 'overview' ? 'text-primary-100' : 'text-gray-500'}`}>
+              {services.length} business plan totali
+            </p>
+          </button>
 
-      {/* Service Detail Modal */}
+          {/* Client Tabs */}
+          {openTabs.map(serviceId => {
+            const service = services.find(s => s._id === serviceId)
+            if (!service) return null
+
+            return (
+              <div
+                key={serviceId}
+                className={`p-4 rounded-lg text-left transition-all duration-200 relative group cursor-pointer ${
+                  activeTab === serviceId
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+                onClick={() => setActiveTab(serviceId)}
+              >
+                <button
+                  onClick={(e) => closeTab(serviceId, e)}
+                  className={`absolute top-2 right-2 p-1 rounded-full transition-colors ${
+                    activeTab === serviceId
+                      ? 'hover:bg-blue-700'
+                      : 'hover:bg-gray-200'
+                  }`}
+                  title="Sospendi lavoro"
+                >
+                  <X className={`h-3 w-3 ${activeTab === serviceId ? 'text-white' : 'text-gray-400'}`} />
+                </button>
+                <div className="flex items-center space-x-2 mb-1 pr-6">
+                  <User className="h-5 w-5" />
+                  <span className="font-medium text-sm truncate">{service.userId.name}</span>
+                </div>
+                <p className={`text-xs truncate ${activeTab === serviceId ? 'text-blue-100' : 'text-gray-500'}`}>
+                  In lavorazione
+                </p>
+              </div>
+            )
+          })}
+
+          {/* Empty slots reminder */}
+          {openTabs.length < MAX_OPEN_TABS && (
+            <div className="p-4 rounded-lg border-2 border-dashed border-gray-300 text-center flex flex-col items-center justify-center">
+              <p className="text-xs text-gray-400 font-medium">
+                {MAX_OPEN_TABS - openTabs.length} slot disponibili
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {renderTabContent()}
+
+      {/* Service Detail Modal - Only for pending and completed services */}
       <Modal
         isOpen={!!selectedService}
         onClose={closeModal}
@@ -480,156 +1030,99 @@ export default function BusinessPlans() {
               </div>
             </div>
 
-            {/* Status Actions */}
-            {selectedService.status !== 'completed' && (
-              <div className="flex space-x-3">
-                {selectedService.status === 'pending' && (
-                  <button
-                    onClick={() => handleUpdateStatus('in_progress')}
-                    disabled={isUpdating}
-                    className="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50"
-                  >
-                    <Clock className="h-4 w-4 inline mr-2" />
-                    Inizia Lavorazione
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Form Fields */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Contenuto Business Plan</h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Executive Summary <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.executiveSummary}
-                  onChange={(e) => setFormData({ ...formData, executiveSummary: e.target.value })}
-                  rows={4}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Sintesi esecutiva del business plan..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Obiettivi <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.objective}
-                  onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
-                  rows={3}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Obiettivi principali del business..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Analisi di Mercato <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.marketAnalysis}
-                  onChange={(e) => setFormData({ ...formData, marketAnalysis: e.target.value })}
-                  rows={4}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Analisi del mercato di riferimento..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time Series Forecasting
-                </label>
-                <textarea
-                  value={formData.timeSeriesForecasting}
-                  onChange={(e) => setFormData({ ...formData, timeSeriesForecasting: e.target.value })}
-                  rows={3}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Previsioni temporali e trend..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Simulazione Budget
-                </label>
-                <textarea
-                  value={formData.budgetSimulation}
-                  onChange={(e) => setFormData({ ...formData, budgetSimulation: e.target.value })}
-                  rows={3}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Simulazione finanziaria e budget..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Alert e Avvisi
-                </label>
-                <textarea
-                  value={formData.alertsAndWarnings}
-                  onChange={(e) => setFormData({ ...formData, alertsAndWarnings: e.target.value })}
-                  rows={2}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Avvisi importanti e note..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL PDF (opzionale)
-                </label>
-                <input
-                  type="url"
-                  value={formData.pdfUrl}
-                  onChange={(e) => setFormData({ ...formData, pdfUrl: e.target.value })}
-                  disabled={selectedService.status === 'completed'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="https://example.com/business-plan.pdf"
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            {selectedService.status !== 'completed' && (
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            {/* For pending services - show start button */}
+            {selectedService.status === 'pending' && (
+              <div className="flex flex-col items-center space-y-4 py-8">
+                <p className="text-gray-600 text-center">
+                  Questo business plan è in attesa di lavorazione.<br />
+                  Clicca il pulsante per iniziare a lavorarci.
+                </p>
                 <button
-                  onClick={closeModal}
+                  onClick={() => handleStartWork(selectedService)}
                   disabled={isUpdating}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 flex items-center space-x-2"
                 >
-                  Annulla
-                </button>
-                <button
-                  onClick={handleCompleteService}
-                  disabled={isUpdating || !formData.executiveSummary || !formData.objective || !formData.marketAnalysis}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUpdating ? 'Pubblicazione...' : 'Completa e Pubblica'}
+                  <Clock className="h-5 w-5" />
+                  <span>{isUpdating ? 'Inizializzazione...' : 'Inizia Lavorazione'}</span>
                 </button>
               </div>
             )}
 
-            {selectedService.status === 'completed' && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <div>
-                    <p className="font-semibold text-green-900">Business Plan Completato</p>
-                    <p className="text-sm text-green-700">
-                      Completato il {selectedService.completedAt && new Date(selectedService.completedAt).toLocaleDateString('it-IT')}
-                      {selectedService.completedBy && ` da ${selectedService.completedBy.name}`}
-                    </p>
+            {/* For completed services - show read-only content */}
+            {selectedService.status === 'completed' && selectedService.businessPlanContent && (
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                    <div>
+                      <p className="font-semibold text-green-900">Business Plan Completato</p>
+                      <p className="text-sm text-green-700">
+                        Completato il {selectedService.completedAt && new Date(selectedService.completedAt).toLocaleDateString('it-IT')}
+                        {selectedService.completedBy && ` da ${selectedService.completedBy.name}`}
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-900 pt-4">Contenuto Business Plan</h3>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Executive Summary</h4>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.executiveSummary}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Obiettivi</h4>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.objective}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Analisi di Mercato</h4>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.marketAnalysis}</p>
+                </div>
+
+                {selectedService.businessPlanContent.timeSeriesForecasting && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Time Series Forecasting</h4>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.timeSeriesForecasting}</p>
+                  </div>
+                )}
+
+                {selectedService.businessPlanContent.budgetSimulation && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Simulazione Budget</h4>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.budgetSimulation}</p>
+                  </div>
+                )}
+
+                {selectedService.businessPlanContent.alertsAndWarnings && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Alert e Avvisi</h4>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedService.businessPlanContent.alertsAndWarnings}</p>
+                  </div>
+                )}
+
+                {selectedService.businessPlanContent.pdfUrl && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">PDF Business Plan</h4>
+                    <a
+                      href={selectedService.businessPlanContent.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:text-primary-700 underline"
+                    >
+                      {selectedService.businessPlanContent.pdfUrl}
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-6 border-t border-gray-200">
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  >
+                    Chiudi
+                  </button>
                 </div>
               </div>
             )}

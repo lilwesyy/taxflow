@@ -47,6 +47,7 @@ export interface IPurchasedService extends Document {
     recommendedActions: string
     pdfUrl?: string
   }
+  assignedToConsultant?: mongoose.Types.ObjectId // Consulente che sta lavorando su questo servizio
   completedBy?: mongoose.Types.ObjectId
   completedAt?: Date
   purchasedAt: Date
@@ -69,6 +70,7 @@ const PurchasedServiceSchema = new Schema<IPurchasedService>({
   amountPaid: { type: Number, required: true },
   businessPlanContent: { type: BusinessPlanContentSchema },
   analisiSWOTContent: { type: AnalisiSWOTContentSchema },
+  assignedToConsultant: { type: Schema.Types.ObjectId, ref: 'User' },
   completedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   completedAt: { type: Date },
   purchasedAt: { type: Date, default: Date.now }

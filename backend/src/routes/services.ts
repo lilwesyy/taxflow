@@ -145,6 +145,7 @@ router.get('/get-services', authenticateToken, async (req: AuthRequest, res) => 
       const services = await PurchasedService.find(query)
         .populate('userId', 'name email')
         .populate('completedBy', 'name email')
+        .populate('assignedToConsultant', 'name email')
         .sort({ purchasedAt: -1 })
 
       return res.json({ services })
@@ -164,6 +165,7 @@ router.get('/get-services', authenticateToken, async (req: AuthRequest, res) => 
 router.post('/update-status', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userRole = req.user!.role
+    const adminUserId = req.user!.userId
 
     // Only admin can update status
     if (userRole !== 'admin') {
@@ -181,11 +183,36 @@ router.post('/update-status', authenticateToken, async (req: AuthRequest, res) =
     }
 
     const service = await PurchasedService.findById(serviceId)
+      .populate('assignedToConsultant', 'name email')
     if (!service) {
       return res.status(404).json({ error: 'Servizio non trovato' })
     }
 
+    // Check if another consultant is already working on this
+    if (status === 'in_progress' && service.assignedToConsultant) {
+      const assignedConsultantId = (service.assignedToConsultant as any)._id || service.assignedToConsultant
+      if (assignedConsultantId.toString() !== adminUserId) {
+        const consultant = service.assignedToConsultant as any
+        return res.status(409).json({
+          error: 'Questo servizio è già in lavorazione da un altro consulente',
+          assignedTo: consultant.name || 'Altro consulente'
+        })
+      }
+    }
+
+    // Update status
     service.status = status
+
+    // Assign consultant when moving to in_progress
+    if (status === 'in_progress') {
+      service.assignedToConsultant = adminUserId as any
+    }
+
+    // Clear assignment when moving back to pending or suspending
+    if (status === 'pending') {
+      service.assignedToConsultant = undefined
+    }
+
     await service.save()
 
     res.json({
@@ -197,6 +224,51 @@ router.post('/update-status', authenticateToken, async (req: AuthRequest, res) =
     console.error('Error updating service status:', error)
     res.status(500).json({
       error: 'Errore nell\'aggiornamento dello status',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+})
+
+// Suspend work on service (admin only) - removes assignment but keeps in_progress status
+router.post('/suspend-work', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userRole = req.user!.role
+    const adminUserId = req.user!.userId
+
+    // Only admin can suspend work
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Solo gli admin possono sospendere il lavoro' })
+    }
+
+    const { serviceId } = req.body
+
+    if (!serviceId) {
+      return res.status(400).json({ error: 'Service ID è obbligatorio' })
+    }
+
+    const service = await PurchasedService.findById(serviceId)
+    if (!service) {
+      return res.status(404).json({ error: 'Servizio non trovato' })
+    }
+
+    // Check if this consultant is the one working on it
+    if (service.assignedToConsultant && service.assignedToConsultant.toString() !== adminUserId) {
+      return res.status(403).json({ error: 'Non puoi sospendere il lavoro di un altro consulente' })
+    }
+
+    // Clear assignment but keep status as in_progress
+    service.assignedToConsultant = undefined
+    await service.save()
+
+    res.json({
+      success: true,
+      message: 'Lavoro sospeso con successo',
+      service
+    })
+  } catch (error) {
+    console.error('Error suspending work:', error)
+    res.status(500).json({
+      error: 'Errore nella sospensione del lavoro',
       details: error instanceof Error ? error.message : 'Unknown error'
     })
   }
@@ -251,6 +323,7 @@ router.post('/complete-service', authenticateToken, async (req: AuthRequest, res
     service.status = 'completed'
     service.completedBy = adminUserId as any
     service.completedAt = new Date()
+    service.assignedToConsultant = undefined // Clear assignment when completed
 
     await service.save()
 
