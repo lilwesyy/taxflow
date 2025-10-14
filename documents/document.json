@@ -1,0 +1,4228 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Invoicetronic API",
+    "description": "The [Invoicetronic API][2] is a RESTful service that allows you to send and receive invoices through the Italian [Servizio di Interscambio (SDI)][1], or Interchange Service. The API is designed to be simple and easy to use, abstracting away SDI complexity while providing complete control over the invoice send/receive process. It provides advanced features as encryption at rest, multi-language pre-flight invoice validation, multiple upload formats, webhooks, event logging, client SDKs, and CLI tools.\n\nFor more information, see  [Invoicetronic website][2]\n\n[1]: https://www.fatturapa.gov.it/it/sistemainterscambio/cose-il-sdi/\n[2]: https://invoicetronic.com/",
+    "termsOfService": "https://invoicetronic.com/tos",
+    "contact": {
+      "name": "Invoicetronic",
+      "url": "https://invoicetronic.com",
+      "email": "info@invoicetronic.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/invoicetronic/openapi/blob/main/LICENSE"
+    },
+    "version": "1",
+    "x-logo": {
+      "url": "https://invoicetronic.com/assets/logomark-white.svg",
+      "altText": "Invoicetronic: support electronic invoices in a snap"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.invoicetronic.com/v1/"
+    }
+  ],
+  "paths": {
+    "/company/{id}": {
+      "get": {
+        "tags": [
+          "company"
+        ],
+        "summary": "Get a company by id",
+        "description": "Companies are the entities that send and receive invoices. As you send invoices, companies are added as needed (company details are extrapolated). **You can only receive invoices for existing companies, so ensure they exist**.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "company"
+        ],
+        "summary": "Delete a company",
+        "description": "Companies are the entities that send and receive invoices. As you send invoices, companies are added as needed (company details are extrapolated). **You can only receive invoices for existing companies, so ensure they exist**.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/company": {
+      "get": {
+        "tags": [
+          "company"
+        ],
+        "summary": "List companies",
+        "description": "Companies are the entities that send and receive invoices. As you send invoices, companies are added as needed (company details are extrapolated). **You can only receive invoices for existing companies, so ensure they exist**.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Company"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "company"
+        ],
+        "summary": "Add a company",
+        "description": "Companies are the entities that send and receive invoices. As you send invoices, companies are added as needed (company details are extrapolated). **You can only receive invoices for existing companies, so ensure they exist**.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Company"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "company"
+        ],
+        "summary": "Update a company",
+        "description": "Companies are the entities that send and receive invoices. As you send invoices, companies are added as needed (company details are extrapolated). **You can only receive invoices for existing companies, so ensure they exist**.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Company"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/log/{id}": {
+      "get": {
+        "tags": [
+          "log"
+        ],
+        "summary": "Get an event by id",
+        "description": "Every API operation is logged and can be retrieved here. Log records are preserved for 15 days.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/log": {
+      "get": {
+        "tags": [
+          "log"
+        ],
+        "summary": "List events",
+        "description": "Every API operation is logged and can be retrieved here. Log records are preserved for 15 days.",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "description": "Company id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "endpoint",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "api_verion",
+            "in": "query",
+            "description": "Api version",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status_code",
+            "in": "query",
+            "description": "Response status code",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "date_created_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_created_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "success",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "date_time_from",
+            "in": "query",
+            "description": "Date and time of the event",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_time_to",
+            "in": "query",
+            "description": "Date and time of the event",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receive/{id}": {
+      "get": {
+        "tags": [
+          "receive"
+        ],
+        "summary": "Get an incoming invoice by id",
+        "description": "Receive invoices are the invoices that are received from other companies. They are preserved for two years in the live environment and 24 hours in the Sandbox.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "include_payload",
+            "in": "query",
+            "description": "Include payload in the response. Defaults to false.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receive"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "receive"
+        ],
+        "summary": "Delete an incoming invoice by id",
+        "description": "Receive invoices are the invoices that are received from other companies. They are preserved for two years in the live environment and 24 hours in the Sandbox.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receive"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/receive": {
+      "get": {
+        "tags": [
+          "receive"
+        ],
+        "summary": "List incoming invoices",
+        "description": "Receive invoices are the invoices that are received from other companies. They are preserved for two years in the live environment and 24 hours in the Sandbox.",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "description": "Company id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "description": "SDI identifier.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "description": "Unread items only.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "committente",
+            "in": "query",
+            "description": "Vat number or fiscal code.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "prestatore",
+            "in": "query",
+            "description": "Vat number or fiscal code.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "description": "File name.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "last_update_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "last_update_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_date_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_date_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_number",
+            "in": "query",
+            "description": "Document number.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_payload",
+            "in": "query",
+            "description": "Include payload in the response. Defaults to false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Receive"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/{id}": {
+      "get": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Get a invoice by id",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "include_payload",
+            "in": "query",
+            "description": "Include payload in the response. Defaults to false.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/send/{identifier}": {
+      "get": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Get a invoice by identifier",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_payload",
+            "in": "query",
+            "description": "Include payload in the response. Defaults to false.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send": {
+      "get": {
+        "tags": [
+          "send"
+        ],
+        "summary": "List invoices",
+        "description": "test **markdown**.",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "description": "Company id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "description": "SDI identifier.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "committente",
+            "in": "query",
+            "description": "Vat number or fiscal code.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "prestatore",
+            "in": "query",
+            "description": "Vat number or fiscal code.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "description": "File name.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "last_update_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "last_update_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_date_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_date_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "document_number",
+            "in": "query",
+            "description": "Document number.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_payload",
+            "in": "query",
+            "description": "Include payload in the response. Defaults to false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Send"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Add an invoice",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "validate",
+            "in": "query",
+            "description": "Validate the document first, and reject it on failure.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "description": "Whether to digitally sign the document.",
+            "schema": {
+              "enum": [
+                "None",
+                "Apply",
+                "Force",
+                "Auto"
+              ],
+              "type": "string",
+              "description": "Definisce le modalità di firma per le fatture.",
+              "default": "Auto"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Send"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/xml": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Add an invoice by xml",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "validate",
+            "in": "query",
+            "description": "Validate the document first, and reject it on failure.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "description": "Whether to digitally sign the document.",
+            "schema": {
+              "enum": [
+                "None",
+                "Apply",
+                "Force",
+                "Auto"
+              ],
+              "type": "string",
+              "description": "Definisce le modalità di firma per le fatture.",
+              "default": "Auto"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/FatturaOrdinaria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/file": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Add an invoice by file",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "validate",
+            "in": "query",
+            "description": "Validate the document first, and reject it on failure.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "description": "Whether to digitally sign the document.",
+            "schema": {
+              "enum": [
+                "None",
+                "Apply",
+                "Force",
+                "Auto"
+              ],
+              "type": "string",
+              "description": "Definisce le modalità di firma per le fatture.",
+              "default": "Auto"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/json": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Add an invoice by json",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "parameters": [
+          {
+            "name": "validate",
+            "in": "query",
+            "description": "Validate the document first, and reject it on failure.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "description": "Whether to digitally sign the document.",
+            "schema": {
+              "enum": [
+                "None",
+                "Apply",
+                "Force",
+                "Auto"
+              ],
+              "type": "string",
+              "description": "Definisce le modalità di firma per le fatture.",
+              "default": "Auto"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FatturaOrdinaria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Send"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/validate": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Validate an invoice",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Send"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/validate/xml": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Validate an invoice by xml",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "requestBody": {
+          "content": {
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/FatturaOrdinaria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/validate/file": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Validate an invoice file",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/send/validate/json": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "summary": "Validate an invoice by json",
+        "description": "Send invoices are the invoices that are sent to the SDI. They are preserved for two years in the live environment and 15 days in the Sandbox.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FatturaOrdinaria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [
+          "status"
+        ],
+        "summary": "Account status",
+        "description": "This endpoint is used to know how many operations (invoices + validations) and signatures are left on your account. \n\nWhen `signature_left` is 0, you will receive a `403 Forbidden` response if you try to sign an invoice. Likewise, if `operation_left` is 0, you will receive a `403 Forbidden` response when storing or validating an invoice.\n\nYou can raise the limits by purchasing operations and/or signatures from the [Dashboard](https://dashboard.invoicetronic.com).\n\n__Please note__ that these values are not enforced if you are on the Sandbox. See the [API Keys & Sandbox](https://invoicetronic.com/apikeys/) documentation section to learn more about the Sandbox.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update/{id}": {
+      "get": {
+        "tags": [
+          "update"
+        ],
+        "summary": "Get an update by id",
+        "description": "Updates are notifications sent by the SDI about the status of invoices you sent.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Update"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/update": {
+      "get": {
+        "tags": [
+          "update"
+        ],
+        "summary": "List updates",
+        "description": "Updates are notifications sent by the SDI about the status of invoices you sent.",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "description": "Company id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "description": "SDI identifier.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "prestatore",
+            "in": "query",
+            "description": "Vat number or fiscal code.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "description": "Unread items only.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "send_id",
+            "in": "query",
+            "description": "Send item's id.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "SDI state",
+            "schema": {
+              "enum": [
+                "Inviato",
+                "Consegnato",
+                "NonConsegnato",
+                "Scartato",
+                "AccettatoDalDestinatario",
+                "RifiutatoDalDestinatario",
+                "ImpossibilitaDiRecapito",
+                "DecorrenzaTermini",
+                "AttestazioneTrasmissioneFattura"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "last_update_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "last_update_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_from",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "date_sent_to",
+            "in": "query",
+            "description": "UTC ISO 8601 (2024-11-29T12:34:56Z)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string",
+              "default": "last_update"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Update"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/{id}": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Get a webhook by id",
+        "description": "Webhooks are used to notify external services about write events that occur in the API. You can subscribe to specific events and receive a notification when they occur.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebHook"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Delete a webhook by id",
+        "description": "Webhooks are used to notify external services about write events that occur in the API. You can subscribe to specific events and receive a notification when they occur.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebHook"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/webhook": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "List webhooks",
+        "description": "Webhooks are used to notify external services about write events that occur in the API. You can subscribe to specific events and receive a notification when they occur.",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "description": "Company id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "events",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebHook"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Add a webhook",
+        "description": "Webhooks are used to notify external services about write events that occur in the API. You can subscribe to specific events and receive a notification when they occur.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebHook"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebHook"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Update a webhook",
+        "description": "Webhooks are used to notify external services about write events that occur in the API. You can subscribe to specific events and receive a notification when they occur.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebHook"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebHook"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhookhistory/{id}": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Get a webhook history item by id",
+        "description": "Webhook history items are stored in the database and can be accessed via the API. They are preserved for 15 in both the live and sandbox environments.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Item id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebHookHistory"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/webhookhistory": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "List webhook history items",
+        "description": "Webhook history items are stored in the database and can be accessed via the API. They are preserved for 15 in both the live and sandbox environments.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Items per page. Cannot be greater than 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field. Prefix with '-' for descending order.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhook_id",
+            "in": "query",
+            "description": "WebHook id",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebHookHistory"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemHttpResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Allegati": {
+        "type": "object",
+        "properties": {
+          "nome_attachment": {
+            "type": "string",
+            "nullable": true
+          },
+          "algoritmo_compressione": {
+            "type": "string",
+            "nullable": true
+          },
+          "formato_attachment": {
+            "type": "string",
+            "nullable": true
+          },
+          "descrizione_attachment": {
+            "type": "string",
+            "nullable": true
+          },
+          "attachment": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AltriDatiGestionali": {
+        "type": "object",
+        "properties": {
+          "tipo_dato": {
+            "type": "string",
+            "nullable": true
+          },
+          "riferimento_testo": {
+            "type": "string",
+            "nullable": true
+          },
+          "riferimento_numero": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "riferimento_data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Anagrafica": {
+        "type": "object",
+        "properties": {
+          "denominazione": {
+            "type": "string",
+            "nullable": true
+          },
+          "nome": {
+            "type": "string",
+            "nullable": true
+          },
+          "cognome": {
+            "type": "string",
+            "nullable": true
+          },
+          "titolo": {
+            "type": "string",
+            "nullable": true
+          },
+          "cod_eori": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CedentePrestatore": {
+        "type": "object",
+        "properties": {
+          "dati_anagrafici": {
+            "$ref": "#/components/schemas/DatiAnagraficiCedentePrestatore"
+          },
+          "sede": {
+            "$ref": "#/components/schemas/SedeCedentePrestatore"
+          },
+          "stabile_organizzazione": {
+            "$ref": "#/components/schemas/StabileOrganizzazione"
+          },
+          "iscrizione_rea": {
+            "$ref": "#/components/schemas/IscrizioneREA"
+          },
+          "contatti": {
+            "$ref": "#/components/schemas/Contatti"
+          },
+          "riferimento_amministrazione": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CessionarioCommittente": {
+        "type": "object",
+        "properties": {
+          "dati_anagrafici": {
+            "$ref": "#/components/schemas/DatiAnagraficiCessionarioCommittente"
+          },
+          "sede": {
+            "$ref": "#/components/schemas/SedeCessionarioCommittente"
+          },
+          "stabile_organizzazione": {
+            "$ref": "#/components/schemas/StabileOrganizzazione"
+          },
+          "rappresentante_fiscale": {
+            "$ref": "#/components/schemas/RappresentanteFiscaleCessionarioCommittente"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CodiceArticolo": {
+        "type": "object",
+        "properties": {
+          "codice_tipo": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_valore": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Company": {
+        "required": [
+          "fiscal_code",
+          "name",
+          "vat"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "vat": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Vat number. Must include the country code.",
+            "example": "IT01234567891"
+          },
+          "fiscal_code": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Fiscal code. In most cases it's the same as the vat number.",
+            "example": "RSSMRA70A01F205V"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Name",
+            "example": "Mario Rossi Srl"
+          }
+        },
+        "additionalProperties": false,
+        "description": "A company model."
+      },
+      "Contatti": {
+        "type": "object",
+        "properties": {
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "fax": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContattiTrasmittente": {
+        "type": "object",
+        "properties": {
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiAnagrafici": {
+        "type": "object",
+        "properties": {
+          "id_fiscale_iva": {
+            "$ref": "#/components/schemas/IdFiscaleIVA"
+          },
+          "codice_fiscale": {
+            "type": "string",
+            "nullable": true
+          },
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiAnagraficiCedentePrestatore": {
+        "type": "object",
+        "properties": {
+          "id_fiscale_iva": {
+            "$ref": "#/components/schemas/IdFiscaleIVA"
+          },
+          "codice_fiscale": {
+            "type": "string",
+            "nullable": true
+          },
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "albo_professionale": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia_albo": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_iscrizione_albo": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_iscrizione_albo": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "regime_fiscale": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiAnagraficiCessionarioCommittente": {
+        "type": "object",
+        "properties": {
+          "id_fiscale_iva": {
+            "$ref": "#/components/schemas/IdFiscaleIVA"
+          },
+          "codice_fiscale": {
+            "type": "string",
+            "nullable": true
+          },
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiAnagraficiVettore": {
+        "type": "object",
+        "properties": {
+          "id_fiscale_iva": {
+            "$ref": "#/components/schemas/IdFiscaleIVA"
+          },
+          "codice_fiscale": {
+            "type": "string",
+            "nullable": true
+          },
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "numero_licenza_guida": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiBeniServizi": {
+        "type": "object",
+        "properties": {
+          "dettaglio_linee": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DettaglioLinee"
+            },
+            "nullable": true
+          },
+          "dati_riepilogo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiRiepilogo"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiBollo": {
+        "type": "object",
+        "properties": {
+          "bollo_virtuale": {
+            "type": "string",
+            "nullable": true
+          },
+          "importo_bollo": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiCassaPrevidenziale": {
+        "type": "object",
+        "properties": {
+          "tipo_cassa": {
+            "type": "string",
+            "nullable": true
+          },
+          "al_cassa": {
+            "type": "number",
+            "format": "double"
+          },
+          "importo_contributo_cassa": {
+            "type": "number",
+            "format": "double"
+          },
+          "imponibile_cassa": {
+            "type": "number",
+            "format": "double"
+          },
+          "aliquota_iva": {
+            "type": "number",
+            "format": "double"
+          },
+          "ritenuta": {
+            "type": "string",
+            "nullable": true
+          },
+          "natura": {
+            "type": "string",
+            "nullable": true
+          },
+          "riferimento_amministrazione": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiContratto": {
+        "type": "object",
+        "properties": {
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "id_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "num_item": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_commessa_convenzione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cup": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cig": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiConvenzione": {
+        "type": "object",
+        "properties": {
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "id_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "num_item": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_commessa_convenzione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cup": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cig": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiDDT": {
+        "type": "object",
+        "properties": {
+          "numero_ddt": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_ddt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiFattureCollegate": {
+        "type": "object",
+        "properties": {
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "id_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "num_item": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_commessa_convenzione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cup": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cig": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiGenerali": {
+        "type": "object",
+        "properties": {
+          "dati_generali_documento": {
+            "$ref": "#/components/schemas/DatiGeneraliDocumento"
+          },
+          "dati_ordine_acquisto": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiOrdineAcquisto"
+            },
+            "nullable": true
+          },
+          "dati_contratto": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiContratto"
+            },
+            "nullable": true
+          },
+          "dati_convenzione": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiConvenzione"
+            },
+            "nullable": true
+          },
+          "dati_ricezione": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiRicezione"
+            },
+            "nullable": true
+          },
+          "dati_fatture_collegate": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiFattureCollegate"
+            },
+            "nullable": true
+          },
+          "dati_sal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiSAL"
+            },
+            "nullable": true
+          },
+          "dati_ddt": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiDDT"
+            },
+            "nullable": true
+          },
+          "dati_trasporto": {
+            "$ref": "#/components/schemas/DatiTrasporto"
+          },
+          "fattura_principale": {
+            "$ref": "#/components/schemas/FatturaPrincipale"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiGeneraliDocumento": {
+        "type": "object",
+        "properties": {
+          "tipo_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "divisa": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "numero": {
+            "type": "string",
+            "nullable": true
+          },
+          "dati_ritenuta": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiRitenuta"
+            },
+            "nullable": true
+          },
+          "dati_bollo": {
+            "$ref": "#/components/schemas/DatiBollo"
+          },
+          "dati_cassa_previdenziale": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiCassaPrevidenziale"
+            },
+            "nullable": true
+          },
+          "sconto_maggiorazione": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScontoMaggiorazione"
+            },
+            "nullable": true
+          },
+          "importo_totale_documento": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "arrotondamento": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "causale": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "art73": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiOrdineAcquisto": {
+        "type": "object",
+        "properties": {
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "id_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "num_item": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_commessa_convenzione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cup": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cig": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiPagamento": {
+        "type": "object",
+        "properties": {
+          "condizioni_pagamento": {
+            "type": "string",
+            "nullable": true
+          },
+          "dettaglio_pagamento": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DettaglioPagamento"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiRicezione": {
+        "type": "object",
+        "properties": {
+          "riferimento_numero_linea": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "id_documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "num_item": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_commessa_convenzione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cup": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_cig": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiRiepilogo": {
+        "type": "object",
+        "properties": {
+          "aliquota_iva": {
+            "type": "number",
+            "format": "double"
+          },
+          "natura": {
+            "type": "string",
+            "nullable": true
+          },
+          "spese_accessorie": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "arrotondamento": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "imponibile_importo": {
+            "type": "number",
+            "format": "double"
+          },
+          "imposta": {
+            "type": "number",
+            "format": "double"
+          },
+          "esigibilita_iva": {
+            "type": "string",
+            "nullable": true
+          },
+          "riferimento_normativo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiRitenuta": {
+        "type": "object",
+        "properties": {
+          "tipo_ritenuta": {
+            "type": "string",
+            "nullable": true
+          },
+          "importo_ritenuta": {
+            "type": "number",
+            "format": "double"
+          },
+          "aliquota_ritenuta": {
+            "type": "number",
+            "format": "double"
+          },
+          "causale_pagamento": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiSAL": {
+        "type": "object",
+        "properties": {
+          "riferimento_fase": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiTrasmissione": {
+        "type": "object",
+        "properties": {
+          "id_trasmittente": {
+            "$ref": "#/components/schemas/IdTrasmittente"
+          },
+          "progressivo_invio": {
+            "type": "string",
+            "nullable": true
+          },
+          "formato_trasmissione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_destinatario": {
+            "type": "string",
+            "nullable": true
+          },
+          "contatti_trasmittente": {
+            "$ref": "#/components/schemas/ContattiTrasmittente"
+          },
+          "pec_destinatario": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiTrasporto": {
+        "type": "object",
+        "properties": {
+          "dati_anagrafici_vettore": {
+            "$ref": "#/components/schemas/DatiAnagraficiVettore"
+          },
+          "mezzo_trasporto": {
+            "type": "string",
+            "nullable": true
+          },
+          "causale_trasporto": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_colli": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "descrizione": {
+            "type": "string",
+            "nullable": true
+          },
+          "unita_misura_peso": {
+            "type": "string",
+            "nullable": true
+          },
+          "peso_lordo": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "peso_netto": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "data_ora_ritiro": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "data_inizio_trasporto": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "tipo_resa": {
+            "type": "string",
+            "nullable": true
+          },
+          "indirizzo_resa": {
+            "$ref": "#/components/schemas/IndirizzoResa"
+          },
+          "data_ora_consegna": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatiVeicoli": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "totale_percorso": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DettaglioLinee": {
+        "type": "object",
+        "properties": {
+          "numero_linea": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipo_cessione_prestazione": {
+            "type": "string",
+            "nullable": true
+          },
+          "codice_articolo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodiceArticolo"
+            },
+            "nullable": true
+          },
+          "descrizione": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantita": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "unita_misura": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_inizio_periodo": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "data_fine_periodo": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "prezzo_unitario": {
+            "type": "number",
+            "format": "double"
+          },
+          "sconto_maggiorazione": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScontoMaggiorazione"
+            },
+            "nullable": true
+          },
+          "prezzo_totale": {
+            "type": "number",
+            "format": "double"
+          },
+          "aliquota_iva": {
+            "type": "number",
+            "format": "double"
+          },
+          "ritenuta": {
+            "type": "string",
+            "nullable": true
+          },
+          "natura": {
+            "type": "string",
+            "nullable": true
+          },
+          "riferimento_amministrazione": {
+            "type": "string",
+            "nullable": true
+          },
+          "altri_dati_gestionali": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AltriDatiGestionali"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DettaglioPagamento": {
+        "type": "object",
+        "properties": {
+          "beneficiario": {
+            "type": "string",
+            "nullable": true
+          },
+          "modalita_pagamento": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_riferimento_termini_pagamento": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "giorni_termini_pagamento": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "data_scadenza_pagamento": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "importo_pagamento": {
+            "type": "number",
+            "format": "double"
+          },
+          "cod_ufficio_postale": {
+            "type": "string",
+            "nullable": true
+          },
+          "cognome_quietanzante": {
+            "type": "string",
+            "nullable": true
+          },
+          "nome_quietanzante": {
+            "type": "string",
+            "nullable": true
+          },
+          "cf_quietanzante": {
+            "type": "string",
+            "nullable": true
+          },
+          "titolo_quietanzante": {
+            "type": "string",
+            "nullable": true
+          },
+          "istituto_finanziario": {
+            "type": "string",
+            "nullable": true
+          },
+          "iban": {
+            "type": "string",
+            "nullable": true
+          },
+          "abi": {
+            "type": "string",
+            "nullable": true
+          },
+          "cab": {
+            "type": "string",
+            "nullable": true
+          },
+          "bic": {
+            "type": "string",
+            "nullable": true
+          },
+          "sconto_pagamento_anticipato": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "data_limite_pagamento_anticipato": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "penalita_pagamenti_ritardati": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "data_decorrenza_penale": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "codice_pagamento": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentData": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Error description.",
+            "nullable": true
+          },
+          "hint": {
+            "type": "string",
+            "description": "Hint on how to solve the issue.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Validation error from the SDI."
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "api_key_id": {
+            "type": "integer",
+            "description": "Api key id.",
+            "format": "int32"
+          },
+          "company_id": {
+            "type": "integer",
+            "description": "Company id.",
+            "format": "int32",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "description": "Request method.",
+            "nullable": true
+          },
+          "query": {
+            "type": "string",
+            "description": "Request query.",
+            "nullable": true
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "API endpoint.",
+            "nullable": true
+          },
+          "api_version": {
+            "type": "integer",
+            "description": "Api version.",
+            "format": "int32"
+          },
+          "status_code": {
+            "type": "integer",
+            "description": "Status code returned by the API.",
+            "format": "int32"
+          },
+          "date_time": {
+            "type": "string",
+            "description": "Date and time of the request.",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string",
+            "description": "Response error.",
+            "nullable": true
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Wether the request was successful.",
+            "readOnly": true
+          },
+          "response_body": {
+            "type": "string",
+            "description": "Response payload. It is guaranteed to be cyphered at rest.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FatturaElettronicaBody": {
+        "type": "object",
+        "properties": {
+          "dati_generali": {
+            "$ref": "#/components/schemas/DatiGenerali"
+          },
+          "dati_beni_servizi": {
+            "$ref": "#/components/schemas/DatiBeniServizi"
+          },
+          "dati_veicoli": {
+            "$ref": "#/components/schemas/DatiVeicoli"
+          },
+          "dati_pagamento": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatiPagamento"
+            },
+            "nullable": true
+          },
+          "allegati": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Allegati"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FatturaElettronicaHeader": {
+        "type": "object",
+        "properties": {
+          "dati_trasmissione": {
+            "$ref": "#/components/schemas/DatiTrasmissione"
+          },
+          "cedente_prestatore": {
+            "$ref": "#/components/schemas/CedentePrestatore"
+          },
+          "RappresentanteFiscale": {
+            "$ref": "#/components/schemas/RappresentanteFiscale"
+          },
+          "cessionario_committente": {
+            "$ref": "#/components/schemas/CessionarioCommittente"
+          },
+          "terzo_intermediario_o_soggetto_emittente": {
+            "$ref": "#/components/schemas/TerzoIntermediarioOSoggettoEmittente"
+          },
+          "soggetto_emittente": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FatturaOrdinaria": {
+        "type": "object",
+        "properties": {
+          "sistema_emittente": {
+            "type": "string",
+            "nullable": true
+          },
+          "fattura_elettronica_header": {
+            "$ref": "#/components/schemas/FatturaElettronicaHeader"
+          },
+          "fattura_elettronica_body": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FatturaElettronicaBody"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FatturaPrincipale": {
+        "type": "object",
+        "properties": {
+          "numero_fattura_principale": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_fattura_principale": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdFiscaleIVA": {
+        "type": "object",
+        "properties": {
+          "id_paese": {
+            "type": "string",
+            "nullable": true
+          },
+          "id_codice": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdTrasmittente": {
+        "type": "object",
+        "properties": {
+          "id_paese": {
+            "type": "string",
+            "nullable": true
+          },
+          "id_codice": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IndirizzoResa": {
+        "type": "object",
+        "properties": {
+          "indirizzo": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_civico": {
+            "type": "string",
+            "nullable": true
+          },
+          "cap": {
+            "type": "string",
+            "nullable": true
+          },
+          "comune": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "nazione": {
+            "type": "string",
+            "default": "IT",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IscrizioneREA": {
+        "type": "object",
+        "properties": {
+          "ufficio": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_rea": {
+            "type": "string",
+            "nullable": true
+          },
+          "capitale_sociale": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "socio_unico": {
+            "type": "string",
+            "nullable": true
+          },
+          "stato_liquidazione": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ProblemHttpResult": {
+        "type": "object",
+        "properties": {
+          "problem_details": {
+            "$ref": "#/components/schemas/ProblemDetails"
+          },
+          "content_type": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "status_code": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RappresentanteFiscale": {
+        "type": "object",
+        "properties": {
+          "dati_anagrafici": {
+            "$ref": "#/components/schemas/DatiAnagrafici"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RappresentanteFiscaleCessionarioCommittente": {
+        "type": "object",
+        "properties": {
+          "denominazione": {
+            "type": "string",
+            "nullable": true
+          },
+          "nome": {
+            "type": "string",
+            "nullable": true
+          },
+          "cognome": {
+            "type": "string",
+            "nullable": true
+          },
+          "id_fiscale_iva": {
+            "$ref": "#/components/schemas/IdFiscaleIVA"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Receive": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "company_id": {
+            "type": "integer",
+            "description": "Company id. On send, this is the sender and must be set in advance. On receive, it will be\r\nautomatically set based on the recipient's VAT number. If a matching company is not found, the invoice will be rejected until the company is created.",
+            "format": "int32"
+          },
+          "committente": {
+            "type": "string",
+            "description": "VAT number of the Cessionario/Committente (customer). This is automatically set based on the recipient's VAT number.",
+            "nullable": true
+          },
+          "prestatore": {
+            "type": "string",
+            "description": "VAT number of the Cedente/Prestatore (vendor). This is automatically set based on the sender's VAT number.",
+            "nullable": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "SDI identifier. This is set by the SDI and is guaranted to be unique within the SDI system.",
+            "nullable": true
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Xml file name.",
+            "nullable": true
+          },
+          "format": {
+            "type": "string",
+            "description": "SDI format (FPA12, FPR12, FSM10, ...)",
+            "nullable": true
+          },
+          "payload": {
+            "type": "string",
+            "description": "Xml payloaad. This is the actual xml content, as string. On send, it can be base64 encoded. If it's not, it will be encoded before sending. It is guaranteed to be cyphered at rest.",
+            "nullable": true
+          },
+          "last_update": {
+            "type": "string",
+            "description": "Last update from SDI.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "date_sent": {
+            "type": "string",
+            "description": "When the invoice was sent to SDI.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentData"
+            },
+            "description": "The invoices included in the payload. This is set by the system, based on the xml content.",
+            "nullable": true
+          },
+          "encoding": {
+            "enum": [
+              "Xml",
+              "Base64"
+            ],
+            "type": "string",
+            "description": "Whether the payload is Base64 encoded or a plain XML (text)."
+          },
+          "is_read": {
+            "type": "boolean",
+            "description": "Wether the invoice has been read at least once."
+          },
+          "message_id": {
+            "type": "string",
+            "description": "SDI message id.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScontoMaggiorazione": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "nullable": true
+          },
+          "percentuale": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "importo": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SedeCedentePrestatore": {
+        "type": "object",
+        "properties": {
+          "indirizzo": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_civico": {
+            "type": "string",
+            "nullable": true
+          },
+          "cap": {
+            "type": "string",
+            "nullable": true
+          },
+          "comune": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "nazione": {
+            "type": "string",
+            "default": "IT",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SedeCessionarioCommittente": {
+        "type": "object",
+        "properties": {
+          "indirizzo": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_civico": {
+            "type": "string",
+            "nullable": true
+          },
+          "cap": {
+            "type": "string",
+            "nullable": true
+          },
+          "comune": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "nazione": {
+            "type": "string",
+            "default": "IT",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Send": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "company_id": {
+            "type": "integer",
+            "description": "Company id. On send, this is the sender and must be set in advance. On receive, it will be\r\nautomatically set based on the recipient's VAT number. If a matching company is not found, the invoice will be rejected until the company is created.",
+            "format": "int32"
+          },
+          "committente": {
+            "type": "string",
+            "description": "VAT number of the Cessionario/Committente (customer). This is automatically set based on the recipient's VAT number.",
+            "nullable": true
+          },
+          "prestatore": {
+            "type": "string",
+            "description": "VAT number of the Cedente/Prestatore (vendor). This is automatically set based on the sender's VAT number.",
+            "nullable": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "SDI identifier. This is set by the SDI and is guaranted to be unique within the SDI system.",
+            "nullable": true
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Xml file name.",
+            "nullable": true
+          },
+          "format": {
+            "type": "string",
+            "description": "SDI format (FPA12, FPR12, FSM10, ...)",
+            "nullable": true
+          },
+          "payload": {
+            "type": "string",
+            "description": "Xml payloaad. This is the actual xml content, as string. On send, it can be base64 encoded. If it's not, it will be encoded before sending. It is guaranteed to be cyphered at rest.",
+            "nullable": true
+          },
+          "last_update": {
+            "type": "string",
+            "description": "Last update from SDI.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "date_sent": {
+            "type": "string",
+            "description": "When the invoice was sent to SDI.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentData"
+            },
+            "description": "The invoices included in the payload. This is set by the system, based on the xml content.",
+            "nullable": true
+          },
+          "encoding": {
+            "enum": [
+              "Xml",
+              "Base64"
+            ],
+            "type": "string",
+            "description": "Whether the payload is Base64 encoded or a plain XML (text)."
+          },
+          "meta_data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional metadata, as json.",
+            "nullable": true
+          },
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendReduced": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "SDI identifier.",
+            "nullable": true
+          },
+          "prestatore": {
+            "type": "string",
+            "description": "VAT number of the Cedente/Prestatore (vendor).",
+            "nullable": true
+          },
+          "meta_data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional metadata, as json.",
+            "nullable": true
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentData"
+            },
+            "description": "The invoices included in the payload.",
+            "nullable": true
+          },
+          "date_sent": {
+            "type": "string",
+            "description": "When the invoice was sent to SDI.",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Reduced Send data for Update responses, containing only the essential fields."
+      },
+      "StabileOrganizzazione": {
+        "type": "object",
+        "properties": {
+          "indirizzo": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_civico": {
+            "type": "string",
+            "nullable": true
+          },
+          "cap": {
+            "type": "string",
+            "nullable": true
+          },
+          "comune": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "nazione": {
+            "type": "string",
+            "default": "IT",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "operation_left": {
+            "type": "integer",
+            "description": "Operations (invoices and validations) left.",
+            "format": "int32"
+          },
+          "signature_left": {
+            "type": "integer",
+            "description": "Signatures left.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TerzoIntermediarioOSoggettoEmittente": {
+        "type": "object",
+        "properties": {
+          "dati_anagrafici": {
+            "$ref": "#/components/schemas/DatiAnagrafici"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Update": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "company_id": {
+            "type": "integer",
+            "description": "Company id.",
+            "format": "int32"
+          },
+          "send_id": {
+            "type": "integer",
+            "description": "Send id. This is the id of the sent invoice to which this update refers to.",
+            "format": "int32"
+          },
+          "last_update": {
+            "type": "string",
+            "description": "Last update from SDI.",
+            "format": "date-time"
+          },
+          "state": {
+            "enum": [
+              "Inviato",
+              "Consegnato",
+              "NonConsegnato",
+              "Scartato",
+              "AccettatoDalDestinatario",
+              "RifiutatoDalDestinatario",
+              "ImpossibilitaDiRecapito",
+              "DecorrenzaTermini",
+              "AttestazioneTrasmissioneFattura"
+            ],
+            "type": "string",
+            "description": "State of the document. Theses are the possible values, as per the SDI documentation:"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description for the state.",
+            "nullable": true
+          },
+          "message_id": {
+            "type": "string",
+            "description": "SDI message id.",
+            "nullable": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "description": "SDI errors, if any.",
+            "nullable": true
+          },
+          "is_read": {
+            "type": "boolean",
+            "description": "Wether the item has been read at least once."
+          },
+          "send": {
+            "$ref": "#/components/schemas/SendReduced"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebHook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "company_id": {
+            "type": "integer",
+            "description": "Company id.",
+            "format": "int32",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The url of your application's endpoint that will receive a POST request when the webhook is fired.",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Wether the webhook is enabled. On creation, this is set to `true`."
+          },
+          "secret": {
+            "type": "string",
+            "description": "The secret used to generate webhook signatures, only returned on creation. You should store this value securely and validate it on every call, to ensure that the caller is InvoicetronicApi.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional description.",
+            "nullable": true
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of events to that trigger the webhook.\r\nSee Invoicetronic.SupportedEvents.Available for a list of valid event names.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebHookHistory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier. Leave it at 0 for new records as it will be set automatically.",
+            "format": "int32"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation date. It is set automatically.",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "description": "Row version, for optimistic concurrency. It is set automatically.",
+            "format": "int32"
+          },
+          "web_hook_id": {
+            "type": "integer",
+            "description": "Webhook id.",
+            "format": "int32"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User id.",
+            "format": "int32"
+          },
+          "event": {
+            "type": "string",
+            "description": "Event name.",
+            "nullable": true
+          },
+          "status_code": {
+            "type": "integer",
+            "description": "Status code.",
+            "format": "int32"
+          },
+          "date_time": {
+            "type": "string",
+            "description": "Date and time of the request.",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Wether the request was successful.",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Webhook history."
+      }
+    },
+    "securitySchemes": {
+      "Basic": {
+        "type": "http",
+        "description": "Use your API key as the basic auth username, and an empty password. If you don't have an API key, you can get one by signing up at [Invoicetronic](https://invoicetronic.com).",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "Basic": [ ]
+    }
+  ]
+}
