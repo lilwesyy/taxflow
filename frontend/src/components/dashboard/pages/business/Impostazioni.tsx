@@ -108,8 +108,10 @@ export default function Impostazioni() {
 
   const validateFiscalCode = (cf: string): boolean => {
     if (!cf) return true // Optional field
+    // Remove spaces and convert to uppercase before validation
+    const cleaned = cf.toUpperCase().replace(/\s/g, '')
     const cfRegex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/
-    return cfRegex.test(cf.toUpperCase())
+    return cfRegex.test(cleaned)
   }
 
   const validatePIVA = (piva: string): boolean => {
@@ -184,7 +186,7 @@ export default function Impostazioni() {
     }
 
     if (profileData.codiceFiscale && !validateFiscalCode(profileData.codiceFiscale)) {
-      errors.codiceFiscale = 'Codice fiscale non valido (16 caratteri)'
+      errors.codiceFiscale = 'Codice fiscale non valido. Formato richiesto: 6 lettere, 2 cifre, 1 lettera, 2 cifre, 1 lettera, 3 cifre, 1 lettera (es: RSSMRA85M01H501Z)'
     }
 
     if (profileData.cap && !validateCAP(profileData.cap)) {
@@ -1009,7 +1011,7 @@ export default function Impostazioni() {
           <button
             onClick={() => handleSave('profile')}
             disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Salvataggio...' : 'Salva Modifiche'}
@@ -1104,9 +1106,9 @@ export default function Impostazioni() {
       {/* Other Notifications */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Push Notifications */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -1124,9 +1126,9 @@ export default function Impostazioni() {
         </div>
 
         {/* SMS Notifications */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -1144,9 +1146,9 @@ export default function Impostazioni() {
         </div>
 
         {/* Promotional */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -1169,7 +1171,7 @@ export default function Impostazioni() {
         <button
           onClick={() => handleSave('notifications')}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-5 w-5 mr-2" />
           {loading ? 'Salvataggio...' : 'Salva Preferenze'}
@@ -1196,7 +1198,7 @@ export default function Impostazioni() {
         {/* Grid Layout per le card */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Card: Cambia Password */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
                 <Shield className="h-5 w-5 text-white" />
@@ -1218,7 +1220,7 @@ export default function Impostazioni() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:scale-110 transition-transform duration-200"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -1284,7 +1286,7 @@ export default function Impostazioni() {
                 <button
                   onClick={() => handleSave('password')}
                   disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
@@ -1294,7 +1296,7 @@ export default function Impostazioni() {
           </div>
 
           {/* Card: Timeout Sessione */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
                 <Clock className="h-5 w-5 text-white" />
@@ -1330,7 +1332,7 @@ export default function Impostazioni() {
                 <button
                   onClick={handleSaveSessionTimeout}
                   disabled={loading}
-                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50"
+                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 transition-colors flex items-center disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Salva Timeout
@@ -1341,7 +1343,7 @@ export default function Impostazioni() {
         </div>
 
         {/* Sessioni Attive - Full width */}
-        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
@@ -1353,7 +1355,7 @@ export default function Impostazioni() {
                 <button
                   onClick={handleCleanupSessions}
                   disabled={loading}
-                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center disabled:opacity-50"
+                  className="text-orange-600 hover:text-orange-700 transition-colors text-sm font-medium flex items-center disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Pulisci Inattive
@@ -1362,7 +1364,7 @@ export default function Impostazioni() {
                   <button
                     onClick={handleTerminateAllSessions}
                     disabled={loading}
-                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium disabled:opacity-50"
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium disabled:opacity-50"
                   >
                     Termina Tutte
                   </button>
@@ -1386,7 +1388,7 @@ export default function Impostazioni() {
                 {sessions.map((session) => (
                   <div
                     key={session.id}
-                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-300 ${
+                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-200 ${
                       session.isCurrent ? 'border-green-300 bg-green-50' : 'border-gray-200'
                     }`}
                   >
@@ -1407,7 +1409,7 @@ export default function Impostazioni() {
                     {!session.isCurrent && (
                       <button
                         onClick={() => handleTerminateSession(session.id)}
-                        className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                        className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium"
                       >
                         Termina Sessione
                       </button>
@@ -1420,22 +1422,22 @@ export default function Impostazioni() {
 
         {/* Privacy - Grid 2 columns */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-shadow duration-300 bg-white">
+          <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-shadow duration-200 bg-white">
             <div>
               <p className="font-medium text-gray-900">Scarica i tuoi dati</p>
               <p className="text-sm text-gray-600">Esporta tutti i tuoi dati personali</p>
             </div>
-            <button className="text-primary-600 hover:text-primary-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
+            <button className="text-primary-600 hover:text-primary-700 transition-colors text-sm font-medium">
               Scarica
             </button>
           </div>
 
-          <div className="group flex items-center justify-between p-4 border border-red-200 rounded-xl hover:shadow-md transition-shadow duration-300 bg-white">
+          <div className="group flex items-center justify-between p-4 border border-red-200 rounded-xl hover:shadow-md transition-shadow duration-200 bg-white">
             <div>
               <p className="font-medium text-red-900">Elimina Account</p>
               <p className="text-sm text-red-600">Elimina permanentemente il tuo account e tutti i dati</p>
             </div>
-            <button className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
+            <button className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium">
               Elimina
             </button>
           </div>
@@ -1547,11 +1549,11 @@ export default function Impostazioni() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Auto-rinnovo Card */}
-            <div className="group relative overflow-hidden rounded-xl p-5 bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300">
+            <div className="group relative overflow-hidden rounded-xl p-5 bg-green-600 hover:bg-green-700 hover:shadow-md transition-all duration-200">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                       <CheckCircle className="h-5 w-5 text-white" />
                     </div>
                     <h5 className="font-semibold text-white">Auto-rinnovo</h5>
@@ -1571,9 +1573,9 @@ export default function Impostazioni() {
             </div>
 
             {/* Cambia Piano Card */}
-            <button className="group text-left rounded-xl p-5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg transition-all duration-300">
+            <button className="group text-left rounded-xl p-5 bg-blue-600 hover:bg-blue-700 hover:shadow-md transition-all duration-200">
               <div className="flex items-start">
-                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -1584,9 +1586,9 @@ export default function Impostazioni() {
             </button>
 
             {/* Sospendi Abbonamento Card */}
-            <button className="group text-left rounded-xl p-5 bg-orange-600 hover:bg-orange-700 hover:shadow-lg transition-all duration-300">
+            <button className="group text-left rounded-xl p-5 bg-orange-600 hover:bg-orange-700 hover:shadow-md transition-all duration-200">
               <div className="flex items-start">
-                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                   <Clock className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -1597,9 +1599,9 @@ export default function Impostazioni() {
             </button>
 
             {/* Cancella Abbonamento Card */}
-            <button className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-lg transition-all duration-300">
+            <button className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-md transition-all duration-200">
               <div className="flex items-start">
-                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                   <AlertTriangle className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -1641,13 +1643,13 @@ export default function Impostazioni() {
               {invoices.map((invoice, index) => (
                 <div
                   key={invoice._id}
-                  className="group relative overflow-hidden border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50 hover:shadow-lg hover:border-blue-300 transition-all duration-300"
+                  className="group relative overflow-hidden border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50 hover:shadow-md hover:border-blue-300 transition-all duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-start space-x-4 flex-1">
                       {/* Icon */}
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
                         <FileText className="h-6 w-6 text-white" />
                       </div>
 
@@ -1722,7 +1724,7 @@ export default function Impostazioni() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-4 rounded-lg text-left transition-all duration-200 ${
+              className={`p-4 rounded-lg text-left transition-colors ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -1741,7 +1743,7 @@ export default function Impostazioni() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
         {renderTabContent()}
       </div>
     </div>

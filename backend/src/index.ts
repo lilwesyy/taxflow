@@ -9,7 +9,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 // Check required environment variables
 const checkEnvVariables = () => {
   const required = ['MONGODB_URI', 'JWT_SECRET']
-  const optional = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FRONTEND_URL']
+  const optional = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FRONTEND_URL', 'INVOICETRONIC_API_KEY']
 
   const missing: string[] = []
   const warnings: string[] = []
@@ -32,6 +32,16 @@ const checkEnvVariables = () => {
 
   if (!process.env.FRONTEND_URL) {
     warnings.push('⚠️  FRONTEND_URL not set. Using default: http://localhost:5173')
+  }
+
+  // Check Invoicetronic configuration
+  if (!process.env.INVOICETRONIC_API_KEY || process.env.INVOICETRONIC_API_KEY === 'your_api_key_here') {
+    warnings.push('⚠️  INVOICETRONIC_API_KEY not configured properly.')
+    warnings.push('   Electronic invoicing features will not work.')
+    warnings.push('   Get your API key from: https://dashboard.invoicetronic.com/apikeys')
+  } else {
+    const isSandbox = process.env.INVOICETRONIC_SANDBOX_MODE === 'true'
+    console.log(`✅ Invoicetronic configured (${isSandbox ? 'Sandbox' : 'Production'} mode)`)
   }
 
   // Exit if required variables are missing
@@ -67,6 +77,7 @@ import documentsRoutes from './routes/documents'
 import servicesRoutes from './routes/services'
 import invoicesRoutes from './routes/invoices'
 import arubaRoutes from './routes/aruba'
+import invoicetronicRoutes from './routes/invoicetronic'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -105,6 +116,7 @@ app.use('/api/documents', documentsRoutes)
 app.use('/api/services', servicesRoutes)
 app.use('/api/invoices', invoicesRoutes)
 app.use('/api/aruba', arubaRoutes)
+app.use('/api/invoicetronic', invoicetronicRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

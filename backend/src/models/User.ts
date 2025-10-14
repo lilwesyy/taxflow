@@ -31,6 +31,15 @@ interface IUser extends mongoose.Document {
   fatturato?: number
   status?: 'active' | 'pending' | 'new' | 'inactive' | 'rejected' | 'pending_payment'
 
+  // Invoicetronic integration
+  invoicetronic?: {
+    companyId?: number           // Invoicetronic company ID
+    vat?: string                  // VAT number with country code (e.g., IT01234567891)
+    fiscalCodeIT?: string         // Italian fiscal code (e.g., RSSMRA70A01F205V)
+    companyName?: string          // Company name registered in Invoicetronic
+    createdAt?: Date              // When the company was created in Invoicetronic
+  }
+
   // Two-step approval process
   registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'  // First approval: can login
   pivaFormSubmitted?: boolean  // Has submitted P.IVA form
@@ -145,6 +154,15 @@ const UserSchema = new mongoose.Schema({
   fatturato: { type: Number, default: 0 },
   status: { type: String, enum: ['active', 'pending', 'new', 'inactive', 'pending_payment'], default: 'new' },
 
+  // Invoicetronic integration
+  invoicetronic: {
+    companyId: Number,
+    vat: String,
+    fiscalCodeIT: String,
+    companyName: String,
+    createdAt: Date
+  },
+
   // Two-step approval process
   registrationApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   pivaFormSubmitted: { type: Boolean, default: false },
@@ -252,7 +270,7 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
 }
 
 // Indexes for faster queries
-UserSchema.index({ email: 1 }, { unique: true })
+// Note: email index is already defined as unique in schema definition (line 134)
 UserSchema.index({ role: 1 })
 UserSchema.index({ registrationApprovalStatus: 1 })
 UserSchema.index({ pivaApprovalStatus: 1 })

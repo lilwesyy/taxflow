@@ -1,5 +1,6 @@
-import { FileText, Plus, Search, Filter, DollarSign, Building, CheckCircle, Clock } from 'lucide-react'
-import { useState } from 'react'
+import { FileText, Plus, Search, Filter, DollarSign, Building, CheckCircle, Clock, Building2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../../../context/AuthContext'
 import { StatsGrid } from '../../shared/StatsCard'
 import InvoiceTable from '../../shared/InvoiceTable'
 import InvoiceDetailModal from '../../shared/InvoiceDetailModal'
@@ -10,8 +11,10 @@ import type { StatItem } from '../../shared/StatsCard'
 import type { Invoice, Client } from '../../../../types/dashboard'
 import { calculateInvoiceStats } from '../../../../utils/invoiceUtils'
 import Modal from '../../../common/Modal'
+import api from '../../../../services/api'
 
 export default function Fatturazione() {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('fatture')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -19,6 +22,69 @@ export default function Fatturazione() {
   const [showNewClient, setShowNewClient] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+
+  // Invoicetronic state
+  const [invoicetronicCompany, setInvoicetronicCompany] = useState<any>(null)
+  const [loadingCompany, setLoadingCompany] = useState(true)
+  const [setupLoading, setSetupLoading] = useState(false)
+  const [setupError, setSetupError] = useState<string | null>(null)
+  const [setupData, setSetupData] = useState({
+    vat: '',
+    fiscalCode: '',
+    name: ''
+  })
+
+  // Check if user has Invoicetronic company on mount
+  useEffect(() => {
+    checkInvoicetronicCompany()
+  }, [])
+
+  // Prepopulate form with user data
+  useEffect(() => {
+    if (user && !invoicetronicCompany) {
+      setSetupData({
+        vat: (user as any).piva || '',
+        fiscalCode: (user as any).fiscalCode || '',
+        name: (user as any).company || user.name || ''
+      })
+    }
+  }, [user, invoicetronicCompany])
+
+  const checkInvoicetronicCompany = async () => {
+    try {
+      setLoadingCompany(true)
+      const response = await api.getInvoicetronicCompany()
+      if (response && response.success) {
+        setInvoicetronicCompany(response.company)
+      }
+    } catch (error: any) {
+      console.error('Error checking Invoicetronic company:', error)
+    } finally {
+      setLoadingCompany(false)
+    }
+  }
+
+  const handleInvoicetronicSetup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSetupError(null)
+    setSetupLoading(true)
+
+    try {
+      const response = await api.createInvoicetronicCompany(setupData)
+
+      if (response.success) {
+        setInvoicetronicCompany(response.company)
+        setSetupData({ vat: '', fiscalCode: '', name: '' })
+      } else {
+        throw new Error(response.message || 'Setup fallito')
+      }
+    } catch (error: any) {
+      console.error('Invoicetronic setup error:', error)
+      setSetupError(error.message || 'Errore durante la configurazione')
+    } finally {
+      setSetupLoading(false)
+    }
+  }
 
   // Filter business invoices (forfettario - no IVA)
   const businessInvoices = mockInvoices.filter(invoice => invoice.iva === 0)
@@ -191,8 +257,156 @@ export default function Fatturazione() {
     }
   ]
 
+  // Show loading state
+  if (loadingCompany) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Caricamento configurazione fatturazione...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show setup form if not configured
+  if (!invoicetronicCompany) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building2 className="h-8 w-8 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Configura Sistema Fatturazione
+            </h2>
+            <p className="text-gray-600">
+              Per iniziare a emettere fatture elettroniche, configura i tuoi dati fiscali
+            </p>
+          </div>
+
+          {/* Info Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start space-x-3">
+              <Building2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-700">
+                <p className="font-semibold mb-1">Perché servono questi dati?</p>
+                <p>I dati fiscali sono necessari per registrare la tua azienda nel sistema di fatturazione elettronica Invoicetronic e permetterti di emettere fatture valide ai tuoi clienti.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {setupError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-700">{setupError}</p>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleInvoicetronicSetup} className="space-y-6">
+            {/* VAT Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Partita IVA *
+              </label>
+              <input
+                type="text"
+                value={setupData.vat}
+                onChange={(e) => setSetupData(prev => ({ ...prev, vat: e.target.value }))}
+                placeholder="IT01234567891 (con prefisso paese)"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Inserisci la Partita IVA con il prefisso del paese (es: IT01234567891)
+              </p>
+            </div>
+
+            {/* Fiscal Code */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Codice Fiscale *
+              </label>
+              <input
+                type="text"
+                value={setupData.fiscalCode}
+                onChange={(e) => setSetupData(prev => ({ ...prev, fiscalCode: e.target.value }))}
+                placeholder="RSSMRA70A01F205V"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Codice fiscale dell'azienda o del professionista
+              </p>
+            </div>
+
+            {/* Company Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ragione Sociale / Nome *
+              </label>
+              <input
+                type="text"
+                value={setupData.name}
+                onChange={(e) => setSetupData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Mario Rossi Srl"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Nome completo della società o del professionista
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={setupLoading}
+                className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+              >
+                {setupLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Configurazione in corso...
+                  </>
+                ) : (
+                  'Configura Sistema Fatturazione'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
+      {/* Invoicetronic Status Banner */}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <div className="flex items-start space-x-3">
+          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="font-semibold text-green-900 mb-1">
+              Sistema Fatturazione Configurato
+            </h4>
+            <p className="text-sm text-green-700">
+              <strong>{invoicetronicCompany.name}</strong> - P.IVA: {invoicetronicCompany.vat}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Puoi ora emettere fatture elettroniche ai tuoi clienti
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
         <div className="grid grid-cols-2 gap-3">

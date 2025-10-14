@@ -629,6 +629,62 @@ class ApiService {
     const cleanUrl = fileUrl.startsWith('/api/') ? fileUrl.substring(4) : fileUrl
     return `${API_BASE_URL.replace('/api', '')}${cleanUrl}`
   }
+
+  // Invoicetronic Integration
+  async createInvoicetronicCompany(data: { vat: string; fiscalCode: string; name: string }) {
+    const response = await fetch(`${API_BASE_URL}/invoicetronic/company/create`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to create company')
+    }
+
+    return response.json()
+  }
+
+  async getInvoicetronicCompany() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/invoicetronic/company`, {
+        method: 'GET',
+        headers: this.getHeaders(true),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to get company')
+      }
+
+      const data = await response.json()
+
+      // Check if company exists
+      if (!data.success || data.hasCompany === false) {
+        return null
+      }
+
+      return data
+    } catch (error: any) {
+      console.error('Error getting Invoicetronic company:', error)
+      return null
+    }
+  }
+
+  async testInvoicetronicConnection() {
+    const response = await fetch(`${API_BASE_URL}/invoicetronic/test`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to test connection')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()

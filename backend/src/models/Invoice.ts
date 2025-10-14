@@ -73,9 +73,9 @@ const InvoiceSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 // Index for faster queries
+// Note: numero index is already defined as unique in schema definition (line 47)
 InvoiceSchema.index({ adminUserId: 1, status: 1 })
 InvoiceSchema.index({ businessUserId: 1 })
-InvoiceSchema.index({ numero: 1 })
 InvoiceSchema.index({ stripeCheckoutSessionId: 1 })
 
 // Static method to generate invoice number

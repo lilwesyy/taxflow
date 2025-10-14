@@ -341,10 +341,15 @@ export default function Impostazioni() {
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [sessionTimeout, setSessionTimeout] = useState(43200) // Default 30 days
 
-  // Aruba states
-  const [arubaStatus, setArubaStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
-  const [arubaMessage, setArubaMessage] = useState('')
-  const [testingAruba, setTestingAruba] = useState(false)
+  // Invoicetronic states
+  const [invoicetronicStatus, setInvoicetronicStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [invoicetronicMessage, setInvoicetronicMessage] = useState('')
+  const [testingInvoicetronic, setTestingInvoicetronic] = useState(false)
+  const [invoicetronicData, setInvoicetronicData] = useState<{
+    operationLeft?: number
+    signatureLeft?: number
+    sandboxMode?: boolean
+  }>({})
 
   const tabs = [
     {
@@ -501,17 +506,16 @@ export default function Impostazioni() {
     }
   }
 
-  const handleTestArubaAuth = async () => {
-    setTestingAruba(true)
-    setArubaStatus('testing')
-    setArubaMessage('Connessione ad Aruba in corso...')
+  const handleTestInvoicetronicStatus = async () => {
+    setTestingInvoicetronic(true)
+    setInvoicetronicStatus('testing')
+    setInvoicetronicMessage('Connessione a Invoicetronic in corso...')
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/aruba/authenticate`, {
-        method: 'POST',
+      const response = await fetch(`${API_URL}/invoicetronic/status`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       })
@@ -519,30 +523,27 @@ export default function Impostazioni() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        setArubaStatus('success')
-        let message = `Connesso con successo! Servizio: ${data.service || 'Aruba Business'}`
+        setInvoicetronicStatus('success')
+        setInvoicetronicData({
+          operationLeft: data.operationLeft,
+          signatureLeft: data.signatureLeft,
+          sandboxMode: data.sandboxMode
+        })
 
-        if (data.feApiAccess !== undefined) {
-          if (data.feApiAccess) {
-            message += ` ✓ API Fatturazione Elettronica: Accessibile (${data.environment})`
-          } else {
-            message += ` ✗ API Fatturazione Elettronica: Non accessibile`
-          }
-        }
-
-        setArubaMessage(message)
-        showToast(data.feApiAccess ? 'Aruba completamente configurato!' : 'Aruba autenticato (FE API non accessibile)', data.feApiAccess ? 'success' : 'warning')
+        const mode = data.sandboxMode ? 'Sandbox' : 'Produzione'
+        setInvoicetronicMessage(`Connesso con successo! Ambiente: ${mode}`)
+        showToast('Invoicetronic connesso correttamente!', 'success')
       } else {
-        setArubaStatus('error')
-        setArubaMessage(data.message || 'Errore di autenticazione')
-        showToast('Errore nell\'autenticazione Aruba', 'error')
+        setInvoicetronicStatus('error')
+        setInvoicetronicMessage(data.message || 'Errore di connessione')
+        showToast('Errore nella connessione a Invoicetronic', 'error')
       }
     } catch (error) {
-      setArubaStatus('error')
-      setArubaMessage('Errore di connessione al server')
+      setInvoicetronicStatus('error')
+      setInvoicetronicMessage('Errore di connessione al server')
       showToast('Errore di connessione', 'error')
     } finally {
-      setTestingAruba(false)
+      setTestingInvoicetronic(false)
     }
   }
 
@@ -803,7 +804,7 @@ export default function Impostazioni() {
           <button
             onClick={() => handleSave('profile')}
             disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Salvataggio...' : 'Salva Modifiche'}
@@ -885,9 +886,9 @@ export default function Impostazioni() {
       {/* Other Notifications */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Push Notifications */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -905,9 +906,9 @@ export default function Impostazioni() {
         </div>
 
         {/* SMS Notifications */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -925,9 +926,9 @@ export default function Impostazioni() {
         </div>
 
         {/* Promotional */}
-        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+        <div className="group border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
               <Bell className="h-6 w-6 text-white" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -950,7 +951,7 @@ export default function Impostazioni() {
         <button
           onClick={() => handleSave('notifications')}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-5 w-5 mr-2" />
           {loading ? 'Salvataggio...' : 'Salva Preferenze'}
@@ -977,7 +978,7 @@ export default function Impostazioni() {
       {/* Grid Layout per le card */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card: Cambia Password */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center mb-4">
             <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
               <Shield className="h-5 w-5 text-white" />
@@ -999,7 +1000,7 @@ export default function Impostazioni() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:scale-110 transition-transform duration-200"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -1065,7 +1066,7 @@ export default function Impostazioni() {
                 <button
                   onClick={() => handleSave('password')}
                   disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
@@ -1075,7 +1076,7 @@ export default function Impostazioni() {
           </div>
 
         {/* Card: Autenticazione 2FA */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center mb-4">
             <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
               <Shield className="h-5 w-5 text-white" />
@@ -1097,7 +1098,7 @@ export default function Impostazioni() {
                 <button
                   onClick={handle2FAEnable}
                   disabled={loading}
-                  className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                  className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm disabled:opacity-50"
                 >
                   Attiva 2FA
                 </button>
@@ -1113,7 +1114,7 @@ export default function Impostazioni() {
                   <button
                     onClick={handle2FADisable}
                     disabled={loading || !disable2FAPassword}
-                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg transition-all duration-200 text-sm disabled:opacity-50"
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
                   >
                     Disattiva 2FA
                   </button>
@@ -1123,7 +1124,7 @@ export default function Impostazioni() {
           </div>
 
         {/* Card: Timeout Sessione */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center mb-4">
             <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
               <Clock className="h-5 w-5 text-white" />
@@ -1159,7 +1160,7 @@ export default function Impostazioni() {
                 <button
                   onClick={handleSaveSessionTimeout}
                   disabled={loading}
-                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all duration-200 flex items-center disabled:opacity-50"
+                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 transition-colors flex items-center disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Salva Timeout
@@ -1170,7 +1171,7 @@ export default function Impostazioni() {
       </div>
 
       {/* Sessioni Attive - Full width */}
-      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
@@ -1182,7 +1183,7 @@ export default function Impostazioni() {
                 <button
                   onClick={handleCleanupSessions}
                   disabled={loading}
-                  className="text-orange-600 hover:text-orange-700 hover:scale-110 transition-all duration-200 text-sm font-medium flex items-center disabled:opacity-50"
+                  className="text-orange-600 hover:text-orange-700 transition-colors text-sm font-medium flex items-center disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Pulisci Inattive
@@ -1191,7 +1192,7 @@ export default function Impostazioni() {
                   <button
                     onClick={handleTerminateAllSessions}
                     disabled={loading}
-                    className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium disabled:opacity-50"
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium disabled:opacity-50"
                   >
                     Termina Tutte
                   </button>
@@ -1224,7 +1225,7 @@ export default function Impostazioni() {
                 return (
                   <div
                     key={session.id}
-                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-300 ${
+                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-200 ${
                       session.isCurrent ? 'border-green-300 bg-green-50' : 'border-gray-200'
                     }`}
                   >
@@ -1245,7 +1246,7 @@ export default function Impostazioni() {
                     {!session.isCurrent && (
                       <button
                         onClick={() => handleTerminateSession(session.id)}
-                        className="text-red-600 hover:text-red-700 hover:scale-110 transition-all duration-200 text-sm font-medium"
+                        className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium"
                       >
                         Termina Sessione
                       </button>
@@ -1283,7 +1284,7 @@ export default function Impostazioni() {
                     <button
                       type="button"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center hover:scale-110 transition-transform duration-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors"
                     >
                       {showApiKey ? (
                         <EyeOff className="h-4 w-4 text-gray-400" />
@@ -1292,7 +1293,7 @@ export default function Impostazioni() {
                       )}
                     </button>
                   </div>
-                  <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-200">
+                  <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
                     Rigenera
                   </button>
                 </div>
@@ -1319,7 +1320,7 @@ export default function Impostazioni() {
           <div className="border-t border-gray-200 pt-6">
             <h4 className="font-medium text-gray-900 mb-4">Backup Automatico</h4>
             <div className="space-y-4">
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
                 <div>
                   <p className="font-medium text-gray-900">Backup Automatico</p>
                   <p className="text-sm text-gray-600">Backup automatico dei dati ogni giorno</p>
@@ -1356,41 +1357,54 @@ export default function Impostazioni() {
           <div className="border-t border-gray-200 pt-6">
             <h4 className="font-medium text-gray-900 mb-4">Fatturazione Elettronica</h4>
             <div className="space-y-3">
-              <div className="group border-2 border-orange-300 bg-orange-50 rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
+              <div className="group border-2 border-blue-300 bg-blue-50 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">Aruba Fatturazione Elettronica</p>
-                      <p className="text-sm text-gray-600">Invio fatture elettroniche tramite SDI</p>
+                      <p className="font-semibold text-gray-900">Invoicetronic Fatturazione Elettronica</p>
+                      <p className="text-sm text-gray-600">Sistema di fatturazione elettronica per i clienti</p>
                     </div>
                   </div>
-                  {arubaStatus === 'success' && (
+                  {invoicetronicStatus === 'success' && (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   )}
-                  {arubaStatus === 'error' && (
+                  {invoicetronicStatus === 'error' && (
                     <XCircle className="h-5 w-5 text-red-600" />
                   )}
                 </div>
 
-                {arubaMessage && (
+                {invoicetronicMessage && (
                   <div className={`mb-4 p-3 rounded-lg text-sm ${
-                    arubaStatus === 'success' ? 'bg-green-100 text-green-800' :
-                    arubaStatus === 'error' ? 'bg-red-100 text-red-800' :
+                    invoicetronicStatus === 'success' ? 'bg-green-100 text-green-800' :
+                    invoicetronicStatus === 'error' ? 'bg-red-100 text-red-800' :
                     'bg-blue-100 text-blue-800'
                   }`}>
-                    {arubaMessage}
+                    {invoicetronicMessage}
+                  </div>
+                )}
+
+                {invoicetronicStatus === 'success' && invoicetronicData.operationLeft !== undefined && (
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="text-xs text-gray-600 mb-1">Operazioni Rimaste</p>
+                      <p className="text-2xl font-bold text-blue-600">{invoicetronicData.operationLeft}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="text-xs text-gray-600 mb-1">Firme Rimaste</p>
+                      <p className="text-2xl font-bold text-blue-600">{invoicetronicData.signatureLeft}</p>
+                    </div>
                   </div>
                 )}
 
                 <button
-                  onClick={handleTestArubaAuth}
-                  disabled={testingAruba}
-                  className="w-full bg-orange-600 text-white px-4 py-2.5 rounded-lg hover:bg-orange-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleTestInvoicetronicStatus}
+                  disabled={testingInvoicetronic}
+                  className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {testingAruba ? (
+                  {testingInvoicetronic ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                       Connessione in corso...
@@ -1398,13 +1412,13 @@ export default function Impostazioni() {
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Testa Connessione Aruba
+                      Verifica Stato Invoicetronic
                     </>
                   )}
                 </button>
 
                 <p className="text-xs text-gray-600 mt-3">
-                  Verifica la connessione con il servizio di fatturazione elettronica Aruba
+                  Verifica lo stato dell'account Invoicetronic e i crediti disponibili
                 </p>
               </div>
             </div>
@@ -1413,9 +1427,9 @@ export default function Impostazioni() {
           <div className="border-t border-gray-200 pt-6">
             <h4 className="font-medium text-gray-900 mb-4">Altri Servizi</h4>
             <div className="space-y-3">
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3 hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                     <CreditCard className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
@@ -1426,9 +1440,9 @@ export default function Impostazioni() {
                 <span className="text-sm text-green-600 font-medium">Connesso</span>
               </div>
 
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                     <Mail className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
@@ -1436,14 +1450,14 @@ export default function Impostazioni() {
                     <p className="text-sm text-gray-600">Invio email</p>
                   </div>
                 </div>
-                <button className="text-primary-600 hover:text-primary-700 hover:scale-110 transition-all duration-200 text-sm font-medium">
+                <button className="text-primary-600 hover:text-primary-700 transition-colors text-sm font-medium">
                   Connetti
                 </button>
               </div>
 
-              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+              <div className="group flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3 hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
                     <Database className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
@@ -1460,7 +1474,7 @@ export default function Impostazioni() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => handleSave('integrations')}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 hover:scale-105 hover:shadow-lg transition-all duration-200 flex items-center"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
           >
             <Save className="h-4 w-4 mr-2" />
             Salva Integrazioni
@@ -1531,7 +1545,7 @@ export default function Impostazioni() {
                 setVerificationCode('')
                 setQrCode('')
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               disabled={loading}
             >
               Annulla
@@ -1539,7 +1553,7 @@ export default function Impostazioni() {
             <button
               onClick={handle2FAVerify}
               disabled={loading || verificationCode.length !== 6}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Verifica...' : 'Verifica e Attiva'}
             </button>
@@ -1568,13 +1582,13 @@ export default function Impostazioni() {
                 setShowTerminateSessionModal(false)
                 setSessionToTerminate(null)
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Annulla
             </button>
             <button
               onClick={confirmTerminateSession}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
               Termina Sessione
             </button>
@@ -1591,7 +1605,7 @@ export default function Impostazioni() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-4 rounded-lg text-left transition-all duration-200 ${
+              className={`p-4 rounded-lg text-left transition-colors ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -1610,7 +1624,7 @@ export default function Impostazioni() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
         {renderTabContent()}
       </div>
     </div>
