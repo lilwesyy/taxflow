@@ -54,7 +54,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
 
     // Strumenti di consulenza
     { id: 'consulenze', name: 'Chat Consulenze', icon: MessageSquare },
-    { id: 'analisi-ai', name: 'Analisi AI Clienti', icon: Brain },
+    { id: 'analisi-ai', name: 'Analisi SWOT', icon: Brain },
     { id: 'business-plans', name: 'Business Plans', icon: Target },
 
     // Gestione documenti e fatturazione
@@ -76,7 +76,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
       'dashboard': `Benvenuto ${userName}!`,
       'clienti': 'Gestione Clienti',
       'richieste-piva': 'Gestione Richieste P.IVA',
-      'analisi-ai': 'Analisi AI per Clienti',
+      'analisi-ai': 'Analisi SWOT per Clienti',
       'business-plans': 'Gestione Business Plans',
       'consulenze': 'Centro Consulenze',
       'documenti': 'Cassetti Fiscali Clienti',
@@ -91,7 +91,7 @@ export default function AdminDashboard({ onLogout, userRole, userName, userEmail
       'dashboard': 'Gestisci i tuoi clienti e le consulenze forfettarie',
       'clienti': 'Visualizza e gestisci tutti i tuoi clienti',
       'richieste-piva': 'Gestisci tutte le richieste di apertura partita IVA forfettaria dei tuoi clienti',
-      'analisi-ai': 'Strumenti avanzati di analisi AI per supportare le tue consulenze',
+      'analisi-ai': 'Strumenti avanzati di analisi SWOT per supportare le tue consulenze',
       'business-plans': 'Gestisci e revisiona i business plan dei tuoi clienti',
       'consulenze': 'Gestisci tutte le conversazioni e consulenze con i clienti',
       'documenti': 'Cassetti fiscali organizzati come Agenzia delle Entrate',
