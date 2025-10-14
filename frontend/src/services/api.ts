@@ -630,9 +630,14 @@ class ApiService {
     return `${API_BASE_URL.replace('/api', '')}${cleanUrl}`
   }
 
-  // Invoicetronic Integration
-  async createInvoicetronicCompany(data: { vat: string; fiscalCode: string; name: string }) {
-    const response = await fetch(`${API_BASE_URL}/invoicetronic/company/create`, {
+  // Fattura Elettronica API Integration
+  async createFatturaElettronicaCompany(data: {
+    ragione_sociale: string
+    piva: string
+    cfis: string
+    [key: string]: any
+  }) {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/aziende`, {
       method: 'POST',
       headers: this.getHeaders(true),
       body: JSON.stringify(data),
@@ -646,9 +651,9 @@ class ApiService {
     return response.json()
   }
 
-  async getInvoicetronicCompany() {
+  async getFatturaElettronicaCompany() {
     try {
-      const response = await fetch(`${API_BASE_URL}/invoicetronic/company`, {
+      const response = await fetch(`${API_BASE_URL}/fatturaelettronica/aziende`, {
         method: 'GET',
         headers: this.getHeaders(true),
       })
@@ -667,13 +672,42 @@ class ApiService {
 
       return data
     } catch (error: any) {
-      console.error('Error getting Invoicetronic company:', error)
+      console.error('Error getting Fattura Elettronica company:', error)
       return null
     }
   }
 
-  async testInvoicetronicConnection() {
-    const response = await fetch(`${API_BASE_URL}/invoicetronic/test`, {
+  async updateFatturaElettronicaCompany(data: any) {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/aziende`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to update company')
+    }
+
+    return response.json()
+  }
+
+  async deleteFatturaElettronicaCompany() {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/aziende`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to delete company')
+    }
+
+    return response.json()
+  }
+
+  async testFatturaElettronicaConnection() {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/status`, {
       method: 'GET',
       headers: this.getHeaders(true),
     })
@@ -684,6 +718,70 @@ class ApiService {
     }
 
     return response.json()
+  }
+
+  // Invoice Management
+  async sendInvoice(invoiceData: any, format: 'json' | 'xml' = 'json') {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/fatture`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ data: invoiceData, format }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to send invoice')
+    }
+
+    return response.json()
+  }
+
+  async getInvoices(params?: {
+    page?: number
+    per_page?: number
+    unread?: boolean
+    date_from?: string
+    date_to?: string
+    partita_iva?: string
+    numero_documento?: string
+    tipo_documento?: string
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.per_page) queryParams.append('per_page', params.per_page.toString())
+    if (params?.unread !== undefined) queryParams.append('unread', params.unread.toString())
+    if (params?.date_from) queryParams.append('date_from', params.date_from)
+    if (params?.date_to) queryParams.append('date_to', params.date_to)
+    if (params?.partita_iva) queryParams.append('partita_iva', params.partita_iva)
+    if (params?.numero_documento) queryParams.append('numero_documento', params.numero_documento)
+    if (params?.tipo_documento) queryParams.append('tipo_documento', params.tipo_documento)
+
+    const url = `${API_BASE_URL}/fatturaelettronica/fatture${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to get invoices')
+    }
+
+    return response.json()
+  }
+
+  async getInvoicePdf(invoiceId: string) {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/fatture/${invoiceId}/pdf`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to get invoice PDF')
+    }
+
+    return response.blob()
   }
 }
 

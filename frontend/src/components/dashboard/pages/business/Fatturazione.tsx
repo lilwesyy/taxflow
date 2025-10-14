@@ -1,20 +1,22 @@
-import { FileText, Plus, Search, Filter, DollarSign, Building, CheckCircle, Clock, Building2 } from 'lucide-react'
+import { FileText, Plus, Search, Filter, DollarSign, Building, CheckCircle, Clock, Building2, AlertCircle, RefreshCw } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
+import { useToast } from '../../../../context/ToastContext'
 import { StatsGrid } from '../../shared/StatsCard'
 import InvoiceTable from '../../shared/InvoiceTable'
 import InvoiceDetailModal from '../../shared/InvoiceDetailModal'
 import InvoiceCreateModal from '../../shared/InvoiceCreateModal'
 import ClientCreateModal from '../../shared/ClientCreateModal'
-import { mockInvoices, mockClients } from '../../../../data/mockData'
 import type { StatItem } from '../../shared/StatsCard'
 import type { Invoice, Client } from '../../../../types/dashboard'
 import { calculateInvoiceStats } from '../../../../utils/invoiceUtils'
 import Modal from '../../../common/Modal'
 import api from '../../../../services/api'
+import { buildFatturaOrdinaria, validateInvoiceData, type InvoiceFormData } from '../../../../utils/fatturaElettronicaBuilder'
 
 export default function Fatturazione() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('fatture')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -26,6 +28,7 @@ export default function Fatturazione() {
   // Invoicetronic state
   const [invoicetronicCompany, setInvoicetronicCompany] = useState<any>(null)
   const [loadingCompany, setLoadingCompany] = useState(true)
+  const [refreshingCompany, setRefreshingCompany] = useState(false)
   const [setupLoading, setSetupLoading] = useState(false)
   const [setupError, setSetupError] = useState<string | null>(null)
   const [setupData, setSetupData] = useState({
@@ -34,10 +37,26 @@ export default function Fatturazione() {
     name: ''
   })
 
+  // Invoices state
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [loadingInvoices, setLoadingInvoices] = useState(false)
+  const [invoiceError, setInvoiceError] = useState<string | null>(null)
+
+  // Clients state
+  const [clients] = useState<Client[]>([])
+  const [loadingClients] = useState(false)
+
   // Check if user has Invoicetronic company on mount
   useEffect(() => {
     checkInvoicetronicCompany()
   }, [])
+
+  // Load invoices when company is configured
+  useEffect(() => {
+    if (invoicetronicCompany) {
+      loadInvoices()
+    }
+  }, [invoicetronicCompany])
 
   // Prepopulate form with user data
   useEffect(() => {
@@ -53,14 +72,64 @@ export default function Fatturazione() {
   const checkInvoicetronicCompany = async () => {
     try {
       setLoadingCompany(true)
-      const response = await api.getInvoicetronicCompany()
+      const response = await api.getFatturaElettronicaCompany()
       if (response && response.success) {
         setInvoicetronicCompany(response.company)
       }
     } catch (error: any) {
-      console.error('Error checking Invoicetronic company:', error)
+      console.error('Error checking Fattura Elettronica company:', error)
     } finally {
       setLoadingCompany(false)
+    }
+  }
+
+  const handleRefreshCompany = async () => {
+    try {
+      setRefreshingCompany(true)
+      // Reload user profile data which includes updated company info
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(`${API_URL}/user/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Update the user in AuthContext
+        if (updateUser) {
+          updateUser(data.user)
+        }
+        showToast('Dati aziendali aggiornati con successo!', 'success')
+      } else {
+        throw new Error('Errore nel caricamento dei dati')
+      }
+    } catch (error: any) {
+      console.error('Error refreshing user profile:', error)
+      showToast('Errore nell\'aggiornamento dei dati', 'error')
+    } finally {
+      setRefreshingCompany(false)
+    }
+  }
+
+  const loadInvoices = async () => {
+    try {
+      setLoadingInvoices(true)
+      setInvoiceError(null)
+      const response = await api.getInvoices({ page: 1, per_page: 100 })
+
+      if (response.success) {
+        // Combine sent and received invoices
+        const allInvoices = [...(response.sent || []), ...(response.received || [])]
+        setInvoices(allInvoices)
+      }
+    } catch (error: any) {
+      console.error('Error loading invoices:', error)
+      setInvoiceError(error.message || 'Errore nel caricamento delle fatture')
+    } finally {
+      setLoadingInvoices(false)
     }
   }
 
@@ -70,38 +139,161 @@ export default function Fatturazione() {
     setSetupLoading(true)
 
     try {
-      const response = await api.createInvoicetronicCompany(setupData)
+      // Convert to Fattura Elettronica API format
+      const fatturaData = {
+        ragione_sociale: setupData.name,
+        piva: setupData.vat,
+        cfis: setupData.fiscalCode
+      }
+      const response = await api.createFatturaElettronicaCompany(fatturaData)
 
       if (response.success) {
         setInvoicetronicCompany(response.company)
         setSetupData({ vat: '', fiscalCode: '', name: '' })
+
+        // Show success message to user
+        const message = response.company.id
+          ? 'Configurazione completata! Azienda già esistente su Fattura Elettronica API.'
+          : 'Configurazione completata! Puoi ora creare la tua prima fattura.'
+
+        showToast(message, 'success')
       } else {
         throw new Error(response.message || 'Setup fallito')
       }
     } catch (error: any) {
-      console.error('Invoicetronic setup error:', error)
+      console.error('Fattura Elettronica setup error:', error)
       setSetupError(error.message || 'Errore durante la configurazione')
     } finally {
       setSetupLoading(false)
     }
   }
 
-  // Filter business invoices (forfettario - no IVA)
-  const businessInvoices = mockInvoices.filter(invoice => invoice.iva === 0)
+  // Convert Invoicetronic invoices to UI format
+  const convertedInvoices: Invoice[] = invoices.map((inv: any) => {
+    // Extract document data from first document if available
+    const doc = inv.documents && inv.documents.length > 0 ? inv.documents[0] : null
 
-  const clienti = mockClients
+    // Parse amount from meta_data if available
+    let importo = 0
+    if (inv.meta_data?.importo) {
+      importo = parseFloat(inv.meta_data.importo) || 0
+    } else if (inv.meta_data?.total_amount) {
+      importo = parseFloat(inv.meta_data.total_amount) || 0
+    }
 
-  const filteredFatture = businessInvoices.filter(fattura => {
+    // Determine status based on SDI identifier
+    let status: 'draft' | 'sent' | 'pending' | 'paid' | 'overdue' = 'draft'
+    if (inv.identifier) {
+      // If we have an SDI identifier, invoice was sent
+      status = 'sent'
+    }
+
+    return {
+      id: inv.id?.toString() || '',
+      conversationId: '',
+      businessUserId: user?.id || '',
+      adminUserId: '',
+      numero: doc?.number || inv.file_name || `#${inv.id}`,
+      cliente: inv.committente || 'Cliente',
+      clienteEmail: '',
+      azienda: inv.company?.name || invoicetronicCompany?.name || '',
+      consulente: '',
+      servizio: inv.meta_data?.descrizione || inv.format || 'Servizio professionale',
+      tipo: 'Fattura',
+      importo: importo,
+      iva: 0,  // Forfettario - no IVA
+      totale: importo,
+      status: status,
+      dataEmissione: doc?.date ? new Date(doc.date).toISOString().split('T')[0] :
+                      (inv.date_sent ? new Date(inv.date_sent).toISOString().split('T')[0] :
+                       new Date(inv.created).toISOString().split('T')[0]),
+      dataScadenza: undefined,
+      dataPagamento: undefined,
+      stripePaymentIntentId: '',
+      createdAt: new Date(inv.created || Date.now()),
+      updatedAt: new Date(inv.last_update || inv.created || Date.now()),
+      // Additional Invoicetronic data (stored as any to avoid type issues)
+      ...(inv.identifier && { descrizione: `SDI ID: ${inv.identifier}` })
+    } as unknown as Invoice
+  })
+
+  // Use converted invoices (no mock data)
+  const businessInvoices = convertedInvoices
+
+  const filteredFatture = businessInvoices.filter((fattura: any) => {
     const matchesSearch = fattura.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          fattura.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         fattura.servizio.toLowerCase().includes(searchTerm.toLowerCase())
+                         (fattura.servizio && fattura.servizio.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesFilter = filterStatus === 'all' || fattura.status === filterStatus
     return matchesSearch && matchesFilter
   })
 
-  const handleCreateInvoice = (formData: unknown) => {
-    console.log('Creating business invoice:', formData)
-    setShowNewInvoice(false)
+  const handleCreateInvoice = async (formData: any) => {
+    try {
+      setInvoiceError(null)
+
+      // Validate we have company data
+      if (!invoicetronicCompany) {
+        throw new Error('Azienda non configurata')
+      }
+
+      // Build invoice data from form
+      // Note: This is a simplified version. You may need to enhance the form to collect all required data
+      const invoiceFormData: InvoiceFormData = {
+        cliente: {
+          denominazione: formData.cliente || '',
+          partitaIva: formData.clientePiva || '',
+          codiceFiscale: formData.clienteCF || '',
+          indirizzo: formData.clienteIndirizzo || 'Via Roma 1',
+          cap: formData.clienteCAP || '00100',
+          comune: formData.clienteComune || 'Roma',
+          provincia: formData.clienteProvincia || 'RM',
+          codiceDestinatario: formData.codiceDestinatario || '0000000',
+          pec: formData.pec
+        },
+        fornitore: {
+          denominazione: invoicetronicCompany.name,
+          partitaIva: invoicetronicCompany.vat,
+          codiceFiscale: invoicetronicCompany.fiscalCode,
+          indirizzo: (user as any)?.indirizzo || 'Via Example 1',
+          cap: (user as any)?.cap || '00100',
+          comune: (user as any)?.comune || 'Roma',
+          provincia: (user as any)?.provincia || 'RM',
+          regimeFiscale: 'RF19'  // Forfettario
+        },
+        numero: formData.numero || `${Date.now()}`,
+        data: formData.data || new Date().toISOString().split('T')[0],
+        descrizione: formData.descrizione || formData.servizio || 'Servizio professionale',
+        importo: parseFloat(formData.importo) || parseFloat(formData.totale) || 0,
+        aliquotaIVA: 0  // Forfettario senza IVA
+      }
+
+      // Validate invoice data
+      const validation = validateInvoiceData(invoiceFormData)
+      if (!validation.valid) {
+        throw new Error(`Dati fattura non validi: ${validation.errors.join(', ')}`)
+      }
+
+      // Build FatturaOrdinaria
+      const fatturaOrdinaria = buildFatturaOrdinaria(invoiceFormData)
+
+      // Send to Invoicetronic
+      const response = await api.sendInvoice(fatturaOrdinaria)
+
+      if (response.success) {
+        console.log('Invoice sent successfully:', response.invoice)
+        // Reload invoices
+        await loadInvoices()
+        setShowNewInvoice(false)
+        showToast('Fattura inviata con successo!', 'success')
+      } else {
+        throw new Error(response.message || 'Errore nell\'invio della fattura')
+      }
+    } catch (error: any) {
+      console.error('Error creating invoice:', error)
+      setInvoiceError(error.message || 'Errore nella creazione della fattura')
+      showToast(error.message || 'Errore nella creazione della fattura', 'error')
+    }
   }
 
   const handleCreateClient = (formData: unknown) => {
@@ -136,6 +328,24 @@ export default function Fatturazione() {
 
   const renderFattureTab = () => (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {invoiceError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-red-700">{invoiceError}</p>
+              <button
+                onClick={() => loadInvoices()}
+                className="text-sm text-red-600 hover:text-red-700 underline mt-1"
+              >
+                Riprova
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <StatsGrid stats={stats} />
 
@@ -180,15 +390,42 @@ export default function Fatturazione() {
       </div>
 
       {/* Fatture Table */}
-      <InvoiceTable
-        invoices={filteredFatture}
-        onViewInvoice={handleViewInvoice}
-        onEditInvoice={handleEditInvoice}
-        onDownloadInvoice={handleDownloadInvoice}
-        onSendInvoice={handleSendInvoice}
-        showClientEmail={false}
-        showService={true}
-      />
+      {loadingInvoices ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Caricamento fatture...</p>
+          </div>
+        </div>
+      ) : filteredFatture.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessuna fattura trovata</h3>
+          <p className="text-gray-600 mb-6">
+            {searchTerm || filterStatus !== 'all'
+              ? 'Prova a modificare i filtri di ricerca'
+              : 'Inizia creando la tua prima fattura elettronica'}
+          </p>
+          {!searchTerm && filterStatus === 'all' && (
+            <button
+              onClick={() => setShowNewInvoice(true)}
+              className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200"
+            >
+              Crea Prima Fattura
+            </button>
+          )}
+        </div>
+      ) : (
+        <InvoiceTable
+          invoices={filteredFatture}
+          onViewInvoice={handleViewInvoice}
+          onEditInvoice={handleEditInvoice}
+          onDownloadInvoice={handleDownloadInvoice}
+          onSendInvoice={handleSendInvoice}
+          showClientEmail={false}
+          showService={true}
+        />
+      )}
     </div>
   )
 
@@ -205,9 +442,31 @@ export default function Fatturazione() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="divide-y divide-gray-200">
-          {clienti.map((cliente) => (
+      {loadingClients ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Caricamento clienti...</p>
+          </div>
+        </div>
+      ) : clients.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun cliente trovato</h3>
+          <p className="text-gray-600 mb-6">
+            Inizia aggiungendo il tuo primo cliente per poter emettere fatture
+          </p>
+          <button
+            onClick={() => setShowNewClient(true)}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200"
+          >
+            Aggiungi Primo Cliente
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="divide-y divide-gray-200">
+            {clients.map((cliente) => (
             <div key={cliente.id} className="p-6 hover:bg-gray-50 transition-colors group">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
@@ -236,9 +495,10 @@ export default function Fatturazione() {
                 </div>
               </div>
             </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 
@@ -293,7 +553,12 @@ export default function Fatturazione() {
               <Building2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-blue-700">
                 <p className="font-semibold mb-1">Perché servono questi dati?</p>
-                <p>I dati fiscali sono necessari per registrare la tua azienda nel sistema di fatturazione elettronica Invoicetronic e permetterti di emettere fatture valide ai tuoi clienti.</p>
+                <p className="mb-2">
+                  I dati fiscali sono necessari per emettere fatture elettroniche valide ai tuoi clienti tramite il Sistema di Interscambio (SDI).
+                </p>
+                <p className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded inline-block">
+                  💡 La tua azienda sarà registrata sul sistema di fatturazione elettronica
+                </p>
               </div>
             </div>
           </div>
@@ -394,11 +659,29 @@ export default function Fatturazione() {
         <div className="flex items-start space-x-3">
           <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
           <div className="flex-1">
-            <h4 className="font-semibold text-green-900 mb-1">
-              Sistema Fatturazione Configurato
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-green-900 mb-1">
+                Sistema Fatturazione Configurato
+              </h4>
+              <div className="flex items-center space-x-2">
+                {invoices.length > 0 && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                    {invoices.length} fatture caricate
+                  </span>
+                )}
+                <button
+                  onClick={handleRefreshCompany}
+                  disabled={refreshingCompany}
+                  className="flex items-center space-x-1 text-green-700 hover:text-green-800 text-sm font-medium px-3 py-1 rounded-lg hover:bg-green-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Aggiorna dati aziendali dalle impostazioni"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshingCompany ? 'animate-spin' : ''}`} />
+                  <span>{refreshingCompany ? 'Aggiornamento...' : 'Aggiorna'}</span>
+                </button>
+              </div>
+            </div>
             <p className="text-sm text-green-700">
-              <strong>{invoicetronicCompany.name}</strong> - P.IVA: {invoicetronicCompany.vat}
+              <strong>{(user as any)?.company || invoicetronicCompany.name}</strong> - P.IVA: {(user as any)?.piva || invoicetronicCompany.vat}
             </p>
             <p className="text-xs text-green-600 mt-1">
               Puoi ora emettere fatture elettroniche ai tuoi clienti

@@ -31,13 +31,23 @@ interface IUser extends mongoose.Document {
   fatturato?: number
   status?: 'active' | 'pending' | 'new' | 'inactive' | 'rejected' | 'pending_payment'
 
-  // Invoicetronic integration
-  invoicetronic?: {
-    companyId?: number           // Invoicetronic company ID
-    vat?: string                  // VAT number with country code (e.g., IT01234567891)
-    fiscalCodeIT?: string         // Italian fiscal code (e.g., RSSMRA70A01F205V)
-    companyName?: string          // Company name registered in Invoicetronic
-    createdAt?: Date              // When the company was created in Invoicetronic
+  // Fattura Elettronica API integration
+  fatturaElettronica?: {
+    aziendaId?: string            // Fattura Elettronica API company ID
+    piva?: string                 // VAT number (e.g., 12345678901 or IT12345678901)
+    cfis?: string                 // Codice fiscale
+    ragioneSociale?: string       // Company name
+    indirizzo?: string            // Address
+    cap?: string                  // CAP
+    citta?: string                // City
+    provincia?: string            // Province code (e.g., RM)
+    paese?: string                // Country
+    formaGiuridica?: string       // Legal form (ind|ss|snc|sas|spa|sapa|srl|srlsem|srlrid|coop|altro)
+    tipoRegimeFiscale?: string    // Tax regime (RF01, RF02, etc.)
+    telefono?: string             // Phone
+    email?: string                // Email
+    iban?: string                 // IBAN
+    createdAt?: Date              // When the company was created
   }
 
   // Two-step approval process
@@ -154,12 +164,22 @@ const UserSchema = new mongoose.Schema({
   fatturato: { type: Number, default: 0 },
   status: { type: String, enum: ['active', 'pending', 'new', 'inactive', 'pending_payment'], default: 'new' },
 
-  // Invoicetronic integration
-  invoicetronic: {
-    companyId: Number,
-    vat: String,
-    fiscalCodeIT: String,
-    companyName: String,
+  // Fattura Elettronica API integration
+  fatturaElettronica: {
+    aziendaId: String,
+    piva: String,
+    cfis: String,
+    ragioneSociale: String,
+    indirizzo: String,
+    cap: String,
+    citta: String,
+    provincia: String,
+    paese: String,
+    formaGiuridica: String,
+    tipoRegimeFiscale: String,
+    telefono: String,
+    email: String,
+    iban: String,
     createdAt: Date
   },
 

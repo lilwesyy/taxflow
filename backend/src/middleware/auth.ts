@@ -18,7 +18,12 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     }
 
     const token = authHeader.substring(7)
-    const JWT_SECRET = process.env.JWT_SECRET || 'taxflow_jwt_secret_key_2024'
+    const JWT_SECRET = process.env.JWT_SECRET
+
+    if (!JWT_SECRET) {
+      console.error('CRITICAL: JWT_SECRET is not defined in environment variables')
+      return res.status(500).json({ error: 'Errore di configurazione del server' })
+    }
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: string, role: 'business' | 'admin' }

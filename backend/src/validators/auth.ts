@@ -1,9 +1,17 @@
 import { z } from 'zod'
 
+// Secure password validation schema
+export const passwordSchema = z.string()
+  .min(8, 'Password deve essere di almeno 8 caratteri')
+  .max(128, 'Password troppo lunga')
+  .regex(/[A-Z]/, 'Password deve contenere almeno una lettera maiuscola')
+  .regex(/[a-z]/, 'Password deve contenere almeno una lettera minuscola')
+  .regex(/[0-9]/, 'Password deve contenere almeno un numero')
+
 // Login validation
 export const loginSchema = z.object({
   email: z.string().email('Email non valida'),
-  password: z.string().min(6, 'Password minimo 6 caratteri').max(128, 'Password troppo lunga'),
+  password: z.string().min(1, 'Password obbligatoria'), // For login, we don't validate complexity
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
@@ -11,9 +19,7 @@ export type LoginInput = z.infer<typeof loginSchema>
 // Register validation
 export const registerSchema = z.object({
   email: z.string().email('Email non valida'),
-  password: z.string()
-    .min(6, 'Password minimo 6 caratteri')
-    .max(128, 'Password troppo lunga'),
+  password: passwordSchema,
   name: z.string().min(1, 'Nome obbligatorio').max(100, 'Nome troppo lungo'),
   role: z.enum(['business', 'admin']).optional().default('business'),
 })

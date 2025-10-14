@@ -2,6 +2,8 @@ import { Router, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import User from '../models/User'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
+import { validateObjectId } from '../middleware/validateObjectId'
+import { passwordSchema } from '../validators/auth'
 
 const router = Router()
 
@@ -174,8 +176,11 @@ router.put('/update', authMiddleware, async (req: AuthRequest, res: Response) =>
         return res.status(401).json({ error: 'La password attuale non è corretta' })
       }
 
-      if (newPassword.length < 8) {
-        return res.status(400).json({ error: 'La nuova password deve essere di almeno 8 caratteri' })
+      // Validate new password with Zod schema
+      const passwordValidation = passwordSchema.safeParse(newPassword)
+      if (!passwordValidation.success) {
+        const errors = passwordValidation.error.issues.map((e: any) => e.message).join(', ')
+        return res.status(400).json({ error: errors })
       }
 
       const salt = await bcrypt.genSalt(10)
@@ -251,7 +256,7 @@ router.get('/pending-registrations', authMiddleware, async (req: AuthRequest, re
 })
 
 // Approve/reject registration (admin only)
-router.post('/pending-registrations/:userId/approve', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/pending-registrations/:userId/approve', authMiddleware, validateObjectId('userId'), async (req: AuthRequest, res: Response) => {
   try {
     const adminUser = await User.findById(req.userId)
     if (!adminUser || adminUser.role !== 'admin') {
@@ -313,7 +318,7 @@ router.get('/piva-requests', authMiddleware, async (req: AuthRequest, res: Respo
 })
 
 // Approve/reject P.IVA request (admin only)
-router.post('/piva-requests/:userId/approve', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/piva-requests/:userId/approve', authMiddleware, validateObjectId('userId'), async (req: AuthRequest, res: Response) => {
   try {
     const adminUser = await User.findById(req.userId)
     if (!adminUser || adminUser.role !== 'admin') {

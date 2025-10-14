@@ -13,8 +13,14 @@ const router = Router()
 
 // Generate JWT Token
 const generateToken = (userId: string, role: 'business' | 'admin'): string => {
-  const JWT_SECRET = process.env.JWT_SECRET || 'taxflow_jwt_secret_key_2024'
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '24h' })
+  const JWT_SECRET = process.env.JWT_SECRET
+
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables')
+  }
+
+  // Reduced expiration time from 24h to 1h for better security
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '1h' })
 }
 
 // Validation helpers
@@ -23,24 +29,7 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email) && email.length <= 254
 }
 
-const validatePasswordStrength = (password: string): { valid: boolean; error?: string } => {
-  if (password.length < 8) {
-    return { valid: false, error: 'La password deve essere di almeno 8 caratteri' }
-  }
-  if (password.length > 128) {
-    return { valid: false, error: 'La password è troppo lunga' }
-  }
-  if (!/[A-Z]/.test(password)) {
-    return { valid: false, error: 'La password deve contenere almeno una lettera maiuscola' }
-  }
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, error: 'La password deve contenere almeno una lettera minuscola' }
-  }
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, error: 'La password deve contenere almeno un numero' }
-  }
-  return { valid: true }
-}
+// Password validation is now handled by Zod schema in validators/auth.ts
 
 const validateName = (name: string): { valid: boolean; sanitized?: string; error?: string } => {
   const trimmed = name.trim()
@@ -227,11 +216,6 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Formato email non valido' })
     }
 
-    const passwordValidation = validatePasswordStrength(password)
-    if (!passwordValidation.valid) {
-      return res.status(400).json({ error: passwordValidation.error })
-    }
-
     const nameValidation = validateName(name)
     if (!nameValidation.valid) {
       return res.status(400).json({ error: nameValidation.error })
@@ -239,7 +223,8 @@ router.post('/register', async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({ email: normalizedEmail })
     if (existingUser) {
-      return res.status(409).json({ error: 'Esiste già un utente con questa email' })
+      // Generic error message to prevent email enumeration
+      return res.status(400).json({ error: 'Impossibile completare la registrazione. Verifica i tuoi dati.' })
     }
 
     const user = new User({
@@ -318,22 +303,15 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     // Send email with reset link
     try {
       await sendPasswordResetEmail(user.email, resetUrl)
-      console.log('Password reset email sent to:', user.email)
+      console.log('Password reset email sent successfully')
     } catch (emailError) {
-      console.error('Failed to send password reset email:', emailError)
-      // Don't reveal to user that email sending failed for security reasons
-      // But log the token for development/debugging
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Password Reset URL:', resetUrl)
-        console.log('Reset Token:', resetToken)
-      }
+      console.error('Failed to send password reset email')
+      // Don't log sensitive information even in development
     }
 
     res.json({
       success: true,
-      message: 'Se l\'email esiste nel nostro sistema, riceverai le istruzioni per il reset della password',
-      // In development, include token for testing
-      ...(process.env.NODE_ENV === 'development' && { resetToken, resetUrl })
+      message: 'Se l\'email esiste nel nostro sistema, riceverai le istruzioni per il reset della password'
     })
   } catch (error) {
     console.error('Forgot password error:', error)
@@ -350,11 +328,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Token e nuova password sono obbligatori' })
     }
 
-    // Validate password strength
-    const passwordValidation = validatePasswordStrength(password)
-    if (!passwordValidation.valid) {
-      return res.status(400).json({ error: passwordValidation.error })
-    }
+    // Password validation is handled by Zod schema
 
     // Hash the token from URL to compare with database
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
