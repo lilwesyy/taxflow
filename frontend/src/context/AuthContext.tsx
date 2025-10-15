@@ -42,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const freshUser = data.user || data
         setUser(freshUser)
         localStorage.setItem('user', JSON.stringify(freshUser))
-        console.log('✅ User data refreshed from backend:', freshUser)
       }
     } catch (error) {
       console.error('Error refreshing user:', error)
@@ -113,7 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const freshUser = freshData.user || freshData
         setUser(freshUser)
         localStorage.setItem('user', JSON.stringify(freshUser))
-        console.log('✅ Login complete with fresh user data:', freshUser)
       } else {
         // Fallback to original user data if refresh fails
         setUser(data.user)

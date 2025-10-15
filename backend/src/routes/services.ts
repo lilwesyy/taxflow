@@ -274,6 +274,66 @@ router.post('/suspend-work', authenticateToken, async (req: AuthRequest, res) =>
   }
 })
 
+// Update business plan content (admin only) - for saving intermediate progress
+router.post('/update-business-plan', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userRole = req.user!.role
+
+    // Only admin can update business plan content
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Solo gli admin possono aggiornare i contenuti' })
+    }
+
+    const { serviceId, content } = req.body
+
+    if (!serviceId) {
+      return res.status(400).json({ error: 'Service ID è obbligatorio' })
+    }
+
+    const service = await PurchasedService.findById(serviceId)
+    if (!service) {
+      return res.status(404).json({ error: 'Servizio non trovato' })
+    }
+
+    // Update business plan content (intermediate save)
+    if (service.serviceType === 'business_plan') {
+      service.businessPlanContent = {
+        creationMode: content.creationMode,
+        executiveSummary: content.executiveSummary || '',
+        idea: content.idea || '',
+        businessModel: content.businessModel || '',
+        marketAnalysis: content.marketAnalysis || '',
+        team: content.team || '',
+        roadmap: content.roadmap || '',
+        financialPlan: content.financialPlan || '',
+        revenueProjections: content.revenueProjections || '',
+        customSections: content.customSections || [],
+        // Legacy fields
+        objective: content.objective || '',
+        timeSeriesForecasting: content.timeSeriesForecasting || '',
+        budgetSimulation: content.budgetSimulation || '',
+        alerts: content.alerts || '',
+        pdfUrl: content.pdfUrl || ''
+      }
+    }
+
+    // Save without changing status (it stays in_progress)
+    await service.save()
+
+    res.json({
+      success: true,
+      message: 'Contenuto salvato con successo',
+      service
+    })
+  } catch (error) {
+    console.error('Error updating business plan:', error)
+    res.status(500).json({
+      error: 'Errore nel salvataggio del contenuto',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+})
+
 // Complete service with content (admin only)
 router.post('/complete-service', authenticateToken, async (req: AuthRequest, res) => {
   try {

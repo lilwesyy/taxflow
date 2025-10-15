@@ -2,6 +2,7 @@ import { Briefcase, Eye, Search, Filter, AlertTriangle, CheckCircle, Clock, Chev
 import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
+import BusinessPlanEditor from './BusinessPlanEditor'
 
 const MAX_OPEN_TABS = 4
 
@@ -26,9 +27,22 @@ interface PurchasedService {
     email: string
   }
   businessPlanContent?: {
-    executiveSummary: string
-    objective: string
-    marketAnalysis: string
+    creationMode?: 'ai' | 'template' | 'scratch'
+    executiveSummary?: string
+    idea?: string
+    businessModel?: string
+    marketAnalysis?: string
+    team?: string
+    roadmap?: string
+    financialPlan?: string
+    revenueProjections?: string
+    customSections?: Array<{
+      id: string
+      title: string
+      content: string
+    }>
+    // Legacy fields (manteniamo per retrocompatibilità)
+    objective?: string
     timeSeriesForecasting?: string
     budgetSimulation?: string
     alertsAndWarnings?: string
@@ -54,25 +68,20 @@ export default function BusinessPlans() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [currentUserId, setCurrentUserId] = useState<string>('')
 
-  // Form data for each tab
-  const [tabFormData, setTabFormData] = useState<Record<string, {
-    executiveSummary: string
-    objective: string
-    marketAnalysis: string
-    timeSeriesForecasting: string
-    budgetSimulation: string
-    alertsAndWarnings: string
-    pdfUrl: string
-  }>>({})
+  // Form data for each tab - now supports new structure
+  const [tabFormData, setTabFormData] = useState<Record<string, any>>({})
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
+    creationMode: undefined,
     executiveSummary: '',
-    objective: '',
+    idea: '',
+    businessModel: '',
     marketAnalysis: '',
-    timeSeriesForecasting: '',
-    budgetSimulation: '',
-    alertsAndWarnings: '',
-    pdfUrl: ''
+    team: '',
+    roadmap: '',
+    financialPlan: '',
+    revenueProjections: '',
+    customSections: []
   })
 
   useEffect(() => {
@@ -97,13 +106,16 @@ export default function BusinessPlans() {
         setTabFormData(prev => ({
           ...prev,
           [service._id]: {
+            creationMode: service.businessPlanContent?.creationMode,
             executiveSummary: service.businessPlanContent?.executiveSummary || '',
-            objective: service.businessPlanContent?.objective || '',
+            idea: service.businessPlanContent?.idea || '',
+            businessModel: service.businessPlanContent?.businessModel || '',
             marketAnalysis: service.businessPlanContent?.marketAnalysis || '',
-            timeSeriesForecasting: service.businessPlanContent?.timeSeriesForecasting || '',
-            budgetSimulation: service.businessPlanContent?.budgetSimulation || '',
-            alertsAndWarnings: service.businessPlanContent?.alertsAndWarnings || '',
-            pdfUrl: service.businessPlanContent?.pdfUrl || ''
+            team: service.businessPlanContent?.team || '',
+            roadmap: service.businessPlanContent?.roadmap || '',
+            financialPlan: service.businessPlanContent?.financialPlan || '',
+            revenueProjections: service.businessPlanContent?.revenueProjections || '',
+            customSections: service.businessPlanContent?.customSections || []
           }
         }))
       }
@@ -157,13 +169,16 @@ export default function BusinessPlans() {
   const closeModal = () => {
     setSelectedService(null)
     setFormData({
+      creationMode: undefined,
       executiveSummary: '',
-      objective: '',
+      idea: '',
+      businessModel: '',
       marketAnalysis: '',
-      timeSeriesForecasting: '',
-      budgetSimulation: '',
-      alertsAndWarnings: '',
-      pdfUrl: ''
+      team: '',
+      roadmap: '',
+      financialPlan: '',
+      revenueProjections: '',
+      customSections: []
     })
   }
 
@@ -173,13 +188,16 @@ export default function BusinessPlans() {
       setSelectedService(service)
       if (service.businessPlanContent) {
         setFormData({
+          creationMode: service.businessPlanContent.creationMode,
           executiveSummary: service.businessPlanContent.executiveSummary || '',
-          objective: service.businessPlanContent.objective || '',
+          idea: service.businessPlanContent.idea || '',
+          businessModel: service.businessPlanContent.businessModel || '',
           marketAnalysis: service.businessPlanContent.marketAnalysis || '',
-          timeSeriesForecasting: service.businessPlanContent.timeSeriesForecasting || '',
-          budgetSimulation: service.businessPlanContent.budgetSimulation || '',
-          alertsAndWarnings: service.businessPlanContent.alertsAndWarnings || '',
-          pdfUrl: service.businessPlanContent.pdfUrl || ''
+          team: service.businessPlanContent.team || '',
+          roadmap: service.businessPlanContent.roadmap || '',
+          financialPlan: service.businessPlanContent.financialPlan || '',
+          revenueProjections: service.businessPlanContent.revenueProjections || '',
+          customSections: service.businessPlanContent.customSections || []
         })
       }
       return
@@ -331,8 +349,8 @@ export default function BusinessPlans() {
     const data = serviceId ? tabFormData[serviceId] : formData
 
     // Validate required fields
-    if (!data || !data.executiveSummary || !data.objective || !data.marketAnalysis) {
-      showToast('Compila almeno Executive Summary, Obiettivo e Analisi di Mercato', 'error')
+    if (!data || !data.executiveSummary || !data.idea || !data.marketAnalysis) {
+      showToast('Compila almeno Executive Summary, L\'Idea e Analisi di Mercato', 'error')
       return
     }
 
@@ -372,16 +390,6 @@ export default function BusinessPlans() {
     } finally {
       setIsUpdating(false)
     }
-  }
-
-  const updateTabFormData = (serviceId: string, field: string, value: string) => {
-    setTabFormData(prev => ({
-      ...prev,
-      [serviceId]: {
-        ...prev[serviceId],
-        [field]: value
-      }
-    }))
   }
 
   // Get open tabs (services assigned to current consultant)
@@ -481,159 +489,78 @@ export default function BusinessPlans() {
     }
 
     const formData = tabFormData[activeTab as string] || {
-      executiveSummary: '',
-      objective: '',
-      marketAnalysis: '',
-      timeSeriesForecasting: '',
-      budgetSimulation: '',
-      alertsAndWarnings: '',
-      pdfUrl: ''
+      creationMode: service.businessPlanContent?.creationMode,
+      executiveSummary: service.businessPlanContent?.executiveSummary || '',
+      idea: service.businessPlanContent?.idea || '',
+      businessModel: service.businessPlanContent?.businessModel || '',
+      marketAnalysis: service.businessPlanContent?.marketAnalysis || '',
+      team: service.businessPlanContent?.team || '',
+      roadmap: service.businessPlanContent?.roadmap || '',
+      financialPlan: service.businessPlanContent?.financialPlan || '',
+      revenueProjections: service.businessPlanContent?.revenueProjections || '',
+      customSections: service.businessPlanContent?.customSections || []
     }
 
     return renderBusinessPlanEditor(service, formData)
   }
 
-  const renderBusinessPlanEditor = (service: PurchasedService, data: typeof formData) => (
-    <div className="space-y-6">
-      {/* Client Info Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Cliente</p>
-            <p className="font-medium text-gray-900">{service.userId.name}</p>
-            <p className="text-xs text-gray-500">{service.userId.email}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Status</p>
-            <span className={`inline-flex items-center px-3 py-1 text-sm rounded-full ${getStatusColor(service.status)}`}>
-              {getStatusIcon(service.status)}
-              <span className="ml-2">{getStatusText(service.status)}</span>
-            </span>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Importo Pagato</p>
-            <p className="font-semibold text-blue-600">€{(service.amountPaid / 100).toFixed(2)}</p>
-          </div>
-        </div>
-      </div>
+  const renderBusinessPlanEditor = (service: PurchasedService, data: any) => {
+    const handleSave = async (businessPlanData: any) => {
+      // Update local state
+      setTabFormData(prev => ({
+        ...prev,
+        [service._id]: businessPlanData
+      }))
 
-      {/* Form Fields */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Contenuto Business Plan</h3>
+      // Save to database
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/services/update-business-plan`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            serviceId: service._id,
+            content: businessPlanData
+          })
+        })
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Executive Summary <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={data.executiveSummary}
-            onChange={(e) => updateTabFormData(service._id, 'executiveSummary', e.target.value)}
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Sintesi esecutiva del business plan..."
-          />
-        </div>
+        if (!response.ok) {
+          throw new Error('Errore nel salvataggio')
+        }
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Obiettivi <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={data.objective}
-            onChange={(e) => updateTabFormData(service._id, 'objective', e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Obiettivi principali del business..."
-          />
-        </div>
+        console.log('Business plan saved to database')
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Analisi di Mercato <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={data.marketAnalysis}
-            onChange={(e) => updateTabFormData(service._id, 'marketAnalysis', e.target.value)}
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Analisi del mercato di riferimento..."
-          />
-        </div>
+        // Reload services to get updated data including creationMode
+        await loadServices()
+      } catch (error) {
+        console.error('Error saving business plan:', error)
+        throw error // Re-throw to let the caller handle it
+      }
+    }
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Time Series Forecasting
-          </label>
-          <textarea
-            value={data.timeSeriesForecasting}
-            onChange={(e) => updateTabFormData(service._id, 'timeSeriesForecasting', e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Previsioni temporali e trend..."
-          />
-        </div>
+    const handleComplete = async (businessPlanData: any) => {
+      setTabFormData(prev => ({
+        ...prev,
+        [service._id]: businessPlanData
+      }))
+      await handleCompleteService(service._id)
+    }
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Simulazione Budget
-          </label>
-          <textarea
-            value={data.budgetSimulation}
-            onChange={(e) => updateTabFormData(service._id, 'budgetSimulation', e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Simulazione finanziaria e budget..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Alert e Avvisi
-          </label>
-          <textarea
-            value={data.alertsAndWarnings}
-            onChange={(e) => updateTabFormData(service._id, 'alertsAndWarnings', e.target.value)}
-            rows={2}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Avvisi importanti e note..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            URL PDF (opzionale)
-          </label>
-          <input
-            type="url"
-            value={data.pdfUrl}
-            onChange={(e) => updateTabFormData(service._id, 'pdfUrl', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="https://example.com/business-plan.pdf"
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-          <button
-            onClick={() => handleSuspendWork(service._id)}
-            disabled={isUpdating}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2"
-          >
-            <Pause className="h-4 w-4" />
-            <span>Sospendi Lavoro</span>
-          </button>
-          <button
-            onClick={() => handleCompleteService(service._id)}
-            disabled={isUpdating || !data.executiveSummary || !data.objective || !data.marketAnalysis}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          >
-            <CheckCircle className="h-4 w-4" />
-            <span>{isUpdating ? 'Pubblicazione...' : 'Completa e Pubblica'}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+    return (
+      <BusinessPlanEditor
+        key={`${service._id}-${service.businessPlanContent?.creationMode || 'none'}`}
+        service={service}
+        initialData={data}
+        onSave={handleSave}
+        onComplete={handleComplete}
+        onSuspend={() => handleSuspendWork(service._id)}
+        isUpdating={isUpdating}
+      />
+    )
+  }
 
   const renderOverviewTab = () => {
     // Get suspended services (in_progress but no consultant assigned)

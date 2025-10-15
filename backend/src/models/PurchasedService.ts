@@ -1,10 +1,30 @@
 import mongoose, { Document, Schema } from 'mongoose'
 
+// Custom Section Schema
+const CustomSectionSchema = new Schema({
+  id: { type: String, required: true },
+  title: { type: String, required: true },
+  content: { type: String, required: true }
+}, { _id: false })
+
 // Business Plan Content Schema
 const BusinessPlanContentSchema = new Schema({
+  // Creation mode tracking
+  creationMode: { type: String, enum: ['ai', 'template', 'scratch'] },
+
+  // New structure fields
   executiveSummary: { type: String },
-  objective: { type: String },
+  idea: { type: String },
+  businessModel: { type: String },
   marketAnalysis: { type: String },
+  team: { type: String },
+  roadmap: { type: String },
+  financialPlan: { type: String },
+  revenueProjections: { type: String },
+  customSections: [CustomSectionSchema],
+
+  // Legacy fields (for backward compatibility)
+  objective: { type: String },
   timeSeriesForecasting: { type: String },
   budgetSimulation: { type: String },
   alerts: { type: String },
@@ -30,12 +50,27 @@ export interface IPurchasedService extends Document {
   stripeCheckoutSessionId?: string
   amountPaid: number
   businessPlanContent?: {
-    executiveSummary: string
-    objective: string
-    marketAnalysis: string
-    timeSeriesForecasting: string
-    budgetSimulation: string
-    alerts: string
+    // Creation mode tracking
+    creationMode?: 'ai' | 'template' | 'scratch'
+    // New structure fields
+    executiveSummary?: string
+    idea?: string
+    businessModel?: string
+    marketAnalysis?: string
+    team?: string
+    roadmap?: string
+    financialPlan?: string
+    revenueProjections?: string
+    customSections?: Array<{
+      id: string
+      title: string
+      content: string
+    }>
+    // Legacy fields (for backward compatibility)
+    objective?: string
+    timeSeriesForecasting?: string
+    budgetSimulation?: string
+    alerts?: string
     pdfUrl?: string
   }
   analisiSWOTContent?: {

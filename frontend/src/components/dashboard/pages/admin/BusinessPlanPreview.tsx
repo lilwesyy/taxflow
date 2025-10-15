@@ -1,0 +1,109 @@
+import { FileText, Calendar, User } from 'lucide-react'
+import Logo from '../../../common/Logo'
+
+interface CustomSection {
+  id: string
+  title: string
+  content: string
+}
+
+interface BusinessPlanData {
+  executiveSummary: string
+  idea: string
+  businessModel: string
+  marketAnalysis: string
+  team: string
+  roadmap: string
+  financialPlan: string
+  revenueProjections: string
+  customSections: CustomSection[]
+}
+
+interface BusinessPlanPreviewProps {
+  data: BusinessPlanData
+  clientName: string
+}
+
+export default function BusinessPlanPreview({ data, clientName }: BusinessPlanPreviewProps) {
+  const currentDate = new Date().toLocaleDateString('it-IT', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
+  const renderSection = (title: string, content: string) => {
+    if (!content) return null
+
+    return (
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+          {title}
+        </h2>
+        <div
+          className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Preview Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <FileText className="h-8 w-8" />
+            <span className="text-sm font-medium uppercase tracking-wider">Business Plan</span>
+          </div>
+          <div>
+            <Logo className="h-12" inverted={true} />
+          </div>
+        </div>
+
+        <h1 className="text-4xl font-bold mb-2">
+          Business Plan
+        </h1>
+        <p className="text-xl text-blue-100">
+          {clientName}
+        </p>
+
+        <div className="mt-6 pt-6 border-t border-blue-500 flex items-center space-x-6 text-sm text-blue-100">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4" />
+            <span>{currentDate}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <User className="h-4 w-4" />
+            <span>TaxFlow Consulting</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Content */}
+      <div className="p-8 max-w-4xl mx-auto">
+        <div className="prose prose-lg max-w-none">
+          {renderSection('Executive Summary', data.executiveSummary)}
+          {renderSection("L'Idea", data.idea)}
+          {renderSection('Business Model', data.businessModel)}
+          {renderSection('Analisi di Mercato e Concorrenza', data.marketAnalysis)}
+          {renderSection('Il Team', data.team)}
+          {renderSection('Roadmap e Go-to-Market', data.roadmap)}
+          {renderSection('Piano Economico-Finanziario', data.financialPlan)}
+          {renderSection('Proiezioni Ricavi', data.revenueProjections)}
+
+          {/* Custom Sections */}
+          {data.customSections.map((section) => (
+            renderSection(section.title, section.content)
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+          <p>Documento riservato e confidenziale</p>
+          <p className="mt-1">© {new Date().getFullYear()} TaxFlow - Tutti i diritti riservati</p>
+        </div>
+      </div>
+    </div>
+  )
+}
