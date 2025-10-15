@@ -342,9 +342,9 @@ export default function ReportsAnalytics() {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {overviewStats.map((stat, index) => (
-          <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+          <div key={index} className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -357,20 +357,20 @@ export default function ReportsAnalytics() {
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">{stat.value}</h3>
-            <p className="text-sm text-gray-600">{stat.title}</p>
+            <p className="text-xs sm:text-sm text-gray-600">{stat.title}</p>
           </div>
         ))}
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Andamento Fatturato</h3>
             <div className="flex items-center space-x-2 hover:scale-105 transition-transform">
               <LineChart className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Mensile</span>
+              <span className="text-xs sm:text-sm text-gray-600">Mensile</span>
             </div>
           </div>
           <div className="h-64 flex items-end justify-between space-x-2">
@@ -395,7 +395,7 @@ export default function ReportsAnalytics() {
         </div>
 
         {/* Consultation Types */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Tipi di Consulenza</h3>
             <PieChart className="h-4 w-4 text-gray-400 hover:scale-110 transition-transform" />
@@ -418,9 +418,9 @@ export default function ReportsAnalytics() {
       </div>
 
       {/* Top Clients and Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Clients */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Top Clienti</h3>
             <Activity className="h-4 w-4 text-gray-400 hover:scale-110 transition-transform" />
@@ -447,7 +447,7 @@ export default function ReportsAnalytics() {
         </div>
 
         {/* Consultant Performance */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Performance Consulenti</h3>
             <BarChart3 className="h-4 w-4 text-gray-400 hover:scale-110 transition-transform" />
@@ -459,7 +459,7 @@ export default function ReportsAnalytics() {
                   <h4 className="font-medium text-gray-900">{consulente.nome}</h4>
                   <div className="flex items-center">
                     <span className="text-yellow-400">★</span>
-                    <span className="text-sm text-gray-600 ml-1">{consulente.rating}</span>
+                    <span className="text-xs sm:text-sm text-gray-600 ml-1">{consulente.rating}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
@@ -491,12 +491,12 @@ export default function ReportsAnalytics() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Mese</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Fatturato</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Nuovi Clienti</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Consulenze</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Ticket Medio</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Crescita</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Mese</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Fatturato</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Nuovi Clienti</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Consulenze</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Ticket Medio</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Crescita</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

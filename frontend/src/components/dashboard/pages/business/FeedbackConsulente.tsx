@@ -162,7 +162,7 @@ export default function FeedbackConsulente() {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-5 w-5 ${
+            className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
               star <= rating
                 ? 'text-yellow-400 fill-current'
                 : 'text-gray-300'
@@ -175,24 +175,24 @@ export default function FeedbackConsulente() {
   }
 
   const renderFeedbackTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <MessageCircle className="h-8 w-8 text-blue-600 mr-3" />
+            <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-3 flex-shrink-0" />
             <div>
-              <p className="text-sm text-gray-600">Feedback Totali</p>
-              <p className="text-2xl font-bold text-gray-900">{feedbackList.length}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Feedback Totali</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{feedbackList.length}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <Star className="h-8 w-8 text-yellow-500 mr-3" />
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mr-3 flex-shrink-0" />
             <div>
-              <p className="text-sm text-gray-600">Valutazione Media</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">Valutazione Media</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {feedbackList.length > 0
                   ? (feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1)
                   : '0.0'
@@ -201,23 +201,23 @@ export default function FeedbackConsulente() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
+            <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mr-3 flex-shrink-0" />
             <div>
-              <p className="text-sm text-gray-600">Risposte Ricevute</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">Risposte Ricevute</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {feedbackList.filter(f => f.status === 'responded').length}
               </p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <Clock className="h-8 w-8 text-orange-600 mr-3" />
+            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 mr-3 flex-shrink-0" />
             <div>
-              <p className="text-sm text-gray-600">In Attesa</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">In Attesa</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {feedbackList.filter(f => f.status === 'pending').length}
               </p>
             </div>
@@ -226,25 +226,25 @@ export default function FeedbackConsulente() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10 relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Cerca feedback per titolo, consulente o servizio..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
               >
                 <option value="all">Tutti gli stati</option>
                 <option value="pending">In attesa</option>
@@ -255,9 +255,9 @@ export default function FeedbackConsulente() {
           </div>
           <button
             onClick={() => setShowNewFeedback(true)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+            className="w-full sm:w-auto bg-primary-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center text-xs sm:text-sm"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
             Nuovo Feedback
           </button>
         </div>
@@ -282,22 +282,22 @@ export default function FeedbackConsulente() {
           </div>
         ) : (
           filteredFeedback.map((feedback) => (
-            <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+            <div key={feedback.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary-600" />
+                <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{feedback.title}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                      <span>Consulente: {feedback.consultantName}</span>
-                      <span>Servizio: {feedback.service}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1 truncate">{feedback.title}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-xs sm:text-sm text-gray-600 mb-2">
+                      <span className="truncate">Consulente: {feedback.consultantName}</span>
+                      <span className="truncate">Servizio: {feedback.service}</span>
                       <span>Data: {formatDate(feedback.createdAt)}</span>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {renderStars(feedback.rating)}
-                      <span className="text-sm text-gray-500">({feedback.rating}/5)</span>
+                      <span className="text-xs sm:text-sm text-gray-500">({feedback.rating}/5)</span>
                       <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(feedback.status)}`}>
                         {getStatusIcon(feedback.status)}
                         <span className="ml-1">{getStatusText(feedback.status)}</span>
@@ -305,7 +305,7 @@ export default function FeedbackConsulente() {
                     </div>
                   </div>
                 </div>
-                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded flex-shrink-0 ml-2">
                   {feedback.category}
                 </span>
               </div>
@@ -329,12 +329,12 @@ export default function FeedbackConsulente() {
                 </div>
               )}
 
-              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 border-t border-gray-100 gap-2 sm:gap-0">
                 <button
                   onClick={() => setSelectedFeedback(feedback)}
-                  className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
+                  className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-medium flex items-center hover:scale-110 transition-transform duration-200"
                 >
-                  <Eye className="h-4 w-4 mr-1" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 mr-1 flex-shrink-0" />
                   Visualizza Dettagli
                 </button>
                 <div className="flex items-center space-x-2">
@@ -353,33 +353,33 @@ export default function FeedbackConsulente() {
   )
 
   const renderConsultantsTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="text-center">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">I Tuoi Consulenti</h3>
-        <p className="text-gray-600">Visualizza e valuta i consulenti che ti hanno assistito</p>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">I Tuoi Consulenti</h3>
+        <p className="text-sm sm:text-base text-gray-600">Visualizza e valuta i consulenti che ti hanno assistito</p>
       </div>
 
       {consultants.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun consulente disponibile</h3>
-          <p className="text-gray-600">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+          <User className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Nessun consulente disponibile</h3>
+          <p className="text-sm sm:text-base text-gray-600">
             Non ci sono consulenti disponibili al momento.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {consultants.map((consultant) => (
-            <div key={consultant.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="h-8 w-8 text-primary-600" />
+            <div key={consultant.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600" />
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1">{consultant.name}</h4>
-                <p className="text-sm text-gray-600 mb-3">{consultant.specialization}</p>
+                <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-1 truncate">{consultant.name}</h4>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 truncate">{consultant.specialization}</p>
                 <div className="flex items-center justify-center space-x-2 mb-2">
                   {renderStars(Math.floor(consultant.rating))}
-                  <span className="text-sm text-gray-600">({consultant.rating})</span>
+                  <span className="text-xs sm:text-sm text-gray-600">({consultant.rating})</span>
                 </div>
                 <p className="text-xs text-gray-500">{consultant.totalFeedbacks} recensioni</p>
               </div>
@@ -389,9 +389,9 @@ export default function FeedbackConsulente() {
                   setShowNewFeedback(true)
                   // Pre-fill consultant data
                 }}
-                className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center"
+                className="w-full bg-primary-600 text-white py-2 sm:py-2.5 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center text-xs sm:text-sm"
               >
-                <Star className="h-4 w-4 mr-2" />
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                 Lascia Feedback
               </button>
             </div>
@@ -437,25 +437,25 @@ export default function FeedbackConsulente() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
         <div className="grid grid-cols-2 gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-3 rounded-lg text-left transition-all duration-200 ${
+              className={`p-3 sm:p-4 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
               <div className="flex items-center space-x-2 mb-1">
-                <tab.icon className="h-4 w-4" />
-                <span className="font-medium text-sm">{tab.name}</span>
+                <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="font-medium text-xs sm:text-sm truncate">{tab.name}</span>
               </div>
-              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'} line-clamp-2`}>
                 {tab.description}
               </p>
             </button>
@@ -476,7 +476,7 @@ export default function FeedbackConsulente() {
         <div className="space-y-6">
           {/* Consultant Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Consulente *</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Consulente *</label>
             <select
               value={formData.consultantId}
               onChange={(e) => {
@@ -487,7 +487,7 @@ export default function FeedbackConsulente() {
                   consultantName: consultant ? consultant.name : ''
                 })
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 sm:px-4 sm:py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
             >
               <option value="">Seleziona un consulente</option>
               {consultants.map((consultant) => (
@@ -623,10 +623,10 @@ export default function FeedbackConsulente() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
             <button
               onClick={() => setShowNewFeedback(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm"
               disabled={loading}
             >
               Annulla
@@ -634,9 +634,9 @@ export default function FeedbackConsulente() {
             <button
               onClick={handleSubmitFeedback}
               disabled={loading}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
             >
-              <Send className="h-4 w-4 mr-2" />
+              <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
               {loading ? 'Invio...' : 'Invia Feedback'}
             </button>
           </div>

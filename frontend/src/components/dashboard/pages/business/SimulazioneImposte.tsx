@@ -140,19 +140,19 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
   return (
     <div className="space-y-8">
       {/* Quick Scenarios */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
         <div className="flex items-center mb-4">
-          <Zap className="h-5 w-5 text-primary-600 mr-2" />
-          <h3 className="font-semibold text-gray-900">Scenari Rapidi</h3>
+          <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 mr-2" />
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900">Scenari Rapidi</h3>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {quickScenarios.map((scenario) => (
             <button
               key={scenario.name}
               onClick={() => applyQuickScenario(scenario)}
               className="bg-gray-50 p-3 rounded-lg hover:bg-primary-50 hover:border-primary-300 border border-gray-200 hover:shadow-md transition-all duration-200 text-left group"
             >
-              <p className="text-sm font-medium text-gray-900 group-hover:text-primary-600 transition-colors">{scenario.name}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-900 group-hover:text-primary-600 transition-colors">{scenario.name}</p>
               <p className="text-xs text-gray-600 mt-1">€ {parseInt(scenario.fatturato).toLocaleString()}</p>
             </button>
           ))}
@@ -161,8 +161,8 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Inserisci i tuoi dati</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Inserisci i tuoi dati</h3>
 
           <div className="space-y-6">
             <div>
@@ -276,10 +276,10 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
           {risultato ? (
             <>
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={exportResults}
-                  className="flex-1 bg-primary-100 border border-primary-300 text-primary-700 py-2 px-4 rounded-lg hover:bg-primary-200 hover:border-primary-400 transition-all duration-200 flex items-center justify-center font-medium"
+                  className="flex-1 bg-primary-100 border border-primary-300 text-primary-700 py-2 px-3 sm:px-4 rounded-lg hover:bg-primary-200 hover:border-primary-400 transition-all duration-200 flex items-center justify-center font-medium text-sm"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Esporta
@@ -293,7 +293,7 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                       }, 100)
                     }
                   }}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center font-medium ${
+                  className={`flex-1 py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center font-medium text-sm ${
                     showComparison
                       ? 'bg-primary-600 text-white shadow-lg shadow-primary-300'
                       : 'bg-primary-100 border border-primary-300 text-primary-700 hover:bg-primary-200 hover:border-primary-400'
@@ -305,9 +305,9 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               </div>
 
               {/* Visual Tax Breakdown */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <PieChart className="h-5 w-5 mr-2 text-primary-600" />
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-300">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary-600" />
                   Ripartizione Imposte
                 </h3>
 
@@ -391,27 +391,27 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all duration-200">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center">
-                    <div className="bg-primary-100 p-2 rounded-lg">
-                      <PieChart className="h-7 w-7 text-primary-600" />
+                    <div className="bg-primary-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                      <PieChart className="h-5 w-5 sm:h-7 sm:w-7 text-primary-600" />
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-2 sm:ml-3">
                       <p className="text-xs text-gray-600 font-medium">% Tasse</p>
-                      <p className="text-2xl font-bold text-gray-900">{risultato.percentualeTasse.toFixed(1)}%</p>
+                      <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.percentualeTasse.toFixed(1)}%</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all duration-200">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center">
-                    <div className="bg-green-100 p-2 rounded-lg">
-                      <TrendingUp className="h-7 w-7 text-green-600" />
+                    <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                      <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-2 sm:ml-3">
                       <p className="text-xs text-gray-600 font-medium">Coefficiente</p>
-                      <p className="text-2xl font-bold text-gray-900">{risultato.coefficiente}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.coefficiente}</p>
                     </div>
                   </div>
                 </div>
@@ -419,17 +419,17 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
 
               {/* Benefits Card */}
               {risultato.isNeoAttivita && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-6 animate-fade-in">
-                  <div className="flex items-start space-x-3">
-                    <Info className="h-5 w-5 text-green-600 mt-1" />
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 animate-fade-in">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
                     <div>
-                      <h4 className="font-semibold text-green-900 mb-2">Agevolazione Neo-attività</h4>
-                      <p className="text-sm text-green-800 mb-2">
+                      <h4 className="text-sm sm:text-base font-semibold text-green-900 mb-2">Agevolazione Neo-attività</h4>
+                      <p className="text-xs sm:text-sm text-green-800 mb-2">
                         Stai usufruendo dell'aliquota agevolata del 5% per i primi 5 anni di attività!
                         Dal 6° anno l'aliquota diventerà del 15%.
                       </p>
                       {risultato.differenzaRisparmio > 0 && (
-                        <p className="text-sm font-semibold text-green-900">
+                        <p className="text-xs sm:text-sm font-semibold text-green-900">
                           Risparmio annuo: € {risultato.differenzaRisparmio.toLocaleString()}
                         </p>
                       )}
@@ -450,13 +450,13 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
 
       {/* Comparison Section */}
       {risultato && showComparison && (
-        <div ref={comparisonRef} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-fade-in">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2 text-primary-600" />
+        <div ref={comparisonRef} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 animate-fade-in">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary-600" />
             Confronto Aliquote
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Current Scenario */}
             <div className="p-6 rounded-lg border-2 border-green-300 shadow-sm bg-green-50">
               <div className="flex items-center justify-between mb-4">
@@ -602,12 +602,12 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
       )}
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <div className="flex items-start space-x-3">
-          <AlertTriangle className="h-5 w-5 text-blue-600 mt-1" />
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+        <div className="flex items-start space-x-2 sm:space-x-3">
+          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
           <div>
-            <h4 className="font-semibold text-blue-900 mb-2">Nota Importante</h4>
-            <p className="text-sm text-blue-800">
+            <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-2">Nota Importante</h4>
+            <p className="text-xs sm:text-sm text-blue-800">
               Questa simulazione è indicativa e basata sui parametri attuali del regime forfettario.
               I calcoli effettivi possono variare in base a deduzioni specifiche e aggiornamenti normativi.
               Consulta sempre il tuo consulente per una valutazione precisa.

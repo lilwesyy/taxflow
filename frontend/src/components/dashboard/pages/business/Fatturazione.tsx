@@ -327,17 +327,17 @@ export default function Fatturazione() {
   ]
 
   const renderFattureTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Error Banner */}
       {invoiceError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
           <div className="flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm text-red-700">{invoiceError}</p>
+              <p className="text-xs sm:text-sm text-red-700">{invoiceError}</p>
               <button
                 onClick={() => loadInvoices()}
-                className="text-sm text-red-600 hover:text-red-700 underline mt-1"
+                className="text-xs sm:text-sm text-red-600 hover:text-red-700 underline mt-1"
               >
                 Riprova
               </button>
@@ -350,25 +350,25 @@ export default function Fatturazione() {
       <StatsGrid stats={stats} />
 
       {/* Filters and Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Cerca per numero, cliente o servizio..."
+                placeholder="Cerca per numero, cliente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+            <div className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-auto min-w-[120px]"
               >
                 <option value="all">Tutti gli stati</option>
                 <option value="draft">Bozze</option>
@@ -381,9 +381,9 @@ export default function Fatturazione() {
           </div>
           <button
             onClick={() => setShowNewInvoice(true)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+            className="bg-primary-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
             Nuova Fattura
           </button>
         </div>
@@ -391,17 +391,17 @@ export default function Fatturazione() {
 
       {/* Fatture Table */}
       {loadingInvoices ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-8 sm:py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Caricamento fatture...</p>
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-xs sm:text-sm text-gray-600">Caricamento fatture...</p>
           </div>
         </div>
       ) : filteredFatture.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessuna fattura trovata</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-12 text-center">
+          <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Nessuna fattura trovata</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mb-6">
             {searchTerm || filterStatus !== 'all'
               ? 'Prova a modificare i filtri di ricerca'
               : 'Inizia creando la tua prima fattura elettronica'}
@@ -409,7 +409,7 @@ export default function Fatturazione() {
           {!searchTerm && filterStatus === 'all' && (
             <button
               onClick={() => setShowNewInvoice(true)}
-              className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200"
+              className="bg-primary-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 text-xs sm:text-sm w-full sm:w-auto"
             >
               Crea Prima Fattura
             </button>
@@ -430,35 +430,35 @@ export default function Fatturazione() {
   )
 
   const renderClientiTab = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Anagrafica Clienti</h3>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Anagrafica Clienti</h3>
         <button
           onClick={() => setShowNewClient(true)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center"
+          className="bg-primary-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center text-xs sm:text-sm w-full sm:w-auto justify-center"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
           Nuovo Cliente
         </button>
       </div>
 
       {loadingClients ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-8 sm:py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Caricamento clienti...</p>
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-xs sm:text-sm text-gray-600">Caricamento clienti...</p>
           </div>
         </div>
       ) : clients.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nessun cliente trovato</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-12 text-center">
+          <Building className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Nessun cliente trovato</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mb-6">
             Inizia aggiungendo il tuo primo cliente per poter emettere fatture
           </p>
           <button
             onClick={() => setShowNewClient(true)}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200"
+            className="bg-primary-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 text-xs sm:text-sm w-full sm:w-auto"
           >
             Aggiungi Primo Cliente
           </button>
@@ -467,30 +467,30 @@ export default function Fatturazione() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="divide-y divide-gray-200">
             {clients.map((cliente) => (
-            <div key={cliente.id} className="p-6 hover:bg-gray-50 transition-colors group">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <Building className="h-5 w-5 text-primary-600" />
+            <div key={cliente.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors group">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Building className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600" />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-gray-900">{cliente.ragioneSociale || cliente.nome}</h4>
-                    <p className="text-sm text-gray-600">P.IVA: {cliente.partitaIva || cliente.piva}</p>
-                    <p className="text-sm text-gray-600">CF: {cliente.codiceFiscale}</p>
-                    <p className="text-sm text-gray-600">{cliente.indirizzo}</p>
-                    <div className="flex items-center space-x-4 pt-2">
-                      <span className="text-sm text-gray-600">{cliente.email}</span>
-                      <span className="text-sm text-gray-600">{cliente.telefono}</span>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{cliente.ragioneSociale || cliente.nome}</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">P.IVA: {cliente.partitaIva || cliente.piva}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">CF: {cliente.codiceFiscale}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{cliente.indirizzo}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 pt-2 gap-1">
+                      <span className="text-xs sm:text-sm text-gray-600 truncate">{cliente.email}</span>
+                      <span className="text-xs sm:text-sm text-gray-600">{cliente.telefono}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-shrink-0">
                   <button
                     onClick={() => setSelectedClient(cliente)}
                     className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 hover:scale-110 transition-transform duration-200"
                     title="Visualizza dettagli"
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
               </div>
@@ -532,26 +532,26 @@ export default function Fatturazione() {
   // Show setup form if not configured
   if (!invoicetronicCompany) {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6 lg:p-8">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Building2 className="h-8 w-8 text-blue-600" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2">
               Configura Sistema Fatturazione
             </h2>
-            <p className="text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               Per iniziare a emettere fatture elettroniche, configura i tuoi dati fiscali
             </p>
           </div>
 
           {/* Info Banner */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start space-x-3">
-              <Building2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-700">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex items-start space-x-2 sm:space-x-3">
+              <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs sm:text-sm text-blue-700">
                 <p className="font-semibold mb-1">Perché servono questi dati?</p>
                 <p className="mb-2">
                   I dati fiscali sono necessari per emettere fatture elettroniche valide ai tuoi clienti tramite il Sistema di Interscambio (SDI).
@@ -565,25 +565,25 @@ export default function Fatturazione() {
 
           {/* Error Message */}
           {setupError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-red-700">{setupError}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-red-700">{setupError}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleInvoicetronicSetup} className="space-y-6">
+          <form onSubmit={handleInvoicetronicSetup} className="space-y-4 sm:space-y-6">
             {/* VAT Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Partita IVA *
               </label>
               <input
                 type="text"
                 value={setupData.vat}
                 onChange={(e) => setSetupData(prev => ({ ...prev, vat: e.target.value }))}
-                placeholder="IT01234567891 (con prefisso paese)"
+                placeholder="IT01234567891"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Inserisci la Partita IVA con il prefisso del paese (es: IT01234567891)
@@ -592,7 +592,7 @@ export default function Fatturazione() {
 
             {/* Fiscal Code */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Codice Fiscale *
               </label>
               <input
@@ -601,7 +601,7 @@ export default function Fatturazione() {
                 onChange={(e) => setSetupData(prev => ({ ...prev, fiscalCode: e.target.value }))}
                 placeholder="RSSMRA70A01F205V"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Codice fiscale dell'azienda o del professionista
@@ -610,7 +610,7 @@ export default function Fatturazione() {
 
             {/* Company Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Ragione Sociale / Nome *
               </label>
               <input
@@ -619,7 +619,7 @@ export default function Fatturazione() {
                 onChange={(e) => setSetupData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Mario Rossi Srl"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Nome completo della società o del professionista
@@ -631,7 +631,7 @@ export default function Fatturazione() {
               <button
                 type="submit"
                 disabled={setupLoading}
-                className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+                className="w-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
               >
                 {setupLoading ? (
                   <>
@@ -653,35 +653,35 @@ export default function Fatturazione() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Invoicetronic Status Banner */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-        <div className="flex items-start space-x-3">
-          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-green-900 mb-1">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
+        <div className="flex items-start space-x-2 sm:space-x-3">
+          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <h4 className="font-semibold text-green-900 text-sm sm:text-base">
                 Sistema Fatturazione Configurato
               </h4>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {invoices.length > 0 && (
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded whitespace-nowrap">
                     {invoices.length} fatture caricate
                   </span>
                 )}
                 <button
                   onClick={handleRefreshCompany}
                   disabled={refreshingCompany}
-                  className="flex items-center space-x-1 text-green-700 hover:text-green-800 text-sm font-medium px-3 py-1 rounded-lg hover:bg-green-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-1 text-green-700 hover:text-green-800 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-lg hover:bg-green-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Aggiorna dati aziendali dalle impostazioni"
                 >
-                  <RefreshCw className={`h-4 w-4 ${refreshingCompany ? 'animate-spin' : ''}`} />
-                  <span>{refreshingCompany ? 'Aggiornamento...' : 'Aggiorna'}</span>
+                  <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${refreshingCompany ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{refreshingCompany ? 'Aggiornamento...' : 'Aggiorna'}</span>
                 </button>
               </div>
             </div>
-            <p className="text-sm text-green-700">
-              <strong>{(user as any)?.company || invoicetronicCompany.name}</strong> - P.IVA: {(user as any)?.piva || invoicetronicCompany.vat}
+            <p className="text-xs sm:text-sm text-green-700 mt-1">
+              <strong className="truncate">{(user as any)?.company || invoicetronicCompany.name}</strong> - P.IVA: {(user as any)?.piva || invoicetronicCompany.vat}
             </p>
             <p className="text-xs text-green-600 mt-1">
               Puoi ora emettere fatture elettroniche ai tuoi clienti
@@ -691,23 +691,23 @@ export default function Fatturazione() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-4 rounded-lg text-left transition-all duration-200 ${
+              className={`p-3 sm:p-4 rounded-lg text-left transition-all duration-200 ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
               }`}
             >
               <div className="flex items-center space-x-2 mb-1">
-                <tab.icon className="h-5 w-5" />
-                <span className="font-medium text-sm">{tab.name}</span>
+                <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="font-medium text-xs sm:text-sm">{tab.name}</span>
               </div>
-              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'} line-clamp-1`}>
                 {tab.description}
               </p>
             </button>

@@ -204,44 +204,44 @@ export default function FeedbackClienti() {
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <MessageCircle className="h-8 w-8 text-blue-600 mr-3" />
+            <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">Feedback Totali</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics?.total || 0}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Feedback Totali</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{statistics?.total || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <Star className="h-8 w-8 text-yellow-500 mr-3" />
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">Valutazione Media</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">Valutazione Media</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {statistics?.avgRating || 0}
               </p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <Clock className="h-8 w-8 text-orange-600 mr-3" />
+            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">In Attesa di Risposta</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">In Attesa di Risposta</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {statistics?.pending || 0}
               </p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-green-600 mr-3" />
+            <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">Tasso di Risposta</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600">Tasso di Risposta</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {statistics?.responseRate || 0}%
               </p>
             </div>
@@ -286,7 +286,7 @@ export default function FeedbackClienti() {
       {/* Search and Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -347,7 +347,7 @@ export default function FeedbackClienti() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">{feedback.title}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                  <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-600 mb-2">
                     <span>Cliente: {feedback.clientName}</span>
                     <span>Consulente: {feedback.consultantName}</span>
                     <span>Servizio: {feedback.service}</span>
@@ -439,7 +439,7 @@ export default function FeedbackClienti() {
       {activeTab === 'all' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Consulenti</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {consultantStats.map((consultant, index) => (
               <div key={index} className="p-4 border border-gray-200 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-3">{consultant.name}</h4>
@@ -477,7 +477,7 @@ export default function FeedbackClienti() {
             {/* Feedback Summary */}
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium text-gray-900 mb-2">{selectedFeedback.title}</h4>
-              <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+              <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-600 mb-3">
                 <span>Cliente: {selectedFeedback.clientName}</span>
                 <span>Servizio: {selectedFeedback.service}</span>
                 <div className="flex items-center space-x-1">
@@ -553,11 +553,11 @@ export default function FeedbackClienti() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-1">{selectedFeedback.title}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-600 mb-3">
                       <span>Cliente: {selectedFeedback.clientName} ({selectedFeedback.clientCompany})</span>
                       <span>Consulente: {selectedFeedback.consultantName}</span>
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-600 mb-3">
                       <span>Servizio: {selectedFeedback.service}</span>
                       <span>Data: {selectedFeedback.date}</span>
                     </div>
@@ -593,7 +593,7 @@ export default function FeedbackClienti() {
             </div>
 
             {/* Feedback Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Feedback del Cliente</h4>
                 <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
@@ -663,7 +663,7 @@ export default function FeedbackClienti() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">Feedback ricevuto</p>
-                        <p className="text-sm text-gray-600">{selectedFeedback.date}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{selectedFeedback.date}</p>
                       </div>
                     </div>
                     {selectedFeedback.response && (
@@ -671,7 +671,7 @@ export default function FeedbackClienti() {
                         <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">Risposta inviata</p>
-                          <p className="text-sm text-gray-600">{selectedFeedback.responseDate}</p>
+                          <p className="text-xs sm:text-sm text-gray-600">{selectedFeedback.responseDate}</p>
                         </div>
                       </div>
                     )}

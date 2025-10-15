@@ -765,16 +765,16 @@ export default function Consulenze() {
     <div className="space-y-6">
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+          <div key={index} className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
             <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-gray-50 group-hover:scale-110 transition-transform mr-4">
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              <div className="p-2 sm:p-3 rounded-lg bg-gray-50 group-hover:scale-110 transition-transform mr-3 sm:mr-4">
+                <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm text-gray-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{stat.title}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -782,9 +782,9 @@ export default function Consulenze() {
       </div>
 
       {/* Main Chat Interface */}
-      <div className="h-[calc(100vh-250px)] flex bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative z-10">
+      <div className="h-[calc(100vh-250px)] flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative z-10">
         {/* Sidebar Conversazioni */}
-        <div className="w-80 border-r border-gray-200 flex flex-col">
+        <div className="w-full sm:w-80 border-r border-gray-200 flex flex-col max-h-[50vh] sm:max-h-none">
           {/* Header Sidebar */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex justify-between items-center mb-3">

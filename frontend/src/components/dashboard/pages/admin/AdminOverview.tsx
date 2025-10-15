@@ -124,15 +124,15 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
       {/* Quick Actions */}
       <QuickActions actions={quickActions} onSectionChange={onSectionChange} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* Recent Clients */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-gray-900">Clienti Recenti</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Clienti Recenti</h3>
               <button
                 onClick={() => onSectionChange('clienti')}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-medium"
               >
                 Vedi tutti
               </button>
@@ -140,29 +140,29 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
           </div>
           <div className="divide-y divide-gray-200">
             {loading ? (
-              <div className="p-12 text-center">
-                <p className="text-gray-500">Caricamento clienti...</p>
+              <div className="p-8 sm:p-12 text-center">
+                <p className="text-sm sm:text-base text-gray-500">Caricamento clienti...</p>
               </div>
             ) : recentClients.length === 0 ? (
-              <div className="p-12 text-center">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Nessun cliente trovato</p>
+              <div className="p-8 sm:p-12 text-center">
+                <Users className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm sm:text-base text-gray-500">Nessun cliente trovato</p>
               </div>
             ) : (
               recentClients.map((client, index) => (
-                <div key={client.id || index} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
+                <div key={client.id || index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                          <Users className="h-4 w-4 text-primary-600" />
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary-100 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-600" />
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{client.nome || client.name}</p>
-                          {client.company && <p className="text-sm text-gray-500">{client.company}</p>}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{client.nome || client.name}</p>
+                          {client.company && <p className="text-xs sm:text-sm text-gray-500 truncate">{client.company}</p>}
                         </div>
                       </div>
-                      <div className="flex items-center mt-2 space-x-4">
+                      <div className="flex flex-wrap items-center mt-2 gap-2">
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           client.status === 'active' ? 'bg-green-100 text-green-600' :
                           client.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
@@ -170,15 +170,15 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
                         }`}>
                           {client.status === 'active' ? 'Attivo' : client.status === 'pending' ? 'In attesa' : 'Nuovo'}
                         </span>
-                        <span className="text-xs text-gray-500">P.IVA: {client.piva}</span>
+                        <span className="text-xs text-gray-500 truncate">P.IVA: {client.piva}</span>
                         <span className="text-xs text-gray-500">{client.ultimaAttivita ? formatDate(client.ultimaAttivita) : 'N/A'}</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">€ {client.fatturato?.toLocaleString() || '0'}</p>
+                    <div className="flex items-center justify-between sm:flex-col sm:text-right sm:ml-4">
+                      <p className="font-semibold text-sm sm:text-base text-gray-900">€ {client.fatturato?.toLocaleString() || '0'}</p>
                       <button
                         onClick={() => setSelectedClient(client)}
-                        className="text-primary-600 hover:text-primary-700 text-sm mt-1 hover:scale-110 transition-all duration-200"
+                        className="text-primary-600 hover:text-primary-700 text-sm mt-0 sm:mt-1 hover:scale-110 transition-all duration-200"
                         title="Visualizza dettagli"
                       >
                         <Eye className="h-4 w-4" />
@@ -193,32 +193,32 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
 
         {/* Pending Requests */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">Richieste in Sospeso</h3>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Richieste in Sospeso</h3>
           </div>
           <div className="divide-y divide-gray-200">
             {pendingRequests.map((request, index) => (
-              <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <span className={`text-sm font-medium px-2 py-1 rounded-md mr-3 ${
+              <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <span className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-md ${
                         request.priority === 'high' ? 'text-red-600 bg-red-50' :
                         request.priority === 'medium' ? 'text-yellow-600 bg-yellow-50' :
                         'text-green-600 bg-green-50'
                       }`}>
                         {request.type}
                       </span>
-                      <span className="text-sm text-gray-500">{request.time}</span>
+                      <span className="text-xs sm:text-sm text-gray-500">{request.time}</span>
                     </div>
-                    <p className="text-gray-900 mt-1 font-medium">{request.client}</p>
-                    <p className="text-sm text-gray-600">{request.description}</p>
+                    <p className="text-sm sm:text-base text-gray-900 mt-1 font-medium truncate">{request.client}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{request.description}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-2">
                     {request.priority === 'high' && <AlertTriangle className="h-4 w-4 text-red-500" />}
                     {request.priority === 'medium' && <Clock className="h-4 w-4 text-yellow-500" />}
                     {request.priority === 'low' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                    <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                    <button className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-medium px-2 py-1">
                       Gestisci
                     </button>
                   </div>

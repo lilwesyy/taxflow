@@ -73,27 +73,27 @@ export default function Modal({
 
       {/* Modal container */}
       <div className="fixed inset-0 z-[9999] overflow-y-auto pointer-events-none">
-        <div className="flex items-center justify-center min-h-full p-4">
+        <div className="flex items-center justify-center min-h-full p-2 sm:p-4">
           {/* Modal panel */}
           <div
             ref={modalRef}
-            className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden pointer-events-auto ${
+            className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[95vh] sm:max-h-[90vh] bg-white shadow-2xl rounded-xl sm:rounded-2xl flex flex-col overflow-hidden pointer-events-auto ${
               isClosing ? 'animate-scale-out' : 'animate-scale-in'
             }`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 pr-2 truncate">{title}</h3>
               <button
                 onClick={handleClose}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 flex-shrink-0"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               {children}
             </div>
           </div>

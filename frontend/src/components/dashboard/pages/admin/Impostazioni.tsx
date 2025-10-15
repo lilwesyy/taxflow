@@ -664,7 +664,7 @@ export default function Impostazioni() {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Informazioni Personali</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nome *
@@ -828,7 +828,7 @@ export default function Impostazioni() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <label className="group flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer">
             <input
               type="checkbox"

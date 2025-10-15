@@ -89,18 +89,18 @@ export default function ClientCreateModal({
       title="Nuovo Cliente"
       maxWidth="4xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Dati Anagrafici */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-              <User className="h-5 w-5 text-white" />
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Dati Anagrafici
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="lg:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Denominazione/Nome Completo *
               </label>
               <input
@@ -108,13 +108,13 @@ export default function ClientCreateModal({
                 value={formData.denominazione}
                 onChange={(e) => updateField('denominazione', e.target.value)}
                 placeholder="Nome e Cognome / Ragione Sociale"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Codice Fiscale *
               </label>
               <input
@@ -123,7 +123,7 @@ export default function ClientCreateModal({
                 onChange={(e) => updateField('codiceFiscale', e.target.value.toUpperCase())}
                 placeholder="RSSMRA80A01H501U"
                 maxLength={16}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase text-xs sm:text-sm"
                 required
               />
             </div>
@@ -146,10 +146,10 @@ export default function ClientCreateModal({
         </div>
 
         {/* Indirizzo */}
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center mr-3">
-              <MapPin className="h-5 w-5 text-white" />
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Indirizzo (Sede)
           </h4>
@@ -215,10 +215,10 @@ export default function ClientCreateModal({
         </div>
 
         {/* Contatti */}
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
-              <Mail className="h-5 w-5 text-white" />
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Dati di Contatto
           </h4>
@@ -296,17 +296,17 @@ export default function ClientCreateModal({
         </div>
 
         {/* Bottoni Azione */}
-        <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={handleClose}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all duration-200 hover:scale-105"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             Annulla
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 hover:shadow-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             Crea Cliente
           </button>

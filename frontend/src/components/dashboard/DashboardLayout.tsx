@@ -1,4 +1,4 @@
-import { Bell, Settings, LogOut, User, Check, Clock, AlertTriangle, X } from 'lucide-react'
+import { Bell, Settings, LogOut, User, Check, Clock, AlertTriangle, X, Menu } from 'lucide-react'
 import { type ReactNode, useState, useRef, useEffect } from 'react'
 import Logo from '../common/Logo'
 
@@ -38,6 +38,7 @@ export default function DashboardLayout({
   headerDescription
 }: DashboardLayoutProps) {
   const [showNotifications, setShowNotifications] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
 
   // Notifiche mock
@@ -111,14 +112,37 @@ export default function DashboardLayout({
     }
   }
 
+  // Chiudi la sidebar su mobile quando si cambia sezione
+  const handleSectionChange = (section: string) => {
+    onSectionChange(section)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
-      {/* Sidebar - Fixed */}
-      <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed h-full z-40">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <div className={`
+        w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed h-full z-50 transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center px-6 py-4 border-b border-gray-200 flex-shrink-0">
+          {/* Logo with close button on mobile */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
             <Logo className="h-10" />
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Navigation */}
@@ -126,7 +150,7 @@ export default function DashboardLayout({
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onSectionChange(item.id)}
+                onClick={() => handleSectionChange(item.id)}
                 className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeSection === item.id
                     ? 'bg-blue-600 text-white shadow-md'
@@ -147,10 +171,10 @@ export default function DashboardLayout({
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-primary-600" />
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{userName}</p>
-                <p className="text-xs text-gray-500">{userEmail}</p>
-                <p className="text-xs text-primary-600 capitalize">
+              <div className="ml-3 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                <p className="text-xs text-primary-600 capitalize truncate">
                   {userRole === 'admin' ? (userProfessionalRole || 'Consulente') : (userCompany || 'Cliente')}
                 </p>
               </div>
@@ -166,16 +190,26 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Main Content Area - Offset by sidebar width */}
-      <div className="flex-1 flex flex-col ml-64 h-full overflow-hidden">
-        {/* Header - Fixed */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0 fixed top-0 left-64 right-0 z-50">
+      {/* Main Content Area - Responsive margin */}
+      <div className="flex-1 flex flex-col lg:ml-64 h-full overflow-hidden">
+        {/* Header - Responsive */}
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex-shrink-0 fixed top-0 left-0 lg:left-64 right-0 z-30">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{headerTitle}</h1>
-              <p className="text-gray-600 text-sm mt-1">{headerDescription}</p>
+            <div className="flex items-center min-w-0 flex-1">
+              {/* Hamburger Menu - Mobile only */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex-shrink-0"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{headerTitle}</h1>
+                <p className="hidden sm:block text-gray-600 text-xs sm:text-sm mt-1 truncate">{headerDescription}</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               {/* Notifications Dropdown */}
               <div className="relative" ref={notificationRef}>
                 <button
@@ -192,7 +226,7 @@ export default function DashboardLayout({
 
                 {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <div className="fixed right-6 top-16 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-[99999]">
+                  <div className="fixed right-2 sm:right-6 top-16 w-[calc(100vw-1rem)] sm:w-80 max-w-md bg-white rounded-lg shadow-lg border border-gray-200 z-[99999]">
                     <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                       <h3 className="text-lg font-semibold text-gray-900">Notifiche</h3>
                       <button
@@ -264,8 +298,8 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Main Content - Scrollable */}
-        <main className="flex-1 overflow-y-auto p-6 pt-24">
+        {/* Main Content - Scrollable & Responsive */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pt-20 sm:pt-24">
           {children}
         </main>
       </div>

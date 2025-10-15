@@ -36,23 +36,23 @@ export default function InvoiceTable({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-max">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Numero</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Numero</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Cliente</th>
               {showConsulente && (
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Consulente</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Consulente</th>
               )}
               {showService && (
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Servizio</th>
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Servizio</th>
               )}
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Data Emissione</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Scadenza</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Importo</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Totale</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Data Emissione</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Scadenza</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Importo</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Totale</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Status</th>
+              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Azioni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -62,60 +62,60 @@ export default function InvoiceTable({
 
               return (
                 <tr key={invoice._id || invoice.id || invoice.numero} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <div className="flex items-center">
-                      <FileText className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="font-medium text-primary-600">{invoice.numero}</span>
+                      <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <span className="font-medium text-primary-600 text-xs sm:text-sm">{invoice.numero}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-6">
-                    <div>
-                      <p className="font-medium text-gray-900">{invoice.cliente}</p>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{invoice.cliente}</p>
                       {showClientEmail && (
-                        <p className="text-sm text-gray-500">{invoice.email}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 truncate">{invoice.email}</p>
                       )}
                     </div>
                   </td>
                   {showConsulente && (
-                    <td className="py-4 px-6">
-                      <span className="text-gray-700 font-medium">{(invoice as any).consulente || 'N/A'}</span>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <span className="text-gray-700 font-medium text-xs sm:text-sm">{(invoice as any).consulente || 'N/A'}</span>
                     </td>
                   )}
                   {showService && (
-                    <td className="py-4 px-6">
-                      <span className="text-gray-700">{invoice.servizio}</span>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <span className="text-gray-700 text-xs sm:text-sm">{invoice.servizio}</span>
                     </td>
                   )}
-                  <td className="py-4 px-6">
-                    <span className="text-gray-600">{invoice.dataEmissione}</span>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <span className="text-gray-600 text-xs sm:text-sm">{invoice.dataEmissione}</span>
                   </td>
-                  <td className="py-4 px-6">
-                    <span className="text-gray-600">{invoice.dataScadenza}</span>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <span className="text-gray-600 text-xs sm:text-sm">{invoice.dataScadenza}</span>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <div>
-                      <p className="font-medium text-gray-900">{formatCurrency(invoice.importo)}</p>
-                      <p className="text-sm text-gray-500">IVA: {formatCurrency(invoice.iva)}</p>
+                      <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatCurrency(invoice.importo)}</p>
+                      <p className="text-xs text-gray-500">IVA: {formatCurrency(invoice.iva)}</p>
                     </div>
                   </td>
-                  <td className="py-4 px-6">
-                    <span className="font-semibold text-gray-900">{formatCurrency(invoice.totale)}</span>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <span className="font-semibold text-gray-900 text-xs sm:text-sm">{formatCurrency(invoice.totale)}</span>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
+                      <StatusIcon className="h-3 w-3 mr-1 flex-shrink-0" />
                       {statusInfo.label}
                     </div>
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
                       {onViewInvoice && (
                         <button
                           onClick={() => onViewInvoice(invoice)}
                           className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 hover:scale-110 transition-all duration-200"
                           title="Visualizza"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
                       {onEditInvoice && invoice.status !== 'paid' && (
@@ -124,7 +124,7 @@ export default function InvoiceTable({
                           className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200"
                           title="Modifica"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
                       {onDownloadInvoice && invoice.status === 'paid' && (
@@ -133,7 +133,7 @@ export default function InvoiceTable({
                           className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200"
                           title="Download"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
                       {onSendInvoice && invoice.status === 'draft' && (
@@ -142,7 +142,7 @@ export default function InvoiceTable({
                           className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 hover:scale-110 transition-all duration-200"
                           title="Invia"
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
                     </div>

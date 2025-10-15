@@ -621,11 +621,11 @@ export default function Consulenza() {
   return (
     <div className="h-[calc(100vh-120px)] flex items-center justify-center">
       {/* Main Chat Interface */}
-      <div className="w-full h-full flex bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+      <div className="w-full h-full flex flex-col lg:flex-row bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
         {/* Sidebar Conversazioni */}
-        <div className="w-80 border-r border-gray-200 flex flex-col">
+        <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
           {/* Header Sidebar */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
             {/* Toggle between views */}
             <div className="flex mb-3 bg-gray-100 rounded-lg p-1">
               <button
@@ -651,18 +651,18 @@ export default function Consulenza() {
             </div>
 
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                 {viewMode === 'conversations' ? 'Le Mie Conversazioni' : 'Consulenti Disponibili'}
               </h3>
             </div>
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder={viewMode === 'conversations' ? "Cerca conversazioni..." : "Cerca consulenti..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm transition-all duration-200"
               />
             </div>
             {viewMode === 'conversations' && (
@@ -714,23 +714,23 @@ export default function Consulenza() {
                 {aiConversationId && (
                   <button
                     onClick={() => setActiveChat(aiConversationId)}
-                    className={`w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200 ${
+                    className={`w-full p-3 sm:p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200 ${
                       activeChat === aiConversationId ? 'bg-gradient-to-r from-primary-50 to-green-50 border-r-2 border-r-primary-500' : ''
                     }`}
                   >
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-green-500 rounded-full flex items-center justify-center text-lg">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-400 to-green-500 rounded-full flex items-center justify-center text-base sm:text-lg flex-shrink-0">
                         🤖
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-semibold text-gray-900">Assistente AI</p>
-                          <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">
-                            Sempre disponibile
+                          <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">Assistente AI</p>
+                          <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium flex-shrink-0 ml-2">
+                            Disponibile
                           </span>
                         </div>
                         <p className="text-xs text-gray-600 mb-1">Consulente Fiscale AI</p>
-                        <p className="text-sm text-gray-600">Chiedi informazioni sul regime forfettario</p>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">Chiedi informazioni sul regime forfettario</p>
                       </div>
                     </div>
                   </button>
@@ -742,28 +742,28 @@ export default function Consulenza() {
               <button
                 key={conv.id}
                 onClick={() => setActiveChat(conv.id)}
-                className={`w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 ${
+                className={`w-full p-3 sm:p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 ${
                   activeChat === conv.id ? 'bg-primary-50 border-r-2 border-r-primary-500' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center text-base sm:text-lg flex-shrink-0">
                     {conv.consulente.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-900 truncate">{conv.consulente.nome}</p>
-                      <span className="text-xs text-gray-500">{conv.orarioUltimoMessaggio}</span>
+                      <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{conv.consulente.nome}</p>
+                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{conv.orarioUltimoMessaggio}</span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">{conv.consulente.specializzazione}</p>
-                    <p className="text-sm text-gray-600 truncate mb-1">{conv.ultimoMessaggio}</p>
+                    <p className="text-xs text-gray-600 mb-1 truncate">{conv.consulente.specializzazione}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate mb-1">{conv.ultimoMessaggio}</p>
                     <div className="flex items-center justify-between">
                       <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(conv.status)}`}>
                         {getStatusIcon(conv.status)}
                         <span className="ml-1">{getStatusText(conv.status)}</span>
                       </span>
                       {conv.messaggiNonLetti > 0 && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">
+                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full flex-shrink-0">
                           {conv.messaggiNonLetti}
                         </span>
                       )}
@@ -795,27 +795,27 @@ export default function Consulenza() {
                     className="w-full p-4 text-left hover:bg-gray-50 transition-all duration-200 border-b border-gray-100"
                   >
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-lg">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 rounded-full flex items-center justify-center text-base sm:text-lg flex-shrink-0">
                         <span className="text-primary-600 font-semibold">
                           {consultant.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{consultant.name}</p>
-                        <p className="text-xs text-gray-600 mb-1">
+                        <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{consultant.name}</p>
+                        <p className="text-xs text-gray-600 mb-1 truncate">
                           {consultant.professionalRole || 'Consulente Fiscale'}
                         </p>
                         {consultant.bio && (
-                          <p className="text-sm text-gray-500 line-clamp-2">{consultant.bio}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">{consultant.bio}</p>
                         )}
                         <div className="mt-2">
                           <span className="inline-flex items-center px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full">
-                            <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                            <span className="w-2 h-2 bg-green-500 rounded-full mr-1 flex-shrink-0"></span>
                             Disponibile
                           </span>
                         </div>
                       </div>
-                      <Plus className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 flex-shrink-0" />
                     </div>
                   </button>
                 ))
@@ -834,15 +834,15 @@ export default function Consulenza() {
           {conversazioneAttiva ? (
             <>
               {/* Header Chat */}
-              <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="p-4 sm:p-6 border-b border-gray-200 bg-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center text-base sm:text-lg flex-shrink-0">
                       {conversazioneAttiva.consulente.avatar}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{conversazioneAttiva.consulente.nome}</h3>
-                      <p className="text-sm text-gray-600">{conversazioneAttiva.argomento}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">{conversazioneAttiva.consulente.nome}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{conversazioneAttiva.argomento}</p>
                     </div>
                   </div>
                 </div>
@@ -850,16 +850,16 @@ export default function Consulenza() {
 
               {/* Messaggi */}
               {conversazioneAttiva?.status === 'pending' ? (
-                <div className="flex-1 flex items-center justify-center bg-gray-50">
-                  <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center border border-gray-200">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Clock className="h-8 w-8 text-yellow-600" />
+                <div className="flex-1 flex items-center justify-center bg-gray-50 p-4">
+                  <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-md text-center border border-gray-200">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Richiesta in Attesa</h3>
-                    <p className="text-gray-600 mb-2">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Richiesta in Attesa</h3>
+                    <p className="text-sm sm:text-base text-gray-600 mb-2">
                       La tua richiesta di consulenza deve essere accettata dal consulente
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       <span className="font-medium">{conversazioneAttiva.consulente.nome}</span> riceverà una notifica e potrà accettare la tua richiesta. Riceverai una notifica quando la consulenza sarà attiva.
                     </p>
                   </div>
@@ -898,58 +898,58 @@ export default function Consulenza() {
 
         {/* Info Panel Consulente - Hide for AI chat and pending conversations */}
         {conversazioneAttiva && activeChat !== aiConversationId && conversazioneAttiva.status !== 'pending' && (
-          <div className="w-64 border-l border-gray-200 p-4 bg-white shadow-sm flex flex-col h-full hover:shadow-md transition-shadow duration-300">
-            <h4 className="font-semibold text-gray-900 mb-4">Dettagli Consulenza</h4>
+          <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-gray-200 p-4 sm:p-6 bg-white shadow-sm flex flex-col h-full hover:shadow-md transition-shadow duration-300">
+            <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-4">Dettagli Consulenza</h4>
 
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-3 sm:space-y-4">
               <div>
-                <p className="text-sm text-gray-600">Consulente</p>
-                <p className="font-medium text-gray-900">{conversazioneAttiva.consulente.nome}</p>
-                <p className="text-sm text-gray-600">{conversazioneAttiva.consulente.specializzazione}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Consulente</p>
+                <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{conversazioneAttiva.consulente.nome}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{conversazioneAttiva.consulente.specializzazione}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Argomento</p>
-                <p className="font-medium text-gray-900">{conversazioneAttiva.argomento}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Argomento</p>
+                <p className="font-medium text-sm sm:text-base text-gray-900">{conversazioneAttiva.argomento}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Tipo consulenza</p>
-                <p className="font-medium text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Tipo consulenza</p>
+                <p className="font-medium text-sm sm:text-base text-gray-900 capitalize">{conversazioneAttiva.tipo.replace('_', ' ')}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Priorità</p>
-                <span className={`font-medium ${getPriorityColor(conversazioneAttiva.priority)}`}>
+                <p className="text-xs sm:text-sm text-gray-600">Priorità</p>
+                <span className={`font-medium text-sm sm:text-base ${getPriorityColor(conversazioneAttiva.priority)}`}>
                   {conversazioneAttiva.priority}
                 </span>
               </div>
 
               {conversazioneAttiva.durataConsulenza && (
                 <div>
-                  <p className="text-sm text-gray-600">Durata</p>
-                  <p className="font-medium text-gray-900">{conversazioneAttiva.durataConsulenza}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Durata</p>
+                  <p className="font-medium text-sm sm:text-base text-gray-900">{conversazioneAttiva.durataConsulenza}</p>
                 </div>
               )}
 
               {(conversazioneAttiva.importo ?? 0) > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600">Costo consulenza</p>
-                  <p className="font-medium text-gray-900">€ {conversazioneAttiva.importo ?? 0}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Costo consulenza</p>
+                  <p className="font-medium text-sm sm:text-base text-gray-900">€ {conversazioneAttiva.importo ?? 0}</p>
                 </div>
               )}
 
               {conversazioneAttiva.rating && (
                 <div>
-                  <p className="text-sm text-gray-600">Valutazione data</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Valutazione data</p>
                   <div className="flex items-center space-x-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-4 w-4 ${i < conversazioneAttiva.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                        className={`h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 ${i < conversazioneAttiva.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                       />
                     ))}
-                    <span className="text-sm font-medium text-gray-700 ml-2">{conversazioneAttiva.rating}/5</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 ml-2">{conversazioneAttiva.rating}/5</span>
                   </div>
                 </div>
               )}
@@ -988,10 +988,10 @@ export default function Consulenza() {
                           await handleInitiatePayment()
                         }}
                         disabled={isLoadingPayment}
-                        className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-primary-600 text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <CreditCard className="h-4 w-4" />
-                        <span>{isLoadingPayment ? 'Caricamento...' : `Paga € ${((conversazioneAttiva.importo ?? 0) * 1.22).toFixed(2)}`}</span>
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <span className="truncate">{isLoadingPayment ? 'Caricamento...' : `Paga € ${((conversazioneAttiva.importo ?? 0) * 1.22).toFixed(2)}`}</span>
                       </button>
                     </>
                   )}
@@ -1174,20 +1174,20 @@ export default function Consulenza() {
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowNewChatModal(false)
                     setSelectedConsultant(null)
                   }}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                  className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                   Inizia Conversazione
                 </button>

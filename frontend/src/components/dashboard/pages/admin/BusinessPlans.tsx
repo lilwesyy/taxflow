@@ -581,16 +581,16 @@ export default function BusinessPlans() {
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {stats.map((stat, index) => (
-            <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+            <div key={index} className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
               <div className="flex items-center">
-                <div className={`p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-yellow-50'} group-hover:scale-110 transition-transform`}>
-                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                <div className={`p-2 sm:p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-yellow-50'} group-hover:scale-110 transition-transform`}>
+                  <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm text-gray-600">{stat.title}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -611,25 +611,25 @@ export default function BusinessPlans() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {suspendedServices.map(service => (
                 <div key={service._id} className="bg-white rounded-lg p-4 border border-yellow-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <User className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium text-gray-900">{service.userId.name}</span>
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <span className="font-medium text-sm sm:text-base text-gray-900 truncate">{service.userId.name}</span>
                     </div>
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">
                       Sospeso
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{service.userId.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3 truncate">{service.userId.email}</p>
                   <button
                     onClick={() => handleResumeWork(service._id)}
                     disabled={openTabs.length >= MAX_OPEN_TABS}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-yellow-600 text-white text-xs sm:text-sm rounded-lg hover:bg-yellow-700 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Play className="h-4 w-4" />
+                    <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>{openTabs.length >= MAX_OPEN_TABS ? 'Tab piene' : 'Riprendi Lavoro'}</span>
                   </button>
                 </div>
@@ -652,22 +652,22 @@ export default function BusinessPlans() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {otherConsultantServices.map(service => (
                 <div key={service._id} className="bg-white rounded-lg p-4 border border-blue-200">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Briefcase className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium text-gray-900">{service.userId.name}</span>
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base text-gray-900 truncate">{service.userId.name}</span>
                     </div>
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
-                      In Lavorazione
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 flex-shrink-0 ml-2">
+                      In Lavoro
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">{service.userId.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">{service.userId.email}</p>
                   <div className="flex items-center space-x-2 mt-3 p-2 bg-blue-50 rounded">
-                    <User className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm text-blue-700">
+                    <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-blue-700 truncate">
                       Assegnato a: <span className="font-medium">{service.assignedToConsultant?.name}</span>
                     </span>
                   </div>
@@ -678,8 +678,8 @@ export default function BusinessPlans() {
         )}
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -688,7 +688,7 @@ export default function BusinessPlans() {
                 placeholder="Cerca per cliente o email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -697,7 +697,7 @@ export default function BusinessPlans() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">Tutti gli stati</option>
               <option value="pending">In attesa</option>
@@ -727,50 +727,50 @@ export default function BusinessPlans() {
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative z-10">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-max">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Email</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Importo</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Data Acquisto</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Cliente</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Email</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Importo</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Data Acquisto</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Status</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Azioni</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {currentServices.map((service) => (
                   <tr key={service._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <div className="flex items-center">
-                        <Briefcase className="h-4 w-4 text-blue-600 mr-2" />
-                        <p className="font-medium text-gray-900">{service.userId.name}</p>
+                        <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 mr-2 flex-shrink-0" />
+                        <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{service.userId.name}</p>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-600">{service.userId.email}</p>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{service.userId.email}</p>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm font-semibold text-blue-600">€{(service.amountPaid / 100).toFixed(2)}</p>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm font-semibold text-blue-600">€{(service.amountPaid / 100).toFixed(2)}</p>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-600">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         {new Date(service.purchasedAt).toLocaleDateString('it-IT')}
                       </p>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(service.status)}`}>
                         {getStatusIcon(service.status)}
                         <span className="ml-1">{getStatusText(service.status)}</span>
                       </span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <button
                         onClick={() => handleViewService(service)}
                         className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 hover:scale-110 transition-all duration-200"
                         title="Visualizza dettagli"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     </td>
                   </tr>
@@ -857,22 +857,22 @@ export default function BusinessPlans() {
   return (
     <div className="space-y-6">
       {/* Tabs Navigation - Box Style */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
           {/* Overview Tab */}
           <button
             onClick={() => setActiveTab('overview')}
-            className={`p-4 rounded-lg text-left transition-all duration-200 ${
+            className={`p-3 sm:p-4 rounded-lg text-left transition-all duration-200 ${
               activeTab === 'overview'
                 ? 'bg-primary-600 text-white shadow-md'
                 : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
             }`}
           >
             <div className="flex items-center space-x-2 mb-1">
-              <Briefcase className="h-5 w-5" />
-              <span className="font-medium text-sm">Panoramica</span>
+              <Briefcase className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-xs sm:text-sm">Panoramica</span>
             </div>
-            <p className={`text-xs ${activeTab === 'overview' ? 'text-primary-100' : 'text-gray-500'}`}>
+            <p className={`text-xs ${activeTab === 'overview' ? 'text-primary-100' : 'text-gray-500'} truncate`}>
               {services.length} business plan totali
             </p>
           </button>
@@ -885,7 +885,7 @@ export default function BusinessPlans() {
             return (
               <div
                 key={serviceId}
-                className={`p-4 rounded-lg text-left transition-all duration-200 relative group cursor-pointer ${
+                className={`p-3 sm:p-4 rounded-lg text-left transition-all duration-200 relative group cursor-pointer ${
                   activeTab === serviceId
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -894,7 +894,7 @@ export default function BusinessPlans() {
               >
                 <button
                   onClick={(e) => closeTab(serviceId, e)}
-                  className={`absolute top-2 right-2 p-1 rounded-full transition-colors ${
+                  className={`absolute top-1 sm:top-2 right-1 sm:right-2 p-1 rounded-full transition-colors ${
                     activeTab === serviceId
                       ? 'hover:bg-blue-700'
                       : 'hover:bg-gray-200'
@@ -904,8 +904,8 @@ export default function BusinessPlans() {
                   <X className={`h-3 w-3 ${activeTab === serviceId ? 'text-white' : 'text-gray-400'}`} />
                 </button>
                 <div className="flex items-center space-x-2 mb-1 pr-6">
-                  <User className="h-5 w-5" />
-                  <span className="font-medium text-sm truncate">{service.userId.name}</span>
+                  <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="font-medium text-xs sm:text-sm truncate">{service.userId.name}</span>
                 </div>
                 <p className={`text-xs truncate ${activeTab === serviceId ? 'text-blue-100' : 'text-gray-500'}`}>
                   In lavorazione

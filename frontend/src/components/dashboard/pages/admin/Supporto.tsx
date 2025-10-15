@@ -254,7 +254,7 @@ export default function Supporto() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
         {quickActions.map((action, index) => (
           <div key={index} className="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow relative z-10 cursor-pointer">
             <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
@@ -272,7 +272,7 @@ export default function Supporto() {
 
       {/* Support Stats */}
       <div className="group bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white flex-shrink-0 hover:shadow-md transition-shadow relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center group-hover:scale-110 transition-transform">
             <div className="text-2xl font-bold mb-1">2 min</div>
             <div className="text-primary-100 text-sm">Tempo medio risposta</div>
@@ -333,7 +333,7 @@ export default function Supporto() {
       <div className="h-full overflow-y-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h3 className="text-lg font-semibold text-gray-900">I Miei Ticket di Supporto</h3>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -362,13 +362,13 @@ export default function Supporto() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Ticket ID</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Oggetto</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Categoria</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Priorità</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Ultimo Aggiornamento</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Ticket ID</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Oggetto</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Categoria</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Priorità</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Status</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Ultimo Aggiornamento</th>
+                  <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-sm font-medium text-gray-600">Azioni</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -503,7 +503,7 @@ export default function Supporto() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {knowledgeBase.map((section, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
             <h4 className="font-semibold text-gray-900 mb-4">{section.category}</h4>
@@ -567,7 +567,7 @@ export default function Supporto() {
       </div>
 
       {/* Contact Methods */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center hover:shadow-md transition-shadow relative z-10">
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
             <Mail className="h-6 w-6 text-blue-600" />
@@ -603,7 +603,7 @@ export default function Supporto() {
         <h4 className="font-semibold text-gray-900 mb-6">Crea Nuovo Ticket</h4>
 
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Oggetto *

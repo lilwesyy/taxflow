@@ -301,9 +301,9 @@ export default function DocumentiClienti() {
         {selectedCliente === 'all' ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Building className="h-8 w-8" />
+              <Building className="h-6 w-6 sm:h-8 sm:w-8" />
               <div>
-                <h2 className="text-2xl font-bold">Vista Consolidata</h2>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold">Vista Consolidata</h2>
                 <p className="text-blue-100 text-sm">Tutti i cassetti fiscali dei tuoi clienti</p>
               </div>
             </div>
@@ -328,10 +328,10 @@ export default function DocumentiClienti() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-white/20 rounded-lg">
-                <Users className="h-8 w-8" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{clienteSelezionato?.nome}</h2>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold">{clienteSelezionato?.nome}</h2>
                 <p className="text-blue-100">{clienteSelezionato?.azienda} • P.IVA {clienteSelezionato?.piva}</p>
               </div>
             </div>
@@ -401,7 +401,7 @@ export default function DocumentiClienti() {
 
       {/* Documents Grid */}
       {!loading && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredDocuments.filter(doc => doc && doc.nome && doc.cliente).map((documento) => (
           <DocumentCard
             key={documento.id}
@@ -476,7 +476,7 @@ export default function DocumentiClienti() {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Nome documento *</label>
               <input
@@ -507,7 +507,7 @@ export default function DocumentiClienti() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Anno *</label>
               <input
@@ -642,30 +642,30 @@ export default function DocumentiClienti() {
               <h3 className="font-semibold text-gray-900 mb-3">Informazioni Documento</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Tipo:</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Tipo:</p>
                   <p className="font-medium text-gray-900 capitalize">{selectedDocument.tipo.replace(/_/g, ' ')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Formato:</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Formato:</p>
                   <p className="font-medium text-gray-900">{selectedDocument.formato}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Dimensione:</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Dimensione:</p>
                   <p className="font-medium text-gray-900">{selectedDocument.dimensione}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Anno:</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Anno:</p>
                   <p className="font-medium text-gray-900">{selectedDocument.anno}</p>
                 </div>
                 {selectedDocument.protocollo && (
                   <div className="col-span-2">
-                    <p className="text-sm text-gray-600">Protocollo:</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Protocollo:</p>
                     <p className="font-medium text-gray-900 font-mono">{selectedDocument.protocollo}</p>
                   </div>
                 )}
                 {selectedDocument.importo && (
                   <div>
-                    <p className="text-sm text-gray-600">Importo:</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Importo:</p>
                     <p className="font-medium text-gray-900 text-lg">{selectedDocument.importo}</p>
                   </div>
                 )}
@@ -673,7 +673,7 @@ export default function DocumentiClienti() {
 
               {selectedDocument.note && (
                 <div className="mt-4">
-                  <p className="text-sm text-gray-600">Note:</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Note:</p>
                   <p className="text-gray-900">{selectedDocument.note}</p>
                 </div>
               )}

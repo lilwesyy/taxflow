@@ -217,18 +217,18 @@ export default function RichiestePivaReal() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+          <div key={index} className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className={`p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-yellow-600' ? 'bg-yellow-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-red-50'} group-hover:scale-110 transition-transform`}>
-                <stat.icon className={`h-8 w-8 ${stat.color}`} />
+              <div className={`p-2 sm:p-3 rounded-lg ${stat.color === 'text-blue-600' ? 'bg-blue-50' : stat.color === 'text-yellow-600' ? 'bg-yellow-50' : stat.color === 'text-green-600' ? 'bg-green-50' : 'bg-red-50'} group-hover:scale-110 transition-transform`}>
+                <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
               </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm text-gray-600">{stat.title}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -236,34 +236,32 @@ export default function RichiestePivaReal() {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cerca per nome, email o codice fiscale..."
+                placeholder="Cerca per nome o email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               />
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="all">Tutti gli stati</option>
-                <option value="pending">In attesa</option>
-                <option value="approved">Approvata</option>
-                <option value="rejected">Respinta</option>
-              </select>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm w-full sm:w-auto"
+            >
+              <option value="all">Tutti gli stati</option>
+              <option value="pending">In attesa</option>
+              <option value="approved">Approvata</option>
+              <option value="rejected">Respinta</option>
+            </select>
           </div>
         </div>
       </div>
@@ -271,67 +269,67 @@ export default function RichiestePivaReal() {
       {/* Requests Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-max">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Codice Fiscale</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Attività</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Fatturato Previsto</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Data Richiesta</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Cliente</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Codice Fiscale</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Attività</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Fatturato Previsto</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Status</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Data Richiesta</th>
+                <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Azioni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td colSpan={7} className="py-8 text-center text-sm text-gray-500">
                     Nessuna richiesta trovata
                   </td>
                 </tr>
               ) : (
                 currentRequests.map((request) => (
                   <tr key={request._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <div>
-                        <p className="font-medium text-gray-900">{request.name}</p>
-                        <p className="text-sm text-gray-500">{request.email}</p>
+                        <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{request.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{request.email}</p>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-900">{request.pivaRequestData?.fiscalCode || '-'}</p>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm text-gray-900">{request.pivaRequestData?.fiscalCode || '-'}</p>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <div>
-                        <p className="text-sm text-gray-900">{request.pivaRequestData?.businessActivity || '-'}</p>
+                        <p className="text-xs sm:text-sm text-gray-900 truncate">{request.pivaRequestData?.businessActivity || '-'}</p>
                         <p className="text-xs text-gray-500">{request.pivaRequestData?.codiceAteco || '-'}</p>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-900">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm text-gray-900">
                         {request.pivaRequestData?.expectedRevenue
                           ? `€ ${request.pivaRequestData.expectedRevenue.toLocaleString()}`
                           : '-'}
                       </p>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${getStatusColor(request.pivaApprovalStatus)}`}>
                         {getStatusIcon(request.pivaApprovalStatus)}
                         <span className="ml-1">{getStatusText(request.pivaApprovalStatus)}</span>
                       </span>
                     </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-900">{formatDate(request.createdAt)}</p>
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <p className="text-xs sm:text-sm text-gray-900">{formatDate(request.createdAt)}</p>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => setSelectedRequest(request)}
                           className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 transition-all"
                           title="Visualizza dettagli"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </td>
@@ -344,37 +342,37 @@ export default function RichiestePivaReal() {
 
         {/* Pagination Footer */}
         {totalItems > 0 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">Mostra</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-center sm:justify-start space-x-2">
+              <span className="text-xs sm:text-sm text-gray-700">Mostra</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value))
                   setCurrentPage(1)
                 }}
-                className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                className="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span className="text-sm text-gray-700">elementi per pagina</span>
+              <span className="text-xs sm:text-sm text-gray-700 hidden sm:inline">elementi per pagina</span>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">
-                {startIndex + 1}-{Math.min(endIndex, totalItems)} di {totalItems} elementi
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-0 sm:space-x-2">
+              <span className="text-xs sm:text-sm text-gray-700">
+                {startIndex + 1}-{Math.min(endIndex, totalItems)} di {totalItems}
               </span>
 
-              <div className="flex items-center space-x-1 ml-4">
+              <div className="flex items-center space-x-1 sm:ml-4">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="p-1.5 sm:p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -386,11 +384,11 @@ export default function RichiestePivaReal() {
                   .map((page, index, array) => (
                     <div key={page} className="flex items-center">
                       {index > 0 && array[index - 1] !== page - 1 && (
-                        <span className="px-2 text-gray-400">...</span>
+                        <span className="px-1 sm:px-2 text-gray-400 text-xs sm:text-sm">...</span>
                       )}
                       <button
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                           currentPage === page
                             ? 'bg-primary-600 text-white'
                             : 'text-gray-700 hover:bg-gray-100'
@@ -405,9 +403,9 @@ export default function RichiestePivaReal() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="p-1.5 sm:p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
@@ -425,27 +423,27 @@ export default function RichiestePivaReal() {
         {selectedRequest && selectedRequest.pivaRequestData && (
           <div className="space-y-6">
             {/* Header with Client Info */}
-            <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white overflow-hidden">
+            <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-4 sm:p-6 lg:p-8 text-white overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
 
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                      <Building2 className="h-8 w-8 text-white" />
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
+                      <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{selectedRequest.name}</h2>
-                      <p className="text-blue-100 mt-1">{selectedRequest.email}</p>
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{selectedRequest.name}</h2>
+                      <p className="text-blue-100 mt-0.5 sm:mt-1 text-sm truncate">{selectedRequest.email}</p>
                       {selectedRequest.phone && (
-                        <p className="text-blue-100 text-sm mt-0.5">+39 {selectedRequest.phone}</p>
+                        <p className="text-blue-100 text-xs sm:text-sm mt-0.5">+39 {selectedRequest.phone}</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end space-y-2">
-                    <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl ${
+                  <div className="flex flex-col items-start sm:items-end space-y-2">
+                    <span className={`inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl ${
                       selectedRequest.pivaApprovalStatus === 'approved'
                         ? 'bg-green-500/20 text-green-100 border border-green-400/30'
                         : selectedRequest.pivaApprovalStatus === 'rejected'
@@ -455,39 +453,39 @@ export default function RichiestePivaReal() {
                       {getStatusIcon(selectedRequest.pivaApprovalStatus)}
                       <span className="ml-2">{getStatusText(selectedRequest.pivaApprovalStatus)}</span>
                     </span>
-                    <div className="text-sm text-blue-100">
+                    <div className="text-xs sm:text-sm text-blue-100">
                       <span>Richiesta: {formatDate(selectedRequest.createdAt)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Codice Fiscale</p>
-                    <p className="text-white font-semibold mt-1">{selectedRequest.pivaRequestData.fiscalCode}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                    <p className="text-blue-200 text-xs sm:text-sm">Codice Fiscale</p>
+                    <p className="text-white font-semibold mt-1 text-sm sm:text-base truncate">{selectedRequest.pivaRequestData.fiscalCode}</p>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Fatturato Previsto</p>
-                    <p className="text-white font-semibold mt-1">€ {selectedRequest.pivaRequestData.expectedRevenue.toLocaleString()}</p>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                    <p className="text-blue-200 text-xs sm:text-sm">Fatturato Previsto</p>
+                    <p className="text-white font-semibold mt-1 text-sm sm:text-base">€ {selectedRequest.pivaRequestData.expectedRevenue.toLocaleString()}</p>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-blue-200 text-sm">Codice ATECO</p>
-                    <p className="text-white font-semibold mt-1">{selectedRequest.pivaRequestData.codiceAteco}</p>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                    <p className="text-blue-200 text-xs sm:text-sm">Codice ATECO</p>
+                    <p className="text-white font-semibold mt-1 text-sm sm:text-base">{selectedRequest.pivaRequestData.codiceAteco}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Tabs or Sections */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Dati Anagrafici Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-blue-600" />
+              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-5">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Dati Anagrafici</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Dati Anagrafici</h4>
                 </div>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -514,12 +512,12 @@ export default function RichiestePivaReal() {
               </div>
 
               {/* Residenza Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-green-600" />
+              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-5">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Residenza</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Residenza</h4>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -544,12 +542,12 @@ export default function RichiestePivaReal() {
               </div>
 
               {/* Attività Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-purple-600" />
+              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-5">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Dati Attività</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Dati Attività</h4>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -574,12 +572,12 @@ export default function RichiestePivaReal() {
               </div>
 
               {/* Informazioni Fiscali Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-orange-600" />
+              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-5">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Informazioni Fiscali</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Informazioni Fiscali</h4>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -631,18 +629,18 @@ export default function RichiestePivaReal() {
 
             {/* Actions */}
             {(selectedRequest.pivaApprovalStatus === 'pending' || !selectedRequest.pivaApprovalStatus) && (
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200">
                 <button
                   onClick={() => handleApproveClick(selectedRequest._id, false)}
                   disabled={actionLoading}
-                  className="px-6 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-red-600 text-white text-sm sm:text-base font-medium rounded-xl hover:bg-red-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
                 >
                   {actionLoading ? 'Elaborazione...' : 'Respingi Richiesta'}
                 </button>
                 <button
                   onClick={() => handleApproveClick(selectedRequest._id, true)}
                   disabled={actionLoading}
-                  className="px-6 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-green-600 text-white text-sm sm:text-base font-medium rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
                 >
                   {actionLoading ? 'Elaborazione...' : 'Approva Richiesta'}
                 </button>

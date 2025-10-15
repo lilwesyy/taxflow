@@ -36,29 +36,29 @@ export default function DashboardOverview({ onSectionChange }: DashboardOverview
 
       {/* Recent Activities */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900">Attività Recenti</h3>
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Attività Recenti</h3>
         </div>
         <div className="divide-y divide-gray-200">
           {recentActivities.map((activity, index) => (
-            <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between">
+            <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex-1">
-                  <div className="flex items-center">
-                    <span className={`text-sm font-medium px-2 py-1 rounded-md mr-3 ${
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-md ${
                       activity.status === 'success' ? 'text-green-600 bg-green-50' :
                       activity.status === 'warning' ? 'text-orange-600 bg-orange-50' :
                       'text-blue-600 bg-blue-50'
                     }`}>
                       {activity.type}
                     </span>
-                    <span className="text-sm text-gray-500">{activity.time}</span>
+                    <span className="text-xs sm:text-sm text-gray-500">{activity.time}</span>
                   </div>
-                  <p className="text-gray-900 mt-1">{activity.description}</p>
+                  <p className="text-sm sm:text-base text-gray-900 mt-1">{activity.description}</p>
                 </div>
                 {activity.amount && (
-                  <div className="text-right">
-                    <p className={`font-semibold ${
+                  <div className="text-left sm:text-right">
+                    <p className={`text-sm sm:text-base font-semibold ${
                       activity.amount.includes('€') ? 'text-green-600' :
                       activity.status === 'warning' ? 'text-orange-600' : 'text-blue-600'
                     }`}>

@@ -81,12 +81,12 @@ export default function SubscriptionBanner() {
   const Icon = config.icon
 
   return (
-    <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-4 mb-6`}>
-      <div className="flex items-start">
-        <Icon className={`${config.iconColor} h-5 w-5 mr-3 flex-shrink-0 mt-0.5`} />
-        <div>
-          <h4 className={`font-semibold ${config.textColor}`}>{config.title}</h4>
-          <p className={`text-sm ${config.textColor} mt-1`}>{config.message}</p>
+    <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-4 sm:p-6 mb-4 sm:mb-6`}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <Icon className={`${config.iconColor} h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0`} />
+        <div className="flex-1 min-w-0">
+          <h4 className={`font-semibold ${config.textColor} text-sm sm:text-base`}>{config.title}</h4>
+          <p className={`text-xs sm:text-sm ${config.textColor} mt-1`}>{config.message}</p>
         </div>
       </div>
     </div>

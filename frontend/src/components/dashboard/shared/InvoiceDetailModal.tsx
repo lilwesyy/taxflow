@@ -51,56 +51,56 @@ export default function InvoiceDetailModal({
       title={`Fattura ${invoice.numero}`}
       maxWidth="6xl"
     >
-      <div className="space-y-6">
-        {/* Header with Invoice Info - Similar to Client Modal */}
-        <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white overflow-hidden">
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header with Invoice Info */}
+        <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-4 sm:p-6 lg:p-8 text-white overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
 
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <FileText className="h-8 w-8 text-white" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Fattura {invoice.numero}</h2>
-                  <p className="text-blue-100 mt-1">{invoice.cliente}</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold">Fattura {invoice.numero}</h2>
+                  <p className="text-blue-100 mt-1 text-sm sm:text-base truncate">{invoice.cliente}</p>
                   {(invoice.clienteEmail || invoice.email) && (
-                    <p className="text-blue-100 text-sm mt-0.5">{invoice.clienteEmail || invoice.email}</p>
+                    <p className="text-blue-100 text-xs sm:text-sm mt-0.5 truncate">{invoice.clienteEmail || invoice.email}</p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col items-end space-y-2">
-                <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl ${statusDisplay.color}`}>
-                  <StatusIcon className="h-4 w-4 mr-2" />
+              <div className="flex flex-col items-start sm:items-end space-y-2 w-full sm:w-auto">
+                <span className={`inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl ${statusDisplay.color}`}>
+                  <StatusIcon className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span>{statusDisplay.label}</span>
                 </span>
-                <div className="text-sm text-blue-100">
+                <div className="text-xs sm:text-sm text-blue-100">
                   <span>Emessa il: {invoice.dataEmissione}</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Stats */}
-            <div className={`grid ${invoice.dataScadenza ? 'grid-cols-4' : 'grid-cols-3'} gap-4 mt-6`}>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-blue-200 text-sm">Imponibile</p>
-                <p className="text-white font-semibold mt-1">{formatCurrency(invoice.importo)}</p>
+            <div className={`grid grid-cols-2 ${invoice.dataScadenza ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 sm:gap-4 mt-4 sm:mt-6`}>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                <p className="text-blue-200 text-xs sm:text-sm">Imponibile</p>
+                <p className="text-white font-semibold mt-1 text-sm sm:text-base">{formatCurrency(invoice.importo)}</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-blue-200 text-sm">IVA</p>
-                <p className="text-white font-semibold mt-1">{formatCurrency(invoice.iva)}</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                <p className="text-blue-200 text-xs sm:text-sm">IVA</p>
+                <p className="text-white font-semibold mt-1 text-sm sm:text-base">{formatCurrency(invoice.iva)}</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-blue-200 text-sm">Totale</p>
-                <p className="text-white font-semibold mt-1">{formatCurrency(invoice.totale)}</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                <p className="text-blue-200 text-xs sm:text-sm">Totale</p>
+                <p className="text-white font-semibold mt-1 text-sm sm:text-base">{formatCurrency(invoice.totale)}</p>
               </div>
               {invoice.dataScadenza && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                  <p className="text-blue-200 text-sm">Scadenza</p>
-                  <p className="text-white font-semibold mt-1">{invoice.dataScadenza}</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                  <p className="text-blue-200 text-xs sm:text-sm">Scadenza</p>
+                  <p className="text-white font-semibold mt-1 text-sm sm:text-base">{invoice.dataScadenza}</p>
                 </div>
               )}
             </div>
@@ -108,56 +108,56 @@ export default function InvoiceDetailModal({
         </div>
 
         {/* Content */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Informazioni Cliente Card */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <User className="h-5 w-5 text-blue-600" />
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center space-x-3 mb-4 sm:mb-5">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900">Informazioni Cliente</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900">Informazioni Cliente</h4>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome completo</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">{invoice.cliente}</p>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.cliente}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">{invoice.clienteEmail || invoice.email || 'N/D'}</p>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900 truncate">{invoice.clienteEmail || invoice.email || 'N/D'}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Metodo di pagamento</label>
                 <div className="mt-1 flex items-center">
-                  <CreditCard className="h-4 w-4 text-gray-400 mr-2" />
-                  <p className="text-sm font-medium text-gray-900">Carta</p>
+                  <CreditCard className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">Carta</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Dettagli Fattura Card */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-green-600" />
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center space-x-3 mb-4 sm:mb-5">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900">Dettagli Fattura</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900">Dettagli Fattura</h4>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Data emissione</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">{invoice.dataEmissione}</p>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.dataEmissione}</p>
               </div>
               {invoice.dataScadenza && (
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Data scadenza</label>
-                  <p className="mt-1 text-sm font-medium text-gray-900">{invoice.dataScadenza}</p>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.dataScadenza}</p>
                 </div>
               )}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Servizio</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">{invoice.servizio}</p>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.servizio}</p>
               </div>
             </div>
           </div>
@@ -165,83 +165,83 @@ export default function InvoiceDetailModal({
 
         {/* Descrizione se presente */}
         {invoice.descrizione && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                <FileText className="h-5 w-5 text-purple-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900">Descrizione</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900">Descrizione</h4>
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed">{invoice.descrizione}</p>
+            <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">{invoice.descrizione}</p>
           </div>
         )}
 
         {/* Note se presenti */}
         {invoice.note && (
-          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900">Note Importanti</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900">Note Importanti</h4>
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed">{invoice.note}</p>
+            <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">{invoice.note}</p>
           </div>
         )}
 
         {/* Riepilogo importi */}
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="h-5 w-5 text-blue-600" />
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900">Riepilogo Importi</h4>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Riepilogo Importi</h4>
           </div>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-              <span className="text-gray-600 font-medium">Imponibile:</span>
-              <span className="font-semibold text-gray-900 text-lg">{formatCurrency(invoice.importo)}</span>
+              <span className="text-gray-600 font-medium text-xs sm:text-sm">Imponibile:</span>
+              <span className="font-semibold text-gray-900 text-base sm:text-lg">{formatCurrency(invoice.importo)}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-              <span className="text-gray-600 font-medium">IVA:</span>
-              <span className="font-semibold text-gray-900 text-lg">{formatCurrency(invoice.iva)}</span>
+              <span className="text-gray-600 font-medium text-xs sm:text-sm">IVA:</span>
+              <span className="font-semibold text-gray-900 text-base sm:text-lg">{formatCurrency(invoice.iva)}</span>
             </div>
             <div className="border-t-2 border-gray-300 pt-4">
               <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl">
-                <span className="font-bold text-white text-lg">Totale:</span>
-                <span className="font-bold text-white text-2xl">{formatCurrency(invoice.totale)}</span>
+                <span className="font-bold text-white text-base sm:text-lg">Totale:</span>
+                <span className="font-bold text-white text-xl sm:text-2xl">{formatCurrency(invoice.totale)}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Azioni */}
-        <div className="flex justify-between items-center pt-6 border-t-2 border-gray-200">
-          <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-4 sm:pt-6 border-t-2 border-gray-200 gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {onDownloadInvoice && invoice.status === 'paid' && (
               <button
                 onClick={() => onDownloadInvoice(invoice)}
-                className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center font-medium"
+                className="group px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center justify-center font-medium text-sm sm:text-base"
               >
-                <Download className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:scale-110 transition-transform flex-shrink-0" />
                 Scarica PDF
               </button>
             )}
             {onEditInvoice && invoice.status !== 'paid' && (
               <button
                 onClick={() => onEditInvoice(invoice)}
-                className="group px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center font-medium"
+                className="group px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center font-medium text-sm sm:text-base"
               >
-                <Edit className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                <Edit className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:scale-110 transition-transform flex-shrink-0" />
                 Modifica
               </button>
             )}
             {onSendInvoice && invoice.status === 'draft' && (
               <button
                 onClick={() => onSendInvoice(invoice)}
-                className="group px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center font-medium"
+                className="group px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center justify-center font-medium text-sm sm:text-base"
               >
-                <Send className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:scale-110 transition-transform flex-shrink-0" />
                 Invia al Cliente
               </button>
             )}
@@ -250,9 +250,9 @@ export default function InvoiceDetailModal({
           {onMarkAsPaid && invoice.status === 'pending' && (
             <button
               onClick={() => onMarkAsPaid(invoice)}
-              className="group px-6 py-3 bg-gradient-to-r from-primary-600 to-blue-600 text-white rounded-xl hover:from-primary-700 hover:to-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center font-medium"
+              className="group px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-primary-600 to-blue-600 text-white rounded-xl hover:from-primary-700 hover:to-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-xl flex items-center justify-center font-medium text-sm sm:text-base"
             >
-              <CheckCircle className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:scale-110 transition-transform flex-shrink-0" />
               Segna come Pagata
             </button>
           )}

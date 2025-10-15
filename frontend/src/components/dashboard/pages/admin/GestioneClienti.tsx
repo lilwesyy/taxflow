@@ -192,10 +192,10 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -208,9 +208,9 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             >
               <div className="flex items-center space-x-2 mb-1">
                 <tab.icon className="h-4 w-4" />
-                <span className="font-medium text-sm">{tab.name}</span>
+                <span className="font-medium text-xs sm:text-sm truncate">{tab.name}</span>
               </div>
-              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}`}>
+              <p className={`text-xs ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'} truncate`}>
                 {tab.description}
               </p>
               <div className="mt-1">
@@ -231,78 +231,78 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-blue-50 group-hover:scale-110 transition-transform">
-              <Users className="h-8 w-8 text-blue-600" />
+            <div className="p-2 sm:p-3 rounded-lg bg-blue-50 group-hover:scale-110 transition-transform">
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Totale Clienti</p>
-              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.length}</p>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm text-gray-600">Totale Clienti</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{clientiWithFormattedDates.length}</p>
             </div>
           </div>
         </div>
-        <div className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-green-50 group-hover:scale-110 transition-transform">
-              <Building2 className="h-8 w-8 text-green-600" />
+            <div className="p-2 sm:p-3 rounded-lg bg-green-50 group-hover:scale-110 transition-transform">
+              <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Attivi</p>
-              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'active').length}</p>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm text-gray-600">Attivi</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'active').length}</p>
             </div>
           </div>
         </div>
-        <div className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-yellow-50 group-hover:scale-110 transition-transform">
-              <Calendar className="h-8 w-8 text-yellow-600" />
+            <div className="p-2 sm:p-3 rounded-lg bg-yellow-50 group-hover:scale-110 transition-transform">
+              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">In Attesa</p>
-              <p className="text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'pending').length}</p>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm text-gray-600">In Attesa</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{clientiWithFormattedDates.filter(c => c.status === 'pending').length}</p>
             </div>
           </div>
         </div>
-        <div className="group bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
+        <div className="group bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow relative z-10">
           <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-purple-50 group-hover:scale-110 transition-transform">
-              <DollarSign className="h-8 w-8 text-purple-600" />
+            <div className="p-2 sm:p-3 rounded-lg bg-purple-50 group-hover:scale-110 transition-transform">
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Fatturato Tot.</p>
-              <p className="text-2xl font-bold text-gray-900">€ {clientiWithFormattedDates.reduce((sum, c) => sum + (c.fatturato || 0), 0).toLocaleString()}</p>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm text-gray-600">Fatturato Tot.</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">€ {clientiWithFormattedDates.reduce((sum, c) => sum + (c.fatturato || 0), 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow duration-300">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           {/* Search Input */}
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cerca clienti per nome, azienda o email..."
+                placeholder="Cerca clienti..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               />
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
             <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+              <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-[120px]"
+                className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm w-full sm:w-auto min-w-[120px]"
               >
                 <option value="all">Tutti gli stati</option>
                 <option value="active">Attivo</option>
@@ -312,11 +312,11 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
 
             <div className="flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-gray-400" />
+              <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <select
                 value={filterRegime}
                 onChange={(e) => setFilterRegime(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-[130px]"
+                className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm w-full sm:w-auto min-w-[130px]"
               >
                 <option value="all">Tutti i regimi</option>
                 <option value="Forfettario">Forfettario</option>
@@ -326,11 +326,11 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
             </div>
 
             <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-gray-400" />
+              <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <select
                 value={filterActivity}
                 onChange={(e) => setFilterActivity(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-[140px]"
+                className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm w-full sm:w-auto min-w-[140px]"
               >
                 <option value="all">Tutta l'attività</option>
                 <option value="recent">Recente (ore)</option>
@@ -339,7 +339,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
               </select>
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+            <div className="flex items-center justify-center space-x-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <DollarSign className="h-4 w-4 text-gray-400" />
               <span>
                 {filteredClienti.length} clienti
@@ -351,45 +351,45 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
 
       {/* Clients Table */}
       {filteredClienti.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun cliente trovato</h3>
-          <p className="text-gray-500">I clienti approvati appariranno qui</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+          <Users className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Nessun cliente trovato</h3>
+          <p className="text-sm sm:text-base text-gray-500">I clienti approvati appariranno qui</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-max">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Cliente</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azienda</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">P.IVA</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Fatturato</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Ultima Attività</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Azioni</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Cliente</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Azienda</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Status</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">P.IVA</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Fatturato</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Ultima Attività</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Azioni</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {currentClienti.map((cliente) => (
                 <tr key={cliente.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                        <Users className="h-4 w-4 text-primary-600" />
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary-100 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-600" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{cliente.nome}</p>
-                        <p className="text-sm text-gray-500">{cliente.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{cliente.nome}</p>
+                        <p className="text-xs text-gray-500 truncate">{cliente.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-6">
-                    <p className="text-gray-900">{cliente.company}</p>
-                    <p className="text-sm text-gray-500">{cliente.codiceAteco}</p>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <p className="text-xs sm:text-sm text-gray-900 truncate">{cliente.company}</p>
+                    <p className="text-xs text-gray-500 truncate">{cliente.codiceAteco}</p>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(cliente.status)}`}>
                       {getStatusText(cliente.status)}
                     </span>
@@ -397,35 +397,35 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
                       <p className="text-xs text-orange-600 mt-1">{cliente.pendingRequests} richieste</p>
                     )}
                   </td>
-                  <td className="py-4 px-6">
-                    <p className="text-gray-900">{cliente.piva}</p>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <p className="text-xs sm:text-sm text-gray-900">{cliente.piva}</p>
                   </td>
-                  <td className="py-4 px-6">
-                    <p className="font-medium text-gray-900">€ {cliente.fatturato.toLocaleString()}</p>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <p className="font-medium text-xs sm:text-sm text-gray-900">€ {cliente.fatturato.toLocaleString()}</p>
                   </td>
-                  <td className="py-4 px-6">
-                    <p className="text-sm text-gray-600">{cliente.ultimaAttivita}</p>
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{cliente.ultimaAttivita}</p>
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2">
+                  <td className="py-3 sm:py-4 px-4 sm:px-6">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
                       <button
                         onClick={() => setSelectedClient(cliente)}
                         className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50 hover:scale-110 transition-all duration-200"
                         title="Visualizza dettagli"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button
                         onClick={handleChatClick}
                         className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 hover:scale-110 transition-all duration-200" title="Chat"
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 hover:scale-110 transition-all duration-200" title="Chiama">
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button className="text-gray-600 hover:text-gray-700 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200">
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     </div>
                   </td>
@@ -436,9 +436,9 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-center sm:justify-start space-x-2">
+            <span className="text-xs sm:text-sm text-gray-700">
               Mostra
             </span>
             <select
@@ -447,30 +447,30 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
                 setItemsPerPage(Number(e.target.value))
                 setCurrentPage(1)
               }}
-              className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+              className="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
               <option value={50}>50</option>
             </select>
-            <span className="text-sm text-gray-700">
+            <span className="text-xs sm:text-sm text-gray-700 hidden sm:inline">
               elementi per pagina
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">
-              {startIndex + 1}-{Math.min(endIndex, totalItems)} di {totalItems} elementi
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-0 sm:space-x-2">
+            <span className="text-xs sm:text-sm text-gray-700">
+              {startIndex + 1}-{Math.min(endIndex, totalItems)} di {totalItems}
             </span>
 
-            <div className="flex items-center space-x-1 ml-4">
+            <div className="flex items-center space-x-1 sm:ml-4">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+                className="p-1.5 sm:p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
               {/* Page numbers */}
@@ -483,11 +483,11 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
                 .map((page, index, array) => (
                   <div key={page} className="flex items-center">
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="px-2 text-gray-400">...</span>
+                      <span className="px-1 sm:px-2 text-gray-400 text-xs sm:text-sm">...</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                         currentPage === page
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -502,9 +502,9 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+                className="p-1.5 sm:p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
           </div>

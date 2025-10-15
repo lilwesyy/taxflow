@@ -131,16 +131,16 @@ export default function InvoiceCreateModal({
       title={title}
       maxWidth="4xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Dati Cliente */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <span className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">1</span>
-            Dati Cliente (Cessionario/Committente)
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <span className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold flex-shrink-0">1</span>
+            <span className="min-w-0">Dati Cliente (Cessionario/Committente)</span>
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Denominazione/Nome Completo *
               </label>
               <input
@@ -148,13 +148,13 @@ export default function InvoiceCreateModal({
                 value={formData.cliente}
                 onChange={(e) => updateField('cliente', e.target.value)}
                 placeholder="Nome e Cognome / Ragione Sociale"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Email Cliente *
               </label>
               <input
@@ -162,7 +162,7 @@ export default function InvoiceCreateModal({
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 placeholder="cliente@email.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                 required
               />
             </div>
@@ -513,11 +513,11 @@ export default function InvoiceCreateModal({
         </div>
 
         {/* Bottoni Azione */}
-        <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={handleClose}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all duration-200 hover:scale-105"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             Annulla
           </button>
@@ -528,13 +528,13 @@ export default function InvoiceCreateModal({
               onSubmit(formDataWithStatus as any)
               handleReset()
             }}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 hover:shadow-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             Salva come Bozza
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 hover:shadow-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             Crea e Invia
           </button>

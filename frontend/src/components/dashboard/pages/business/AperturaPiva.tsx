@@ -160,61 +160,61 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dati Personali</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Dati Personali</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Nome *</label>
                 <input
                   type="text"
                   name="nome"
                   value={formData.nome}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="Mario"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Cognome *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Cognome *</label>
                 <input
                   type="text"
                   name="cognome"
                   value={formData.cognome}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="Rossi"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email *</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="mario.rossi@email.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Telefono *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Telefono *</label>
                 <input
                   type="tel"
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="+39 123 456 7890"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Codice Fiscale *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Codice Fiscale *</label>
                 <input
                   type="text"
                   name="codiceFiscale"
                   value={formData.codiceFiscale}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="RSSMRA80A01H501Z"
                 />
               </div>
@@ -223,27 +223,27 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
         )
       case 2:
         return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Informazioni Attività</h3>
-            <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Informazioni Attività</h3>
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descrizione Attività *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Descrizione Attività *</label>
                 <input
                   type="text"
                   name="attivita"
                   value={formData.attivita}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                   placeholder="Consulenza informatica"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Codice ATECO *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Codice ATECO *</label>
                 <select
                   name="codiceAteco"
                   value={formData.codiceAteco}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                 >
                   <option value="">Seleziona codice ATECO</option>
                   <option value="62.01.00">62.01.00 - Produzione di software non connesso all'edizione</option>
@@ -253,12 +253,12 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fatturato Previsto Annuo *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Fatturato Previsto Annuo *</label>
                 <select
                   name="fatturatoPrevisto"
                   value={formData.fatturatoPrevisto}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
                 >
                   <option value="">Seleziona range</option>
                   <option value="0-25000">€ 0 - € 25.000</option>
@@ -271,44 +271,44 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
         )
       default:
         return (
-          <div className="text-center py-8">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Richiesta Inviata!</h3>
-            <p className="text-gray-600">La tua richiesta è stata inviata al consulente. Riceverai una risposta entro 24 ore.</p>
+          <div className="text-center py-6 sm:py-8">
+            <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Richiesta Inviata!</h3>
+            <p className="text-sm sm:text-base text-gray-600">La tua richiesta è stata inviata al consulente. Riceverai una risposta entro 24 ore.</p>
           </div>
         )
     }
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Current Requests */}
       {currentRequests.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Le tue richieste</h3>
-          <div className="space-y-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Le tue richieste</h3>
+          <div className="space-y-3 sm:space-y-4">
             {currentRequests.map((request, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer group"
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer group gap-3 sm:gap-0"
                    onClick={() => setSelectedRequest(request)}>
-                <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full ${request.status === 'Completata' ? 'bg-green-500' :
+                <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${request.status === 'Completata' ? 'bg-green-500' :
                     request.status === 'In elaborazione' ? 'bg-yellow-500' : 'bg-gray-500'
                     }`}></div>
-                  <div>
-                    <p className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">{request.id}</p>
-                    <p className="text-sm text-gray-600">Consulente: {request.consultant}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm sm:text-base text-gray-900 group-hover:text-primary-600 transition-colors truncate">{request.id}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">Consulente: {request.consultant}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className={`text-sm font-medium ${request.status === 'Completata' ? 'text-green-600' :
+                <div className="flex items-center space-x-3 justify-between sm:justify-end">
+                  <div className="text-left sm:text-right">
+                    <p className={`text-xs sm:text-sm font-medium ${request.status === 'Completata' ? 'text-green-600' :
                       request.status === 'In elaborazione' ? 'text-yellow-600' : 'text-gray-600'
                       }`}>
                       {request.status}
                     </p>
                     <p className="text-xs text-gray-500">{request.date}</p>
                   </div>
-                  <Eye className="h-4 w-4 text-gray-400 group-hover:text-primary-600 group-hover:scale-110 transition-all duration-200" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-primary-600 group-hover:scale-110 transition-all duration-200 flex-shrink-0" />
                 </div>
               </div>
             ))}
@@ -317,22 +317,22 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
       )}
 
       {/* Steps */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative z-10">
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 space-y-3 sm:space-y-0 overflow-x-auto">
           {steps.map((stepItem, index) => (
-            <div key={stepItem.id} className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${stepItem.status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
+            <div key={stepItem.id} className="flex items-center min-w-0">
+              <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex-shrink-0 ${stepItem.status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
                 stepItem.status === 'active' ? 'bg-primary-500 border-primary-500 text-white' :
                   'bg-gray-100 border-gray-300 text-gray-500'
                 }`}>
-                <stepItem.icon className="h-5 w-5" />
+                <stepItem.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <span className={`ml-2 text-sm font-medium ${stepItem.status === 'active' ? 'text-primary-600' : 'text-gray-600'
+              <span className={`ml-2 text-xs sm:text-sm font-medium truncate ${stepItem.status === 'active' ? 'text-primary-600' : 'text-gray-600'
                 }`}>
                 {stepItem.title}
               </span>
               {index < steps.length - 1 && (
-                <div className={`w-16 h-0.5 ml-4 ${stepItem.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'
+                <div className={`w-12 sm:w-16 h-0.5 ml-3 sm:ml-4 flex-shrink-0 ${stepItem.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'
                   }`}></div>
               )}
             </div>
@@ -346,17 +346,17 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
 
         {/* Navigation Buttons */}
         {step < 4 && (
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
             <button
               onClick={() => setStep(Math.max(1, step - 1))}
               disabled={step === 1}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-6 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
             >
               Indietro
             </button>
             <button
               onClick={() => setStep(Math.min(4, step + 1))}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              className="w-full sm:w-auto px-6 py-2 sm:py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg text-xs sm:text-sm"
             >
               {step === 3 ? 'Invia Richiesta' : 'Avanti'}
             </button>
@@ -365,12 +365,12 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
         <div className="flex items-start space-x-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 mt-1" />
+          <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mt-1 flex-shrink-0" />
           <div>
-            <h4 className="font-semibold text-blue-900 mb-2">Regime Forfettario - Vantaggi</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
+            <h4 className="font-semibold text-sm sm:text-base text-blue-900 mb-2">Regime Forfettario - Vantaggi</h4>
+            <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
               <li>• Tassazione agevolata al 15% (5% per i primi 5 anni)</li>
               <li>• Nessun obbligo di fatturazione elettronica sotto i € 25.000</li>
               <li>• Contabilità semplificata</li>
@@ -388,27 +388,27 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
           title={`Dettagli Richiesta ${selectedRequest.id}`}
           maxWidth="4xl"
         >
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Header Status */}
-            <div className={`p-4 rounded-lg border-2 ${
+            <div className={`p-3 sm:p-4 rounded-lg border-2 ${
               selectedRequest.status === 'Completata' ? 'bg-green-50 border-green-200' :
               selectedRequest.status === 'In elaborazione' ? 'bg-yellow-50 border-yellow-200' :
               'bg-gray-50 border-gray-200'
             }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-4 h-4 rounded-full ${
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className={`w-4 h-4 rounded-full flex-shrink-0 ${
                     selectedRequest.status === 'Completata' ? 'bg-green-500' :
                     selectedRequest.status === 'In elaborazione' ? 'bg-yellow-500' : 'bg-gray-500'
                   }`}></div>
-                  <div>
-                    <h3 className={`font-semibold ${
+                  <div className="min-w-0">
+                    <h3 className={`font-semibold text-sm sm:text-base ${
                       selectedRequest.status === 'Completata' ? 'text-green-900' :
                       selectedRequest.status === 'In elaborazione' ? 'text-yellow-900' : 'text-gray-900'
                     }`}>
                       Stato: {selectedRequest.status}
                     </h3>
-                    <p className={`text-sm ${
+                    <p className={`text-xs sm:text-sm ${
                       selectedRequest.status === 'Completata' ? 'text-green-700' :
                       selectedRequest.status === 'In elaborazione' ? 'text-yellow-700' : 'text-gray-700'
                     }`}>
@@ -417,23 +417,23 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
                   </div>
                 </div>
                 {selectedRequest.partitaIvaAssegnata && (
-                  <div className="text-right">
-                    <p className="font-semibold text-green-900">P.IVA Assegnata</p>
-                    <p className="text-lg font-bold text-green-700">{selectedRequest.partitaIvaAssegnata}</p>
+                  <div className="text-left sm:text-right">
+                    <p className="font-semibold text-xs sm:text-sm text-green-900">P.IVA Assegnata</p>
+                    <p className="text-base sm:text-lg font-bold text-green-700">{selectedRequest.partitaIvaAssegnata}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Informazioni Servizio */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                <h4 className="font-semibold text-sm sm:text-base text-blue-900 mb-3 flex items-center">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                   Informazioni Servizio
                 </h4>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between">
                     <span className="text-blue-700">Costo:</span>
                     <span className="font-medium text-blue-900">{selectedRequest.costoServizio}</span>
@@ -452,12 +452,12 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
               </div>
 
               {/* Dati Personali */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <User className="h-5 w-5 mr-2" />
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 flex items-center">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                   Dati Personali
                 </h4>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Nome:</span>
                     <span className="font-medium text-gray-900">{selectedRequest.datiPersonali.nome} {selectedRequest.datiPersonali.cognome}</span>
@@ -507,27 +507,27 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
 
             {/* Timeline */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
+              <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 sm:mb-4 flex items-center">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                 Cronologia Pratica
               </h4>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {selectedRequest.timeline.map((event, index) => (
-                  <div key={index} className="flex items-start space-x-4">
+                  <div key={index} className="flex items-start space-x-3 sm:space-x-4">
                     <div className="flex flex-col items-center">
-                      <div className={`w-3 h-3 rounded-full mt-1.5 ${
+                      <div className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
                         event.status === 'completed' ? 'bg-green-500' :
                         event.status === 'active' ? 'bg-yellow-500' : 'bg-gray-300'
                       }`}></div>
                       {index < selectedRequest.timeline.length - 1 && (
-                        <div className={`w-0.5 h-8 mt-2 ${
+                        <div className={`w-0.5 h-6 sm:h-8 mt-2 ${
                           event.status === 'completed' ? 'bg-green-200' : 'bg-gray-200'
                         }`}></div>
                       )}
                     </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <p className={`font-medium ${
+                    <div className="flex-1 pb-3 sm:pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-1">
+                        <p className={`font-medium text-xs sm:text-sm ${
                           event.status === 'completed' ? 'text-green-900' :
                           event.status === 'active' ? 'text-yellow-900' : 'text-gray-700'
                         }`}>
@@ -535,7 +535,7 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
                         </p>
                         <span className="text-xs text-gray-500">{event.data}</span>
                       </div>
-                      <p className="text-sm text-gray-600">{event.note}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{event.note}</p>
                     </div>
                   </div>
                 ))}
@@ -580,33 +580,33 @@ export default function AperturaPiva({ onNavigateToDocuments }: AperturaPivaProp
             )}
 
             {/* Actions */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-gray-200 gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs sm:text-sm text-gray-600 gap-2 sm:gap-0">
                 <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1 flex-shrink-0" />
                   <span>Richiesta del {selectedRequest.date}</span>
                 </div>
                 <div className="flex items-center">
-                  <User className="h-4 w-4 mr-1" />
-                  <span>{selectedRequest.consultant}</span>
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 mr-1 flex-shrink-0" />
+                  <span className="truncate">{selectedRequest.consultant}</span>
                 </div>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
                 <button
                   onClick={() => setSelectedRequest(null)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm"
                 >
                   Chiudi
                 </button>
                 {selectedRequest.status === 'In elaborazione' && (
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center">
-                    <Phone className="h-4 w-4 mr-2" />
+                  <button className="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center text-xs sm:text-sm">
+                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                     Contatta Consulente
                   </button>
                 )}
                 {selectedRequest.status === 'Completata' && (
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
+                  <button className="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center justify-center text-xs sm:text-sm">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                     Scarica Documenti
                   </button>
                 )}
