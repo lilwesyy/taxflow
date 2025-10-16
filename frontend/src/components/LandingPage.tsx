@@ -28,7 +28,8 @@ import {
   Star,
   User,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Logo from './common/Logo'
@@ -56,6 +57,13 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
   // Carousel states
   const [currentBanner, setCurrentBanner] = useState(0)
   const [currentService, setCurrentService] = useState(0)
+
+  // Scroll to top button state
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  // Navbar visibility state
+  const [showNavbar, setShowNavbar] = useState(true)
+  const lastScrollY = useRef(0)
 
   const sectionRefs = useRef<Record<string, Element | null>>({})
 
@@ -133,6 +141,41 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
     return () => clearInterval(interval)
   }, [showBanner, showCookieModal, showPrivacyModal, showTermsModal])
 
+  // Show/hide scroll to top button and navbar based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      // Show scroll to top button after 400px
+      setShowScrollTop(currentScrollY > 400)
+
+      // Hide/show navbar based on scroll direction with threshold
+      const scrollDifference = currentScrollY - lastScrollY.current
+
+      // Only trigger if scrolled more than 50px to avoid jittery behavior
+      if (Math.abs(scrollDifference) > 50) {
+        if (scrollDifference > 0 && currentScrollY > 300) {
+          // Scrolling down significantly & past 300px - hide navbar
+          setShowNavbar(false)
+        } else if (scrollDifference < 0) {
+          // Scrolling up - show navbar
+          setShowNavbar(true)
+        }
+
+        lastScrollY.current = currentScrollY
+      }
+
+      // Always show navbar at the very top
+      if (currentScrollY < 100) {
+        setShowNavbar(true)
+        lastScrollY.current = currentScrollY
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const setSectionRef = (id: string) => (el: Element | null) => {
     sectionRefs.current[id] = el
   }
@@ -143,6 +186,10 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       element.scrollIntoView({ behavior: 'smooth' })
       setShowMobileMenu(false)
     }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Modal closing functions with animation
@@ -338,7 +385,9 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
   return (
     <div className="min-h-screen bg-white overflow-x-hidden sm:overflow-x-auto">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-md bg-white/90">
+      <header className={`bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-md bg-white/90 transition-transform duration-300 ${
+        showNavbar ? 'translate-y-0' : '-translate-y-full'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -2024,6 +2073,17 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
           </div>
         </div>
       </Modal>
+
+      {/* Scroll to top button */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 z-50 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+        aria-label="Torna su"
+      >
+        <ChevronUp className="w-6 h-6" />
+      </button>
     </div>
   )
 }
