@@ -1,7 +1,10 @@
-import { TrendingUp, TrendingDown, DollarSign, Wallet, ArrowUpCircle, ArrowDownCircle, Calendar, Download, Plus, X } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Wallet, ArrowUpCircle, ArrowDownCircle, Calendar, Download, Plus } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import api from '../../../../services/api'
 import { useToast } from '../../../../context/ToastContext'
+import Modal from '../../../common/Modal'
+import jsPDF from 'jspdf'
+import logoImage from '../../../../assets/logo.png'
 
 interface Transaction {
   id: string
@@ -196,30 +199,88 @@ export default function CashFlow() {
   }
 
   const exportCashFlow = () => {
-    const content = `
-REPORT CASHFLOW
-===============
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    let yPos = 20
 
-Periodo: ${periodo === 'month' ? 'Ultimo mese' : periodo === 'quarter' ? 'Ultimo trimestre' : 'Ultimo anno'}
-Data: ${new Date().toLocaleDateString('it-IT')}
+    // Logo e Titolo sulla stessa linea
+    doc.addImage(logoImage, 'PNG', 20, yPos, 40, 12)
 
-RIEPILOGO:
-- Saldo attuale: ${formatCurrency(saldoAttuale)}
-- Entrate: ${formatCurrency(entrateCorrente)}
-- Uscite: ${formatCurrency(usciteCorrente)}
-- Cashflow netto: ${formatCurrency(cashflowNetto)}
+    doc.setFontSize(20)
+    doc.setFont('helvetica', 'bold')
+    doc.text('REPORT CASHFLOW', pageWidth / 2, yPos + 8, { align: 'center' })
+    yPos += 30
 
-TRANSAZIONI:
-${transactions.map(t => `${t.data} | ${t.tipo.toUpperCase()} | ${t.descrizione} | ${formatCurrency(t.importo)} | ${t.stato}`).join('\n')}
-    `.trim()
+    // Periodo e data
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const periodoText = periodo === 'month' ? 'Ultimo mese' : periodo === 'quarter' ? 'Ultimo trimestre' : 'Ultimo anno'
+    doc.text(`Periodo: ${periodoText}`, 20, yPos)
+    yPos += 6
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, 20, yPos)
+    yPos += 15
 
-    const blob = new Blob([content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `cashflow-${new Date().toISOString().split('T')[0]}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+    // Riepilogo
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('RIEPILOGO', 20, yPos)
+    yPos += 10
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Saldo attuale: ${formatCurrency(saldoAttuale)}`, 25, yPos)
+    yPos += 6
+    doc.text(`Entrate: ${formatCurrency(entrateCorrente)}`, 25, yPos)
+    yPos += 6
+    doc.text(`Uscite: ${formatCurrency(usciteCorrente)}`, 25, yPos)
+    yPos += 6
+    doc.text(`Cashflow netto: ${formatCurrency(cashflowNetto)}`, 25, yPos)
+    yPos += 15
+
+    // Transazioni
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TRANSAZIONI', 20, yPos)
+    yPos += 10
+
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+
+    // Header tabella
+    doc.setFont('helvetica', 'bold')
+    doc.text('Data', 20, yPos)
+    doc.text('Tipo', 45, yPos)
+    doc.text('Descrizione', 65, yPos)
+    doc.text('Importo', 135, yPos)
+    doc.text('Stato', 170, yPos)
+    yPos += 5
+    doc.line(20, yPos, 190, yPos)
+    yPos += 5
+
+    // Righe transazioni
+    doc.setFont('helvetica', 'normal')
+    transactions.forEach((t) => {
+      if (yPos > 270) {
+        doc.addPage()
+        yPos = 20
+      }
+
+      const dataFormatted = new Date(t.data).toLocaleDateString('it-IT')
+      const tipoText = t.tipo === 'entrata' ? 'Entrata' : 'Uscita'
+      const descrizioneShort = t.descrizione.length > 35 ? t.descrizione.substring(0, 35) + '...' : t.descrizione
+      const importoText = formatCurrency(t.importo)
+      const statoText = t.stato === 'completato' ? 'Completato' : 'Previsto'
+
+      doc.text(dataFormatted, 20, yPos)
+      doc.text(tipoText, 45, yPos)
+      doc.text(descrizioneShort, 65, yPos)
+      doc.text(importoText, 135, yPos)
+      doc.text(statoText, 170, yPos)
+      yPos += 6
+    })
+
+    // Salva PDF
+    doc.save(`cashflow-${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
   const handleSubmitExpense = async (e: React.FormEvent) => {
@@ -279,8 +340,7 @@ ${transactions.map(t => `${t.data} | ${t.tipo.toUpperCase()} | ${t.descrizione} 
   return (
     <div className="space-y-6">
       {/* Header con filtri */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">Cashflow</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
         <div className="flex items-center gap-3">
           <select
             value={periodo}
@@ -488,154 +548,145 @@ ${transactions.map(t => `${t.data} | ${t.tipo.toUpperCase()} | ${t.descrizione} 
       </div>
 
       {/* Modal Aggiungi Spesa */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-              <h3 className="text-xl font-semibold text-gray-900">Aggiungi Nuova Spesa</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Aggiungi Nuova Spesa"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleSubmitExpense} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descrizione *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.descrizione}
+              onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="es. Contributi INPS Q1 2024"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Importo (€) *
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                value={formData.importo}
+                onChange={(e) => setFormData({ ...formData, importo: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="0.00"
+              />
             </div>
 
-            <form onSubmit={handleSubmitExpense} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrizione *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.descrizione}
-                  onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="es. Contributi INPS Q1 2024"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Importo (€) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.01"
-                    value={formData.importo}
-                    onChange={(e) => setFormData({ ...formData, importo: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Data *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.data}
-                    onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Categoria *
-                  </label>
-                  <select
-                    value={formData.categoria}
-                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="inps">Contributi INPS</option>
-                    <option value="imposte">Imposte</option>
-                    <option value="affitto">Affitto</option>
-                    <option value="utilities">Utilities</option>
-                    <option value="fornitori">Fornitori</option>
-                    <option value="attrezzature">Attrezzature</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="formazione">Formazione</option>
-                    <option value="trasporti">Trasporti</option>
-                    <option value="consulenze">Consulenze</option>
-                    <option value="altro">Altro</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stato *
-                  </label>
-                  <select
-                    value={formData.stato}
-                    onChange={(e) => setFormData({ ...formData, stato: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="pagato">Pagato</option>
-                    <option value="da_pagare">Da Pagare</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Metodo di Pagamento
-                </label>
-                <select
-                  value={formData.metodoPagamento}
-                  onChange={(e) => setFormData({ ...formData, metodoPagamento: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="bonifico">Bonifico</option>
-                  <option value="carta">Carta</option>
-                  <option value="contanti">Contanti</option>
-                  <option value="rid">RID</option>
-                  <option value="altro">Altro</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Note
-                </label>
-                <textarea
-                  value={formData.note}
-                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Aggiungi note opzionali..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingExpense}
-                  className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {savingExpense ? 'Salvataggio...' : 'Salva Spesa'}
-                </button>
-              </div>
-            </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.data}
+                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categoria *
+              </label>
+              <select
+                value={formData.categoria}
+                onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="inps">Contributi INPS</option>
+                <option value="imposte">Imposte</option>
+                <option value="affitto">Affitto</option>
+                <option value="utilities">Utilities</option>
+                <option value="fornitori">Fornitori</option>
+                <option value="attrezzature">Attrezzature</option>
+                <option value="marketing">Marketing</option>
+                <option value="formazione">Formazione</option>
+                <option value="trasporti">Trasporti</option>
+                <option value="consulenze">Consulenze</option>
+                <option value="altro">Altro</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Stato *
+              </label>
+              <select
+                value={formData.stato}
+                onChange={(e) => setFormData({ ...formData, stato: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="pagato">Pagato</option>
+                <option value="da_pagare">Da Pagare</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Metodo di Pagamento
+            </label>
+            <select
+              value={formData.metodoPagamento}
+              onChange={(e) => setFormData({ ...formData, metodoPagamento: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="bonifico">Bonifico</option>
+              <option value="carta">Carta</option>
+              <option value="contanti">Contanti</option>
+              <option value="rid">RID</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Note
+            </label>
+            <textarea
+              value={formData.note}
+              onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              rows={3}
+              placeholder="Aggiungi note opzionali..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              disabled={savingExpense}
+              className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingExpense ? 'Salvataggio...' : 'Salva Spesa'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
