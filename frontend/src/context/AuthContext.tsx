@@ -37,6 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
 
+      if (response.status === 401) {
+        // Token scaduto o non valido - logout automatico
+        console.log('Token scaduto, eseguo logout automatico')
+        logout()
+        return
+      }
+
       if (response.ok) {
         const data = await response.json()
         const freshUser = data.user || data

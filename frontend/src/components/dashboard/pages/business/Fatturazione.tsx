@@ -86,29 +86,89 @@ export default function Fatturazione() {
   const handleRefreshCompany = async () => {
     try {
       setRefreshingCompany(true)
-      // Reload user profile data which includes updated company info
+
+      // Step 1: Reload user profile to get updated data from Impostazioni
       const API_URL = import.meta.env.VITE_API_URL || '/api'
       const token = localStorage.getItem('token')
 
-      const response = await fetch(`${API_URL}/user/me`, {
+      const profileResponse = await fetch(`${API_URL}/user/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        // Update the user in AuthContext
-        if (updateUser) {
-          updateUser(data.user)
+      if (!profileResponse.ok) {
+        throw new Error('Errore nel caricamento del profilo')
+      }
+
+      const profileData = await profileResponse.json()
+      const updatedUser = profileData.user
+
+      // Step 2: Sync updated data to Fattura Elettronica API
+      // Build update payload with only fields that exist
+      const updatePayload: any = {}
+
+      if ((updatedUser as any).company) {
+        updatePayload.ragione_sociale = (updatedUser as any).company
+      }
+      if ((updatedUser as any).piva) {
+        updatePayload.piva = (updatedUser as any).piva
+      }
+      if ((updatedUser as any).fiscalCode) {
+        updatePayload.cfis = (updatedUser as any).fiscalCode
+      }
+      if ((updatedUser as any).indirizzo) {
+        updatePayload.indirizzo = (updatedUser as any).indirizzo
+      }
+      if ((updatedUser as any).cap) {
+        updatePayload.cap = (updatedUser as any).cap
+      }
+      if ((updatedUser as any).citta) {
+        updatePayload.citta = (updatedUser as any).citta
+      }
+      if ((updatedUser as any).provincia) {
+        updatePayload.provincia = (updatedUser as any).provincia
+      }
+      if ((updatedUser as any).paese) {
+        updatePayload.paese = (updatedUser as any).paese
+      }
+      if ((updatedUser as any).telefono) {
+        updatePayload.telefono_amministrazione = (updatedUser as any).telefono
+      }
+      if ((updatedUser as any).email) {
+        updatePayload.email_amministrazione = updatedUser.email
+      }
+      if ((updatedUser as any).iban) {
+        updatePayload.iban = (updatedUser as any).iban
+      }
+
+      // Only update if we have at least one field to update
+      if (Object.keys(updatePayload).length > 0) {
+        const updateResponse = await api.updateFatturaElettronicaCompany(updatePayload)
+
+        if (updateResponse.success) {
+          // Step 3: Refresh company data from API
+          await checkInvoicetronicCompany()
+
+          // Step 4: Update user in AuthContext
+          if (updateUser) {
+            updateUser(updatedUser)
+          }
+
+          showToast('Dati aziendali sincronizzati con successo!', 'success')
+        } else {
+          throw new Error(updateResponse.message || 'Errore nella sincronizzazione')
         }
-        showToast('Dati aziendali aggiornati con successo!', 'success')
       } else {
-        throw new Error('Errore nel caricamento dei dati')
+        // No data to sync, just update user context
+        if (updateUser) {
+          updateUser(updatedUser)
+        }
+        showToast('Profilo aggiornato (nessun dato da sincronizzare)', 'info')
       }
     } catch (error: any) {
-      console.error('Error refreshing user profile:', error)
-      showToast('Errore nell\'aggiornamento dei dati', 'error')
+      console.error('Error refreshing company:', error)
+      showToast(error.message || 'Errore nell\'aggiornamento dei dati', 'error')
     } finally {
       setRefreshingCompany(false)
     }
@@ -653,9 +713,9 @@ export default function Fatturazione() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div>
       {/* Invoicetronic Status Banner */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 sm:p-3 mb-3 sm:mb-4">
         <div className="flex items-start space-x-2 sm:space-x-3">
           <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
@@ -691,7 +751,7 @@ export default function Fatturazione() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow mb-3 sm:mb-4">
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {tabs.map((tab) => (
             <button

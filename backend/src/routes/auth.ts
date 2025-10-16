@@ -19,8 +19,8 @@ const generateToken = (userId: string, role: 'business' | 'admin'): string => {
     throw new Error('JWT_SECRET is not defined in environment variables')
   }
 
-  // Reduced expiration time from 24h to 1h for better security
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '1h' })
+  // Token expires after 6 hours of inactivity
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '6h' })
 }
 
 // Validation helpers

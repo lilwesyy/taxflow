@@ -7,9 +7,13 @@ import PaymentPending from './components/PaymentPending'
 import ResetPassword from './components/ResetPassword'
 import CookieBanner from './components/common/CookieBanner'
 import { useAuth } from './context/AuthContext'
+import { useAuthInterceptor } from './hooks/useAuthInterceptor'
 
 function App() {
   const { user, isLoading } = useAuth()
+
+  // Setup automatic logout on token expiration (401 errors)
+  useAuthInterceptor()
   const [currentPage, setCurrentPage] = useState('landing')
   const [loginMode, setLoginMode] = useState(true)
   const [showLoading, setShowLoading] = useState(true)
