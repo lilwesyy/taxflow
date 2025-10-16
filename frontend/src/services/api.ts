@@ -783,6 +783,107 @@ class ApiService {
 
     return response.blob()
   }
+
+  // Business Clients Management (Clienti dei clienti di TaxFlow)
+  async getBusinessClients() {
+    const response = await fetch(`${API_BASE_URL}/business-clients/list`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get business clients')
+    }
+
+    return response.json()
+  }
+
+  async getBusinessClientById(clientId: string) {
+    const response = await fetch(`${API_BASE_URL}/business-clients/${clientId}`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get business client')
+    }
+
+    return response.json()
+  }
+
+  async createBusinessClient(data: {
+    ragioneSociale: string
+    partitaIva?: string
+    codiceFiscale: string
+    indirizzo: string
+    cap: string
+    comune: string
+    provincia: string
+    nazione?: string
+    email?: string
+    telefono?: string
+    pec?: string
+    codiceDestinatario?: string
+    note?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/business-clients/create`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create business client')
+    }
+
+    return response.json()
+  }
+
+  async updateBusinessClient(clientId: string, data: {
+    ragioneSociale?: string
+    partitaIva?: string
+    codiceFiscale?: string
+    indirizzo?: string
+    cap?: string
+    comune?: string
+    provincia?: string
+    nazione?: string
+    email?: string
+    telefono?: string
+    pec?: string
+    codiceDestinatario?: string
+    note?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/business-clients/${clientId}`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update business client')
+    }
+
+    return response.json()
+  }
+
+  async deleteBusinessClient(clientId: string) {
+    const response = await fetch(`${API_BASE_URL}/business-clients/${clientId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete business client')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()

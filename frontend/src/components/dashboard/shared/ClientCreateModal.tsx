@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from '../../common/Modal'
 import { User, MapPin, Mail } from 'lucide-react'
+import AddressAutocomplete from '../../common/AddressAutocomplete'
 
 interface ClientFormData {
   // Dati anagrafici
@@ -13,6 +14,7 @@ interface ClientFormData {
   cap: string
   comune: string
   provincia: string
+  nazione: string
 
   // Contatti
   email: string
@@ -43,6 +45,7 @@ export default function ClientCreateModal({
     cap: '',
     comune: '',
     provincia: '',
+    nazione: 'IT',
     email: '',
     telefono: '',
     pec: '',
@@ -65,6 +68,7 @@ export default function ClientCreateModal({
       cap: '',
       comune: '',
       provincia: '',
+      nazione: 'IT',
       email: '',
       telefono: '',
       pec: '',
@@ -158,14 +162,21 @@ export default function ClientCreateModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Indirizzo *
               </label>
-              <input
-                type="text"
+              <AddressAutocomplete
                 value={formData.indirizzo}
-                onChange={(e) => updateField('indirizzo', e.target.value)}
-                placeholder="Via Roma, 1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
+                onChange={(value) => updateField('indirizzo', value)}
+                onAddressSelect={(address) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    indirizzo: address.full,
+                    comune: address.city,
+                    cap: address.postcode,
+                    provincia: address.state_code?.toUpperCase() || address.county?.substring(0, 2).toUpperCase() || ''
+                  }))
+                }}
+                placeholder="Inizia a digitare l'indirizzo (es. Via Roma 1, Milano)..."
               />
+              <p className="text-xs text-gray-500 mt-1">Inizia a digitare per cercare un indirizzo. CAP, Comune e Provincia saranno compilati automaticamente.</p>
             </div>
 
             <div>
@@ -197,7 +208,7 @@ export default function ClientCreateModal({
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Provincia *
               </label>
@@ -210,6 +221,30 @@ export default function ClientCreateModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent uppercase"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nazione *
+              </label>
+              <select
+                value={formData.nazione}
+                onChange={(e) => updateField('nazione', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                required
+              >
+                <option value="IT">Italia</option>
+                <option value="SM">San Marino</option>
+                <option value="VA">Città del Vaticano</option>
+                <option value="CH">Svizzera</option>
+                <option value="FR">Francia</option>
+                <option value="DE">Germania</option>
+                <option value="ES">Spagna</option>
+                <option value="AT">Austria</option>
+                <option value="GB">Regno Unito</option>
+                <option value="US">Stati Uniti</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Codice ISO a 2 lettere</p>
             </div>
           </div>
         </div>

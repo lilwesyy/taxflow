@@ -43,8 +43,8 @@ export default function Fatturazione() {
   const [invoiceError, setInvoiceError] = useState<string | null>(null)
 
   // Clients state
-  const [clients] = useState<Client[]>([])
-  const [loadingClients] = useState(false)
+  const [clients, setClients] = useState<Client[]>([])
+  const [loadingClients, setLoadingClients] = useState(false)
 
   // Check if user has Invoicetronic company on mount
   useEffect(() => {
@@ -55,6 +55,13 @@ export default function Fatturazione() {
   useEffect(() => {
     if (invoicetronicCompany) {
       loadInvoices()
+    }
+  }, [invoicetronicCompany])
+
+  // Load clients when company is configured
+  useEffect(() => {
+    if (invoicetronicCompany) {
+      loadClients()
     }
   }, [invoicetronicCompany])
 
@@ -190,6 +197,22 @@ export default function Fatturazione() {
       setInvoiceError(error.message || 'Errore nel caricamento delle fatture')
     } finally {
       setLoadingInvoices(false)
+    }
+  }
+
+  const loadClients = async () => {
+    try {
+      setLoadingClients(true)
+      const response = await api.getBusinessClients()
+
+      if (response.success) {
+        setClients(response.clients)
+      }
+    } catch (error: any) {
+      console.error('Error loading clients:', error)
+      showToast(error.message || 'Errore nel caricamento dei clienti', 'error')
+    } finally {
+      setLoadingClients(false)
     }
   }
 
@@ -356,10 +379,33 @@ export default function Fatturazione() {
     }
   }
 
-  const handleCreateClient = (formData: unknown) => {
-    console.log('Creating new client:', formData)
-    setShowNewClient(false)
-    // TODO: Integrate with backend API to save client
+  const handleCreateClient = async (formData: any) => {
+    try {
+      const response = await api.createBusinessClient({
+        ragioneSociale: formData.ragioneSociale || formData.nome,
+        partitaIva: formData.partitaIva || formData.piva,
+        codiceFiscale: formData.codiceFiscale,
+        indirizzo: formData.indirizzo,
+        cap: formData.cap,
+        comune: formData.comune,
+        provincia: formData.provincia,
+        nazione: formData.nazione || 'IT',
+        email: formData.email,
+        telefono: formData.telefono,
+        pec: formData.pec,
+        codiceDestinatario: formData.codiceDestinatario || '0000000',
+        note: formData.note
+      })
+
+      if (response.success) {
+        showToast('Cliente creato con successo!', 'success')
+        await loadClients() // Reload clients list
+        setShowNewClient(false)
+      }
+    } catch (error: any) {
+      console.error('Error creating client:', error)
+      showToast(error.message || 'Errore nella creazione del cliente', 'error')
+    }
   }
 
   const handleViewInvoice = (invoice: Invoice) => {

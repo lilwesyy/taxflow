@@ -73,6 +73,7 @@ import securityRoutes from './routes/security'
 import chatRoutes from './routes/chat'
 import aiAssistantRoutes from './routes/ai-assistant'
 import clientsRoutes from './routes/clients'
+import businessClientsRoutes from './routes/business-clients'
 import feedbackRoutes from './routes/feedback'
 import stripeRoutes from './routes/stripe'
 import documentsRoutes from './routes/documents'
@@ -174,6 +175,7 @@ app.use('/api/security', securityRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/ai', aiAssistantRoutes)
 app.use('/api/clients', clientsRoutes)
+app.use('/api/business-clients', businessClientsRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/stripe', stripeRoutes)
 app.use('/api/documents', documentsRoutes)
