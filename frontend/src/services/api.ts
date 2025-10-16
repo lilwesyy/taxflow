@@ -900,6 +900,146 @@ class ApiService {
 
     return response.json()
   }
+
+  // Expense Management
+  async getExpenses(filters?: {
+    categoria?: string
+    stato?: string
+    startDate?: string
+    endDate?: string
+    clientId?: string
+  }) {
+    const params = new URLSearchParams()
+    if (filters?.categoria) params.append('categoria', filters.categoria)
+    if (filters?.stato) params.append('stato', filters.stato)
+    if (filters?.startDate) params.append('startDate', filters.startDate)
+    if (filters?.endDate) params.append('endDate', filters.endDate)
+    if (filters?.clientId) params.append('clientId', filters.clientId)
+
+    const url = `${API_BASE_URL}/expenses${params.toString() ? '?' + params.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get expenses')
+    }
+
+    return response.json()
+  }
+
+  async createExpense(data: {
+    descrizione: string
+    importo: number
+    data: string
+    categoria: string
+    stato?: string
+    metodoPagamento?: string
+    ricorrente?: {
+      frequenza: string
+      prossimaScadenza?: string
+      importoFisso: boolean
+    }
+    note?: string
+    documentoId?: string
+    clientId?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/expenses`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create expense')
+    }
+
+    return response.json()
+  }
+
+  async getExpenseById(expenseId: string) {
+    const response = await fetch(`${API_BASE_URL}/expenses/${expenseId}`, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get expense')
+    }
+
+    return response.json()
+  }
+
+  async updateExpense(expenseId: string, data: {
+    descrizione?: string
+    importo?: number
+    data?: string
+    categoria?: string
+    stato?: string
+    metodoPagamento?: string
+    ricorrente?: {
+      frequenza: string
+      prossimaScadenza?: string
+      importoFisso: boolean
+    }
+    note?: string
+    documentoId?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/expenses/${expenseId}`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update expense')
+    }
+
+    return response.json()
+  }
+
+  async deleteExpense(expenseId: string) {
+    const response = await fetch(`${API_BASE_URL}/expenses/${expenseId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete expense')
+    }
+
+    return response.json()
+  }
+
+  async getExpenseStats(filters?: {
+    clientId?: string
+    startDate?: string
+    endDate?: string
+  }) {
+    const params = new URLSearchParams()
+    if (filters?.clientId) params.append('clientId', filters.clientId)
+    if (filters?.startDate) params.append('startDate', filters.startDate)
+    if (filters?.endDate) params.append('endDate', filters.endDate)
+
+    const url = `${API_BASE_URL}/expenses/stats/summary${params.toString() ? '?' + params.toString() : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get expense stats')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()

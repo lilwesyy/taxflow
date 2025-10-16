@@ -1,0 +1,111 @@
+
+● Perfetto! Ho completato l'analisi del progetto. Ecco cosa ho scoperto:
+
+● Analisi Completa del Progetto per Implementazione Cashflow
+
+  📊 Stato Attuale
+
+  Cosa funziona già:
+  1. ✅ CashFlow.tsx creato e integrato nel menu business dashboard
+  2. ✅ Entrate (Revenue): Integrazione completa con FatturaElettronica API di Aruba
+    - Model: /backend/src/models/FatturaElettronica.ts - traccia le fatture emesse dai clienti business
+    - Le fatture vengono caricate via api.getInvoices() e visualizzate come entrate
+  3. ✅ UI completa: 4 stat cards, grafico mensile, tabella transazioni, export, filtri periodo
+
+  Limitazioni attuali:
+  1. ❌ Uscite (Expenses): Dati mock hardcoded (INPS e imposte simulate)
+  2. ❌ Nessun backend per spese: Non esiste un model o endpoint per tracciare le spese reali
+  3. ❌ Categorizzazione limitata: Solo "Fatturazione", "Contributi", "Imposte"
+  4. ❌ Nessun inserimento manuale: Utenti non possono aggiungere le proprie spese
+
+  🗂️ Architettura Database Attuale
+
+  Models esistenti:
+  - FatturaElettronica - Fatture emesse dai clienti business (ENTRATE) ✅
+  - Invoice - Fatture TaxFlow (abbonamenti interni, non per cashflow business)
+  - Client - Clienti business dei propri clienti
+  - Document - Documenti fiscali
+  - User, Feedback, Conversation, Message, Session, PurchasedService
+
+  Cosa manca:
+  - ❌ Model Expense o Transaction per tracciare le spese
+
+  🎯 Piano di Implementazione Completo
+
+  Per implementare correttamente il cashflow, ti consiglio questo approccio:
+
+  Fase 1: Backend - Model e Endpoints per Spese
+
+  1.1 Creare Model Expense (backend/src/models/Expense.ts):
+  interface IExpense {
+    userId: ObjectId              // Cliente business
+    descrizione: string
+    importo: number
+    data: string                  // Data spesa
+    categoria: 'inps' | 'imposte' | 'affitto' | 'utilities' | 'fornitori' | 'attrezzature' | 'marketing' | 'altro'
+    stato: 'pagato' | 'da_pagare' | 'ricorrente'
+    metodo: 'bonifico' | 'carta' | 'contanti' | 'rid'
+    ricorrente?: {
+      frequenza: 'mensile' | 'trimestrale' | 'annuale'
+      prossimaScadenza: string
+    }
+    note?: string
+    documentoId?: ObjectId        // Link a documento fiscale
+  }
+
+  1.2 Creare endpoints (backend/src/routes/expenses.ts):
+  - GET /api/expenses - Lista spese con filtri
+  - POST /api/expenses - Crea nuova spesa
+  - PUT /api/expenses/:id - Modifica spesa
+  - DELETE /api/expenses/:id - Elimina spesa
+  - GET /api/expenses/stats - Statistiche spese
+
+  Fase 2: Frontend - Integrazione API
+
+  2.1 Aggiornare api.ts con metodi expenses:
+  async getExpenses(filters?: {...})
+  async createExpense(data: {...})
+  async updateExpense(id, data)
+  async deleteExpense(id)
+  async getExpenseStats()
+
+  2.2 Aggiornare types/dashboard.ts con interface Expense
+
+  Fase 3: Frontend - Miglioramenti CashFlow.tsx
+
+  3.1 Sostituire mock data con dati reali da API
+  - Rimuovere righe 66-85 (usciteSimulate)
+  - Chiamare api.getExpenses() insieme a getInvoices()
+
+  3.2 Aggiungere funzionalità:
+  - Modal per inserimento manuale spese
+  - Filtro per categoria
+  - Sezione spese ricorrenti con alert scadenze
+  - Previsioni cashflow basate su storico
+
+  3.3 Categorie spese italiane per regime forfettario:
+  - 💼 Contributi INPS (fissi trimestrali)
+  - 🏛️ Imposte (acconto, saldo, sostitutive)
+  - 📱 Utilities (internet, telefono, energia)
+  - 🏢 Affitto (se studio/ufficio)
+  - 🛒 Fornitori e materiali
+  - 💻 Attrezzature (computer, software)
+  - 📢 Marketing (pubblicità, sito web)
+  - 📚 Formazione (corsi professionali)
+  - 🚗 Trasporti (carburante, pedaggi)
+  - ⚖️ Consulenze (commercialista, legale)
+
+  Fase 4: Features Avanzate (opzionali)
+
+  1. Previsioni automatiche:
+    - Calcolo automatico INPS in base a fatturato
+    - Previsione imposte (15% o 5% su base imponibile)
+    - Alert scadenze fiscali
+  2. Dashboard insights:
+    - Tasso di crescita cashflow
+    - Confronto anno su anno
+    - Analisi per categoria
+    - Runway (mesi di operatività con saldo attuale)
+  3. Integrazione banche (futuro):
+    - Import automatico movimenti bancari
+    - Riconciliazione automatica entrate/uscite

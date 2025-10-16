@@ -369,3 +369,53 @@ export interface UpdateProfileData {
   approvalStatus?: string  // Legacy field for compatibility
   registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'
 }
+
+// ============================================
+// Expense Types
+// ============================================
+
+export interface Expense {
+  id: string
+  userId: string
+  descrizione: string
+  importo: number
+  data: string // YYYY-MM-DD
+  categoria: 'inps' | 'imposte' | 'affitto' | 'utilities' | 'fornitori' | 'attrezzature' | 'marketing' | 'formazione' | 'trasporti' | 'consulenze' | 'altro'
+  stato: 'pagato' | 'da_pagare' | 'ricorrente'
+  metodoPagamento?: 'bonifico' | 'carta' | 'contanti' | 'rid' | 'altro'
+  ricorrente?: {
+    frequenza: 'mensile' | 'trimestrale' | 'annuale'
+    prossimaScadenza?: string
+    importoFisso: boolean
+  }
+  note?: string
+  documentoId?: string
+  createdAt: Date
+  updatedAt: Date
+  user?: {
+    id: string
+    nome: string
+    email: string
+    azienda?: string
+  }
+  documento?: {
+    id: string
+    nome: string
+    tipo: string
+    fileUrl: string
+  }
+}
+
+export interface ExpenseStats {
+  totale: number
+  totaleSpese: number
+  spesePagate: number
+  speseDaPagare: number
+  speseRicorrenti: number
+  perCategoria: Record<string, number>
+  perStato: {
+    pagato: number
+    da_pagare: number
+    ricorrente: number
+  }
+}

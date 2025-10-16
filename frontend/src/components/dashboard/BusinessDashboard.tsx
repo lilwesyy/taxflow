@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen } from 'lucide-react'
+import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen, TrendingUp } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -12,6 +12,7 @@ import Consulenza from './pages/business/Consulenza'
 import Documenti from './pages/business/Documenti'
 import Impostazioni from './pages/business/Impostazioni'
 import FeedbackConsulente from './pages/business/FeedbackConsulente'
+import CashFlow from './pages/business/CashFlow'
 import PlaceholderPage from './pages/shared/PlaceholderPage'
 
 type UserRole = 'business' | 'admin'
@@ -47,6 +48,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     // Overview e gestione operativa
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'fatture', name: 'Fatturazione', icon: Receipt },
+    { id: 'cashflow', name: 'Cashflow', icon: TrendingUp },
     { id: 'documenti', name: 'Cassetto Fiscale', icon: FolderOpen },
 
     // Strumenti di analisi e pianificazione
@@ -68,6 +70,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     const descriptions: Record<string, string> = {
       'dashboard': 'Panoramica della tua attività forfettaria',
       'fatture': 'Gestisci la fatturazione elettronica',
+      'cashflow': 'Monitora entrate e uscite della tua attività',
       'simulazione-imposte': 'Calcola le imposte con codice ATECO',
       'analisi-ai': 'Analisi aziendale powered by AI',
       'business-plan': 'Crea il tuo business plan con AI',
@@ -96,6 +99,9 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
 
       case 'fatture':
         return <Fatturazione />
+
+      case 'cashflow':
+        return <CashFlow />
 
       case 'business-plan':
         return <BusinessPlan />
