@@ -173,7 +173,7 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                 <div className="group relative">
                   <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
                   <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                    Il fatturato massimo per il regime forfettario è di € 65.000 annui
+                    Il fatturato massimo per il regime forfettario è di € 85.000 annui
                   </div>
                 </div>
               </div>
@@ -184,30 +184,30 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                   value={formData.fatturato}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 pl-8 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                    formData.fatturato && parseFloat(formData.fatturato) > 65000
+                    formData.fatturato && parseFloat(formData.fatturato) > 85000
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300'
                   }`}
                   placeholder="50000"
-                  max="65000"
+                  max="85000"
                 />
                 <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               </div>
-              {formData.fatturato && parseFloat(formData.fatturato) > 65000 ? (
+              {formData.fatturato && parseFloat(formData.fatturato) > 85000 ? (
                 <p className="text-xs text-red-600 mt-1 flex items-center">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Oltre il limite di € 65.000 per il regime forfettario
+                  Oltre il limite di € 85.000 per il regime forfettario
                 </p>
               ) : (
                 <div className="mt-2">
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>€ 0</span>
-                    <span>€ 65.000</span>
+                    <span>€ 85.000</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((parseFloat(formData.fatturato || '0') / 65000) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((parseFloat(formData.fatturato || '0') / 85000) * 100, 100)}%` }}
                     ></div>
                   </div>
                 </div>
