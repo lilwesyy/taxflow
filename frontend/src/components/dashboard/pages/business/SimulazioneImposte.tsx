@@ -1,4 +1,4 @@
-import { Calculator, TrendingUp, DollarSign, PieChart, AlertTriangle, Info, Download, Calendar, HelpCircle, Zap } from 'lucide-react'
+import { Calculator, TrendingUp, DollarSign, PieChart, AlertTriangle, Info, Download, HelpCircle, Zap } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SimulazioneImposte() {
@@ -119,7 +119,13 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
   const getTimelineBreakdown = () => {
     if (!risultato) return []
 
-    if (timelineView === 'monthly') {
+    if (timelineView === 'yearly') {
+      return [{
+        periodo: new Date().getFullYear().toString(),
+        importo: risultato.nettoFinale,
+        imposte: risultato.totaleImposte
+      }]
+    } else if (timelineView === 'monthly') {
       return Array.from({ length: 12 }, (_, i) => ({
         periodo: new Date(2024, i).toLocaleDateString('it-IT', { month: 'short' }),
         importo: risultato.nettoFinale / 12,
@@ -492,14 +498,18 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
       )}
 
       {/* Timeline Breakdown */}
-      {risultato && timelineView !== 'yearly' && (
+      {risultato && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Distribuzione Temporale</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => setTimelineView('yearly')}
-                className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-50"
+                className={`px-3 py-1 text-sm rounded-lg ${
+                  timelineView === 'yearly'
+                    ? 'bg-primary-600 text-white'
+                    : 'border border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 Annuale
               </button>
@@ -535,28 +545,6 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               </div>
             ))}
           </div>
-
-          <div className="mt-4 flex items-center justify-center">
-            <button
-              onClick={() => setTimelineView('yearly')}
-              className="text-sm text-gray-600 hover:text-primary-600 flex items-center"
-            >
-              <Calendar className="h-4 w-4 mr-1" />
-              Torna alla vista annuale
-            </button>
-          </div>
-        </div>
-      )}
-
-      {risultato && timelineView === 'yearly' && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => setTimelineView('quarterly')}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Visualizza distribuzione temporale
-          </button>
         </div>
       )}
 
