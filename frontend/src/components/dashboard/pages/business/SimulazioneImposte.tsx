@@ -1,5 +1,5 @@
 import { Calculator, TrendingUp, DollarSign, PieChart, AlertTriangle, Info, Download, Calendar, HelpCircle, Zap } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 
 export default function SimulazioneImposte() {
   const [formData, setFormData] = useState({
@@ -9,9 +9,7 @@ export default function SimulazioneImposte() {
     speseDeducibili: ''
   })
   const [risultato, setRisultato] = useState<any>(null)
-  const [showComparison, setShowComparison] = useState(false)
   const [timelineView, setTimelineView] = useState<'monthly' | 'quarterly' | 'yearly'>('yearly')
-  const comparisonRef = useRef<HTMLDivElement>(null)
 
   const codiciAteco = [
     { code: '62.01.00', description: 'Produzione di software', coefficiente: 0.67 },
@@ -159,152 +157,97 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Inserisci i tuoi dati</h3>
+      {/* Form Banner */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative z-10">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Calculator className="h-5 w-5 mr-2 text-primary-600" />
+          Inserisci i tuoi dati
+        </h3>
 
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Fatturato Annuo Previsto *
-                </label>
-                <div className="group relative">
-                  <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                    Il fatturato massimo per il regime forfettario è di € 85.000 annui
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="fatturato"
-                  value={formData.fatturato}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 pl-8 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                    formData.fatturato && parseFloat(formData.fatturato) > 85000
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300'
-                  }`}
-                  placeholder="50000"
-                  max="85000"
-                />
-                <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              </div>
-              {formData.fatturato && parseFloat(formData.fatturato) > 85000 ? (
-                <p className="text-xs text-red-600 mt-1 flex items-center">
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  Oltre il limite di € 85.000 per il regime forfettario
-                </p>
-              ) : (
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>€ 0</span>
-                    <span>€ 85.000</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((parseFloat(formData.fatturato || '0') / 85000) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Codice ATECO *
-                </label>
-                <div className="group relative">
-                  <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                    Il coefficiente di redditività varia in base al codice ATECO e determina il reddito imponibile
-                  </div>
-                </div>
-              </div>
-              <select
-                name="codiceAteco"
-                value={formData.codiceAteco}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fatturato Annuo *
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                name="fatturato"
+                value={formData.fatturato}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">Seleziona il tuo codice ATECO</option>
-                {codiciAteco.map((ateco) => (
-                  <option key={ateco.code} value={ateco.code}>
-                    {ateco.code} - {ateco.description} (Coeff. {ateco.coefficiente})
-                  </option>
-                ))}
-              </select>
+                className={`w-full px-4 py-2.5 pl-8 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  formData.fatturato && parseFloat(formData.fatturato) > 85000
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300'
+                }`}
+                placeholder="50000"
+                max="85000"
+              />
+              <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
+            {formData.fatturato && parseFloat(formData.fatturato) > 85000 && (
+              <p className="text-xs text-red-600 mt-1 flex items-center">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Oltre € 85k
+              </p>
+            )}
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Anni di attività
-              </label>
-              <select
-                name="anniAttivita"
-                value={formData.anniAttivita}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="0">Prima apertura (0 anni)</option>
-                <option value="1">1 anno</option>
-                <option value="2">2 anni</option>
-                <option value="3">3 anni</option>
-                <option value="4">4 anni</option>
-                <option value="5">5 anni o più</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Codice ATECO *
+            </label>
+            <select
+              name="codiceAteco"
+              value={formData.codiceAteco}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Seleziona ATECO</option>
+              {codiciAteco.map((ateco) => (
+                <option key={ateco.code} value={ateco.code}>
+                  {ateco.code} - {ateco.description}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Anni di attività
+            </label>
+            <select
+              name="anniAttivita"
+              value={formData.anniAttivita}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="0">0 anni (nuovo)</option>
+              <option value="1">1 anno</option>
+              <option value="2">2 anni</option>
+              <option value="3">3 anni</option>
+              <option value="4">4 anni</option>
+              <option value="5">5+ anni</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
             <button
               onClick={calcolaImposte}
               disabled={!formData.fatturato || !formData.codiceAteco}
-              className="w-full bg-primary-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              className="w-full bg-primary-600 text-white py-2.5 px-6 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
               <Calculator className="h-5 w-5 inline mr-2" />
-              Calcola Imposte
+              Calcola
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Results */}
-        <div className="space-y-6">
-          {risultato ? (
-            <>
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button
-                  onClick={exportResults}
-                  className="flex-1 bg-primary-100 border border-primary-300 text-primary-700 py-2 px-3 sm:px-4 rounded-lg hover:bg-primary-200 hover:border-primary-400 transition-all duration-200 flex items-center justify-center font-medium text-sm"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Esporta
-                </button>
-                <button
-                  onClick={() => {
-                    setShowComparison(!showComparison)
-                    if (!showComparison) {
-                      setTimeout(() => {
-                        comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }, 100)
-                    }
-                  }}
-                  className={`flex-1 py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center font-medium text-sm ${
-                    showComparison
-                      ? 'bg-primary-600 text-white shadow-lg shadow-primary-300'
-                      : 'bg-primary-100 border border-primary-300 text-primary-700 hover:bg-primary-200 hover:border-primary-400'
-                  }`}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Confronta
-                </button>
-              </div>
-
-              {/* Visual Tax Breakdown */}
+      {/* Results Grid - 2 Columns */}
+      {risultato ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Column 1: Ripartizione Imposte */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-300">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
                   <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary-600" />
@@ -390,143 +333,159 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
-                  <div className="flex items-center">
-                    <div className="bg-primary-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
-                      <PieChart className="h-5 w-5 sm:h-7 sm:w-7 text-primary-600" />
-                    </div>
-                    <div className="ml-2 sm:ml-3">
-                      <p className="text-xs text-gray-600 font-medium">% Tasse</p>
-                      <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.percentualeTasse.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Column 2: Confronto Aliquote */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-300">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary-600" />
+              Confronto Aliquote
+            </h3>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
-                  <div className="flex items-center">
-                    <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
-                      <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
-                    </div>
-                    <div className="ml-2 sm:ml-3">
-                      <p className="text-xs text-gray-600 font-medium">Coefficiente</p>
-                      <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.coefficiente}</p>
-                    </div>
+            <div className="space-y-4">
+              {/* Current Scenario */}
+              <div className="p-4 rounded-lg border-2 border-green-300 shadow-sm bg-green-50">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900 text-sm">
+                    {risultato.isNeoAttivita ? 'Aliquota Agevolata (5%)' : 'Aliquota Standard (15%)'}
+                  </h4>
+                  <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full font-bold">Attuale</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">IRPEF ({risultato.aliquotaIrpef}%)</span>
+                    <span className="font-semibold text-gray-900">€ {risultato.irpef.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">INPS</span>
+                    <span className="font-semibold text-gray-900">€ {risultato.inps.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-green-300">
+                    <span className="font-semibold text-gray-900">Totale Imposte</span>
+                    <span className="font-bold text-red-600">€ {risultato.totaleImposte.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-green-300">
+                    <span className="font-semibold text-gray-900">Netto Finale</span>
+                    <span className="font-bold text-green-600 text-lg">€ {risultato.nettoFinale.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Benefits Card */}
-              {risultato.isNeoAttivita && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 animate-fade-in">
-                  <div className="flex items-start space-x-2 sm:space-x-3">
-                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-sm sm:text-base font-semibold text-green-900 mb-2">Agevolazione Neo-attività</h4>
-                      <p className="text-xs sm:text-sm text-green-800 mb-2">
-                        Stai usufruendo dell'aliquota agevolata del 5% per i primi 5 anni di attività!
-                        Dal 6° anno l'aliquota diventerà del 15%.
-                      </p>
-                      {risultato.differenzaRisparmio > 0 && (
-                        <p className="text-xs sm:text-sm font-semibold text-green-900">
-                          Risparmio annuo: € {risultato.differenzaRisparmio.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
+              {/* Alternative Scenario */}
+              <div className="p-4 rounded-lg border-2 border-gray-300 bg-white shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900 text-sm">
+                    {risultato.isNeoAttivita ? 'Aliquota Standard (15%)' : 'Aliquota Agevolata (5%)'}
+                  </h4>
+                  <span className="text-xs bg-gray-200 px-2 py-1 rounded-full font-medium text-gray-700">Alternativa</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">IRPEF ({risultato.isNeoAttivita ? '15' : '5'}%)</span>
+                    <span className="font-semibold text-gray-900">€ {risultato.irpefAlternativa.toLocaleString()}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">INPS</span>
+                    <span className="font-semibold text-gray-900">€ {risultato.inps.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
+                    <span className="font-semibold text-gray-900">Totale Imposte</span>
+                    <span className="font-bold text-red-600">€ {risultato.totaleImposteAlternative.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
+                    <span className="font-semibold text-gray-900">Netto Finale</span>
+                    <span className="font-bold text-gray-700">€ {risultato.nettoFinaleAlternativo.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Savings Banner */}
+              {risultato.isNeoAttivita && risultato.differenzaRisparmio > 0 && (
+                <div className="p-4 bg-green-100 border-2 border-green-300 rounded-lg">
+                  <p className="text-xs sm:text-sm text-green-900 flex items-start">
+                    <DollarSign className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <span className="font-bold">Risparmio annuo:</span> € {risultato.differenzaRisparmio.toLocaleString()}
+                      <span className="text-green-700 ml-1 font-semibold">
+                        ({((risultato.differenzaRisparmio / risultato.totaleImposteAlternative) * 100).toFixed(1)}% in meno)
+                      </span>
+                    </span>
+                  </p>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center hover:shadow-md transition-shadow relative z-10">
-              <Calculator className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Inserisci i dati</h3>
-              <p className="text-gray-600">Compila il form per visualizzare il calcolo delle imposte</p>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      {/* Comparison Section */}
-      {risultato && showComparison && (
-        <div ref={comparisonRef} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 animate-fade-in">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
-            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary-600" />
-            Confronto Aliquote
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Current Scenario */}
-            <div className="p-6 rounded-lg border-2 border-green-300 shadow-sm bg-green-50">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-gray-900">
-                  {risultato.isNeoAttivita ? 'Aliquota Agevolata (5%)' : 'Aliquota Standard (15%)'}
-                </h4>
-                <span className="text-xs bg-green-600 text-white px-3 py-1 rounded-full font-bold shadow">Attuale</span>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">IRPEF ({risultato.aliquotaIrpef}%)</span>
-                  <span className="font-semibold text-gray-900">€ {risultato.irpef.toLocaleString()}</span>
+      {/* Stats Cards & Benefits */}
+      {risultato && (
+        <div className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center">
+                <div className="bg-primary-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                  <PieChart className="h-5 w-5 sm:h-7 sm:w-7 text-primary-600" />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">INPS</span>
-                  <span className="font-semibold text-gray-900">€ {risultato.inps.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-green-300">
-                  <span className="font-semibold text-gray-900">Totale Imposte</span>
-                  <span className="font-bold text-red-600">€ {risultato.totaleImposte.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-green-300">
-                  <span className="font-semibold text-gray-900">Netto Finale</span>
-                  <span className="font-bold text-green-600 text-lg">€ {risultato.nettoFinale.toLocaleString()}</span>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs text-gray-600 font-medium">% Tasse</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.percentualeTasse.toFixed(1)}%</p>
                 </div>
               </div>
             </div>
 
-            {/* Alternative Scenario */}
-            <div className="p-6 rounded-lg border-2 border-gray-300 bg-white shadow-md">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-gray-900">
-                  {risultato.isNeoAttivita ? 'Aliquota Standard (15%)' : 'Aliquota Agevolata (5%)'}
-                </h4>
-                <span className="text-xs bg-gray-200 px-3 py-1 rounded-full font-medium text-gray-700">Alternativa</span>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center">
+                <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                  <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
+                </div>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs text-gray-600 font-medium">Coefficiente</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.coefficiente}</p>
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">IRPEF ({risultato.isNeoAttivita ? '15' : '5'}%)</span>
-                  <span className="font-semibold text-gray-900">€ {risultato.irpefAlternativa.toLocaleString()}</span>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center">
+                <div className="bg-orange-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                  <Calculator className="h-5 w-5 sm:h-7 sm:w-7 text-orange-600" />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">INPS</span>
-                  <span className="font-semibold text-gray-900">€ {risultato.inps.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
-                  <span className="font-semibold text-gray-900">Totale Imposte</span>
-                  <span className="font-bold text-red-600">€ {risultato.totaleImposteAlternative.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
-                  <span className="font-semibold text-gray-900">Netto Finale</span>
-                  <span className="font-bold text-gray-700">€ {risultato.nettoFinaleAlternativo.toLocaleString()}</span>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs text-gray-600 font-medium">IRPEF</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{risultato.aliquotaIrpef}%</p>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5 hover:shadow-md transition-all duration-200">
+              <button
+                onClick={exportResults}
+                className="w-full h-full flex items-center justify-center text-primary-600 hover:text-primary-700 transition-colors"
+              >
+                <Download className="h-5 w-5 sm:h-7 sm:w-7 mr-2" />
+                <span className="text-xs font-medium">Esporta</span>
+              </button>
             </div>
           </div>
 
-          {risultato.isNeoAttivita && risultato.differenzaRisparmio > 0 && (
-            <div className="mt-6 p-5 bg-green-100 border-2 border-green-300 rounded-lg">
-              <p className="text-sm text-green-900 flex items-center">
-                <span className="bg-green-600 p-2 rounded-full mr-3">
-                  <DollarSign className="h-5 w-5 text-white" />
-                </span>
-                <span>
-                  <span className="font-bold">Risparmio annuo con agevolazione:</span> € {risultato.differenzaRisparmio.toLocaleString()}
-                  <span className="text-green-700 ml-2 font-semibold">({((risultato.differenzaRisparmio / risultato.totaleImposteAlternative) * 100).toFixed(1)}% in meno)</span>
-                </span>
-              </p>
+          {/* Benefits Card */}
+          {risultato.isNeoAttivita && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 animate-fade-in">
+              <div className="flex items-start space-x-2 sm:space-x-3">
+                <Info className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm sm:text-base font-semibold text-green-900 mb-2">Agevolazione Neo-attività</h4>
+                  <p className="text-xs sm:text-sm text-green-800 mb-2">
+                    Stai usufruendo dell'aliquota agevolata del 5% per i primi 5 anni di attività!
+                    Dal 6° anno l'aliquota diventerà del 15%.
+                  </p>
+                  {risultato.differenzaRisparmio > 0 && (
+                    <p className="text-xs sm:text-sm font-semibold text-green-900">
+                      Risparmio annuo: € {risultato.differenzaRisparmio.toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
