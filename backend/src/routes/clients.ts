@@ -186,6 +186,58 @@ router.get('/invoices', authMiddleware, adminMiddleware, async (req: AuthRequest
   }
 })
 
+// Get clients with electronic invoicing configured - Admin only
+router.get('/with-piva', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    // Find business users with electronic invoicing configured (must have aziendaId from Fattura Elettronica API)
+    // aziendaId is the company ID from Fattura Elettronica API (stored as string but must be non-empty)
+    const clientsWithPiva = await User.find({
+      role: 'business',
+      registrationApprovalStatus: 'approved',
+      'fatturaElettronica.aziendaId': { $exists: true, $nin: [null, ''] }
+    })
+      .select('-password -twoFactorSecret')
+      .sort({ createdAt: -1 })
+
+    console.log(`📊 Found ${clientsWithPiva.length} clients with electronic invoicing configured`)
+
+    // Log each client for debugging
+    clientsWithPiva.forEach(client => {
+      console.log(`✅ Client: ${client.name} (${client.email}) - aziendaId: ${client.fatturaElettronica?.aziendaId}`)
+    })
+
+    // Format clients
+    const formattedClients = clientsWithPiva.map(client => ({
+      id: client._id,
+      nome: client.name,
+      email: client.email,
+      telefono: client.fatturaElettronica?.telefono || client.phone || '',
+      company: client.fatturaElettronica?.ragioneSociale || client.company || '',
+      piva: client.fatturaElettronica?.piva || client.piva || 'Non disponibile',
+      codiceAteco: client.codiceAteco || '',
+      regimeContabile: client.regimeContabile || 'Forfettario',
+      status: client.status || 'active',
+      dataRegistrazione: client.createdAt,
+      ultimaAttivita: client.ultimaAttivita || client.updatedAt,
+      indirizzo: client.fatturaElettronica?.indirizzo || '',
+      citta: client.fatturaElettronica?.citta || '',
+      cap: client.fatturaElettronica?.cap || '',
+      codiceFiscale: client.fatturaElettronica?.cfis || client.fiscalCode || '',
+      provincia: client.fatturaElettronica?.provincia || '',
+      paese: client.fatturaElettronica?.paese || 'IT',
+      fatturaElettronica: client.fatturaElettronica || null
+    }))
+
+    res.json({
+      success: true,
+      clients: formattedClients
+    })
+  } catch (error) {
+    console.error('Error fetching clients with electronic invoicing:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+})
+
 // Get single client by ID - Admin only
 router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
