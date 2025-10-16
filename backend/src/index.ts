@@ -89,6 +89,9 @@ import { startSessionCleanupJob } from './jobs/sessionCleanup'
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// Trust proxy - Required when behind reverse proxy (Vercel, Nginx, etc.)
+app.set('trust proxy', true)
+
 // Security Middleware - Helmet (must be early in middleware chain)
 app.use(helmet({
   contentSecurityPolicy: {
