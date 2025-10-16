@@ -637,9 +637,8 @@ router.get('/conversations/paid/list', authenticateToken, async (req: AuthReques
     }
 
     // Get all invoices (both paid and pending from Invoice model)
-    const allInvoices = await Invoice.find({
-      adminUserId: userId
-    })
+    // All admins can see all invoices (not filtered by adminUserId)
+    const allInvoices = await Invoice.find({})
       .sort({ createdAt: -1 })
       .lean()
 

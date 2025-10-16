@@ -77,7 +77,7 @@ export default function SimulazioneImposte() {
     { name: 'Freelancer Junior', fatturato: '25000', codiceAteco: '62.02.00' },
     { name: 'Consulente IT', fatturato: '45000', codiceAteco: '62.02.00' },
     { name: 'Designer', fatturato: '35000', codiceAteco: '74.10.10' },
-    { name: 'Massimo Forfettario', fatturato: '65000', codiceAteco: '62.01.00' }
+    { name: 'Massimo Forfettario', fatturato: '85000', codiceAteco: '62.01.00' }
   ]
 
   const applyQuickScenario = (scenario: typeof quickScenarios[0]) => {
