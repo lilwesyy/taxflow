@@ -285,14 +285,14 @@ export const mockInvoices: Invoice[] = [
 
 export const mockBusinessActivities: RecentActivity[] = [
   { type: 'Fattura emessa', description: 'Fattura #2024-001 - Cliente XYZ', time: '2 ore fa', amount: '€ 1.200', status: 'success' },
-  { type: 'Analisi AI', description: 'Analisi di bilancio completata', time: '1 giorno fa', amount: 'Visualizza', status: 'info' },
+  { type: 'Analisi SWOT', description: 'Analisi di bilancio completata', time: '1 giorno fa', amount: 'Visualizza', status: 'info' },
   { type: 'Scadenza fiscale', description: 'Dichiarazione IVA trimestrale', time: '3 giorni', amount: 'In scadenza', status: 'warning' },
   { type: 'Consulenza', description: 'Nuova risposta dal consulente', time: '1 settimana fa', amount: 'Leggi', status: 'info' }
 ]
 
 export const mockAdminRequests: PendingRequest[] = [
   { type: 'Apertura P.IVA', client: 'Mario Rossi', description: 'Richiesta apertura forfettario', priority: 'high', time: '2 ore fa' },
-  { type: 'Analisi AI', client: 'Laura Bianchi', description: 'Analisi di bilancio Q4', priority: 'medium', time: '1 giorno fa' },
+  { type: 'Analisi SWOT', client: 'Laura Bianchi', description: 'Analisi di bilancio Q4', priority: 'medium', time: '1 giorno fa' },
   { type: 'Business Plan', client: 'Giuseppe Verdi', description: 'Revisione business plan', priority: 'high', time: '2 giorni fa' },
   { type: 'Consulenza', client: 'Anna Neri', description: 'Domanda su ristrutturazione', priority: 'low', time: '3 giorni fa' }
 ]

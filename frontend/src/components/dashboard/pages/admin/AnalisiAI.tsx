@@ -397,7 +397,7 @@ export default function AnalisiAI() {
   const renderTypesTab = () => (
     <div className="space-y-4 sm:space-y-6">
       <div className="text-center">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Tipi di Analisi AI</h3>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Tipi di Analisi SWOT</h3>
         <p className="text-sm sm:text-base text-gray-600">Scegli il tipo di analisi più adatto per il tuo cliente</p>
       </div>
 
@@ -450,7 +450,7 @@ export default function AnalisiAI() {
       id: 'overview',
       name: 'Panoramica',
       icon: BarChart3,
-      description: 'Tutte le analisi AI',
+      description: 'Tutte le Analisi SWOT',
       count: analisiClienti.length
     },
     {

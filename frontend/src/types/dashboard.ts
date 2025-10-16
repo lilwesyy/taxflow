@@ -7,6 +7,7 @@ export type { Invoice } from './index'
 
 export interface Client {
   id: number | string
+  _id?: string  // MongoDB ID field
   nome?: string
   ragioneSociale?: string
   email: string
@@ -44,6 +45,8 @@ export interface Client {
   cap?: string
   comune?: string
   provincia?: string
+  numeroCivico?: string
+  nazione?: string  // Nation code (IT, SM, etc.)
   pec?: string
   codiceDestinatario?: string
 }

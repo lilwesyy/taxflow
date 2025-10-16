@@ -658,7 +658,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
             <li><strong>Fatturazione elettronica</strong> con integrazione Sistema di Interscambio (SDI)</li>
             <li><strong>Adempimenti fiscali ordinari:</strong> modello Unico, dichiarazione redditi, F24, comunicazioni obbligatorie</li>
             <li><strong>Business Plan personalizzati</strong> e analisi di fattibilità</li>
-            <li><strong>Analisi AI avanzate:</strong> rating creditizio Basel IV, analisi SWOT, simulazione imposte</li>
+            <li><strong>Analisi SWOT avanzate:</strong> rating creditizio Basel IV, analisi SWOT, simulazione imposte</li>
             <li><strong>Gestione documentale:</strong> archiviazione sicura documenti fiscali e dichiarazioni</li>
             <li><strong>Reports e analytics:</strong> dashboard in tempo reale con KPI fiscali e finanziari</li>
           </ul>

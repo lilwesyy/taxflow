@@ -30,6 +30,33 @@ export const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+export const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return ''
+
+  // Handle different date formats
+  let date: Date
+
+  // If it's already in DD/MM/YYYY format, return as is
+  if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    return dateString
+  }
+
+  // Parse ISO format (YYYY-MM-DD) or other formats
+  date = new Date(dateString)
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return dateString
+  }
+
+  // Format to DD/MM/YYYY
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+
+  return `${day}/${month}/${year}`
+}
+
 export const calculateInvoiceStats = (invoices: Invoice[]) => {
   return {
     total: invoices.length,

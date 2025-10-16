@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, AlertTriangle, Send, Edit, FileText, Download, User, CreditCard, Calendar, DollarSign } from 'lucide-react'
+import { CheckCircle, Clock, AlertTriangle, Send, Edit, FileText, Download, User, Calendar, DollarSign } from 'lucide-react'
 import Modal from '../../common/Modal'
 import type { Invoice } from '../../../types/dashboard'
 import { formatCurrency } from '../../../utils/invoiceUtils'
@@ -119,20 +119,57 @@ export default function InvoiceDetailModal({
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome completo</label>
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ragione Sociale / Nome</label>
                 <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.cliente}</p>
               </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</label>
-                <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900 truncate">{invoice.clienteEmail || invoice.email || 'N/D'}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {invoice.clientePartitaIva && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Partita IVA</label>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.clientePartitaIva}</p>
+                  </div>
+                )}
+                {invoice.clienteCodiceFiscale && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Codice Fiscale</label>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.clienteCodiceFiscale}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Metodo di pagamento</label>
-                <div className="mt-1 flex items-center">
-                  <CreditCard className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">Carta</p>
+              {invoice.clienteIndirizzo && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Indirizzo</label>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">
+                    {invoice.clienteIndirizzo}
+                  </p>
                 </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(invoice.clienteEmail || invoice.email) && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</label>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900 truncate">{invoice.clienteEmail || invoice.email}</p>
+                  </div>
+                )}
+                {invoice.clientePec && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">PEC</label>
+                    <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900 truncate">{invoice.clientePec}</p>
+                  </div>
+                )}
               </div>
+              {invoice.clienteTelefono && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Telefono</label>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.clienteTelefono}</p>
+                </div>
+              )}
+              {invoice.clienteCodiceDestinatario && invoice.clienteCodiceDestinatario !== '0000000' && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Codice Destinatario</label>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{invoice.clienteCodiceDestinatario}</p>
+                </div>
+              )}
             </div>
           </div>
 

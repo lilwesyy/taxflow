@@ -80,6 +80,7 @@ export interface User {
   telefono?: string  // alias for phone
   codiceFiscale?: string  // alias for fiscalCode
   indirizzo?: string  // alias for address
+  numeroCivico?: string  // house number
   azienda?: string  // alias for company
   dataRegistrazione?: Date
 
@@ -215,6 +216,19 @@ export interface Invoice {
   cliente: string
   clienteEmail: string
   email?: string  // Legacy/alternative field
+
+  // Dettagli completi del cliente
+  clientePartitaIva?: string
+  clienteCodiceFiscale?: string
+  clienteIndirizzo?: string
+  clienteCap?: string
+  clienteComune?: string
+  clienteProvincia?: string
+  clienteNazione?: string
+  clienteTelefono?: string
+  clientePec?: string
+  clienteCodiceDestinatario?: string
+
   azienda: string
   consulente: string
   servizio: string

@@ -71,6 +71,7 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
       partitaIva,
       codiceFiscale,
       indirizzo,
+      numeroCivico,
       cap,
       comune,
       provincia,
@@ -108,6 +109,7 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
       partitaIva: partitaIva?.trim(),
       codiceFiscale: codiceFiscale.toUpperCase().trim(),
       indirizzo: indirizzo.trim(),
+      numeroCivico: numeroCivico?.trim(),
       cap: cap.trim(),
       comune: comune.trim(),
       provincia: provincia.toUpperCase().trim(),
@@ -154,6 +156,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       partitaIva,
       codiceFiscale,
       indirizzo,
+      numeroCivico,
       cap,
       comune,
       provincia,
@@ -170,6 +173,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
     if (partitaIva !== undefined) client.partitaIva = partitaIva?.trim()
     if (codiceFiscale) client.codiceFiscale = codiceFiscale.toUpperCase().trim()
     if (indirizzo) client.indirizzo = indirizzo.trim()
+    if (numeroCivico !== undefined) client.numeroCivico = numeroCivico?.trim()
     if (cap) client.cap = cap.trim()
     if (comune) client.comune = comune.trim()
     if (provincia) client.provincia = provincia.toUpperCase().trim()

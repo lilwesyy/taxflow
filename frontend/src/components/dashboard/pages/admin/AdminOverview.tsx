@@ -111,7 +111,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
   const quickActions: QuickAction[] = [
     { title: 'Gestisci Clienti', description: 'Visualizza e gestisci clienti', icon: Users, color: 'bg-primary-600', section: 'clienti' },
     { title: 'Richieste P.IVA', description: 'Gestisci aperture P.IVA', icon: Building2, color: 'bg-purple-600', section: 'richieste-piva' },
-    { title: 'Analisi AI', description: 'Avvia nuova analisi', icon: Brain, color: 'bg-accent-600', section: 'analisi-ai' },
+    { title: 'Analisi SWOT', description: 'Avvia nuova analisi', icon: Brain, color: 'bg-accent-600', section: 'analisi-ai' },
     { title: 'Report Mensile', description: 'Genera report clienti', icon: TrendingUp, color: 'bg-orange-600', section: 'reports' }
   ]
 

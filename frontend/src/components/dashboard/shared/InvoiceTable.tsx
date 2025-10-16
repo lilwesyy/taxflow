@@ -1,7 +1,7 @@
-import { FileText, Eye, Download, Send, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FileText, Eye, Download, Send, Edit, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import type { Invoice } from '../../../types/dashboard'
-import { getStatusInfo, formatCurrency } from '../../../utils/invoiceUtils'
+import { getStatusInfo, formatCurrency, formatDate } from '../../../utils/invoiceUtils'
 
 interface InvoiceTableProps {
   invoices: Invoice[]
@@ -9,6 +9,8 @@ interface InvoiceTableProps {
   onEditInvoice?: (invoice: Invoice) => void
   onDownloadInvoice?: (invoice: Invoice) => void
   onSendInvoice?: (invoice: Invoice) => void
+  onSyncStatus?: (invoice: Invoice) => void
+  syncingInvoiceId?: string | null
   showClientEmail?: boolean
   showService?: boolean
   showConsulente?: boolean
@@ -20,6 +22,8 @@ export default function InvoiceTable({
   onEditInvoice,
   onDownloadInvoice,
   onSendInvoice,
+  onSyncStatus,
+  syncingInvoiceId,
   showClientEmail = true,
   showService = true,
   showConsulente = false
@@ -32,6 +36,9 @@ export default function InvoiceTable({
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const currentInvoices = invoices.slice(startIndex, endIndex)
+
+  // Check if any invoice has a due date
+  const hasAnyDueDate = invoices.some(inv => inv.dataScadenza)
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -48,7 +55,9 @@ export default function InvoiceTable({
                 <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Servizio</th>
               )}
               <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Data Emissione</th>
-              <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Scadenza</th>
+              {hasAnyDueDate && (
+                <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Scadenza</th>
+              )}
               <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Importo</th>
               <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Totale</th>
               <th className="text-left py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-medium text-gray-600">Status</th>
@@ -87,11 +96,13 @@ export default function InvoiceTable({
                     </td>
                   )}
                   <td className="py-3 sm:py-4 px-4 sm:px-6">
-                    <span className="text-gray-600 text-xs sm:text-sm">{invoice.dataEmissione}</span>
+                    <span className="text-gray-600 text-xs sm:text-sm">{formatDate(invoice.dataEmissione)}</span>
                   </td>
-                  <td className="py-3 sm:py-4 px-4 sm:px-6">
-                    <span className="text-gray-600 text-xs sm:text-sm">{invoice.dataScadenza}</span>
-                  </td>
+                  {hasAnyDueDate && (
+                    <td className="py-3 sm:py-4 px-4 sm:px-6">
+                      <span className="text-gray-600 text-xs sm:text-sm">{formatDate(invoice.dataScadenza)}</span>
+                    </td>
+                  )}
                   <td className="py-3 sm:py-4 px-4 sm:px-6">
                     <div>
                       <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatCurrency(invoice.importo)}</p>
@@ -118,6 +129,16 @@ export default function InvoiceTable({
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
+                      {onSyncStatus && invoice.status !== 'draft' && invoice.status !== 'paid' && (
+                        <button
+                          onClick={() => onSyncStatus(invoice)}
+                          disabled={syncingInvoiceId === (invoice._id || invoice.id)}
+                          className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 hover:scale-110 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          title="Aggiorna Status"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${syncingInvoiceId === (invoice._id || invoice.id) ? 'animate-spin' : ''}`} />
+                        </button>
+                      )}
                       {onEditInvoice && invoice.status !== 'paid' && (
                         <button
                           onClick={() => onEditInvoice(invoice)}
@@ -127,11 +148,11 @@ export default function InvoiceTable({
                           <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
-                      {onDownloadInvoice && invoice.status === 'paid' && (
+                      {onDownloadInvoice && invoice.status !== 'draft' && (
                         <button
                           onClick={() => onDownloadInvoice(invoice)}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 hover:scale-110 transition-all duration-200"
-                          title="Download"
+                          className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 hover:scale-110 transition-all duration-200"
+                          title="Download PDF"
                         >
                           <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
@@ -153,7 +174,7 @@ export default function InvoiceTable({
           </tbody>
           <tfoot className="border-t border-gray-200 bg-gray-50">
             <tr>
-              <td colSpan={showService ? 9 : 8} className="px-6 py-4">
+              <td colSpan={7 + (showConsulente ? 1 : 0) + (showService ? 1 : 0) + (hasAnyDueDate ? 1 : 0)} className="px-6 py-4">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <span>Mostra</span>

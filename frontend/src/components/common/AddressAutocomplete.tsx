@@ -13,6 +13,52 @@ interface AddressResult {
   state?: string
   state_code?: string
   county?: string
+  state_district?: string
+}
+
+// Mappa nomi province italiane -> codici a 2 lettere
+const PROVINCE_MAP: { [key: string]: string } = {
+  // Piemonte
+  'torino': 'TO', 'alessandria': 'AL', 'asti': 'AT', 'biella': 'BI', 'cuneo': 'CN',
+  'novara': 'NO', 'verbano-cusio-ossola': 'VB', 'vercelli': 'VC',
+  // Lombardia
+  'milano': 'MI', 'bergamo': 'BG', 'brescia': 'BS', 'como': 'CO', 'cremona': 'CR',
+  'lecco': 'LC', 'lodi': 'LO', 'mantova': 'MN', 'monza e della brianza': 'MB', 'monza': 'MB',
+  'pavia': 'PV', 'sondrio': 'SO', 'varese': 'VA',
+  // Veneto
+  'venezia': 'VE', 'belluno': 'BL', 'padova': 'PD', 'rovigo': 'RO', 'treviso': 'TV',
+  'verona': 'VR', 'vicenza': 'VI',
+  // Emilia-Romagna
+  'bologna': 'BO', 'ferrara': 'FE', 'forlì-cesena': 'FC', 'forli': 'FC', 'modena': 'MO',
+  'parma': 'PR', 'piacenza': 'PC', 'ravenna': 'RA', 'reggio emilia': 'RE', 'rimini': 'RN',
+  // Toscana
+  'firenze': 'FI', 'arezzo': 'AR', 'grosseto': 'GR', 'livorno': 'LI', 'lucca': 'LU',
+  'massa-carrara': 'MS', 'massa': 'MS', 'pisa': 'PI', 'pistoia': 'PT', 'prato': 'PO', 'siena': 'SI',
+  // Lazio
+  'roma': 'RM', 'frosinone': 'FR', 'latina': 'LT', 'rieti': 'RI', 'viterbo': 'VT',
+  // Campania
+  'napoli': 'NA', 'avellino': 'AV', 'benevento': 'BN', 'caserta': 'CE', 'salerno': 'SA',
+  // Puglia
+  'bari': 'BA', 'barletta-andria-trani': 'BT', 'bat': 'BT', 'brindisi': 'BR', 'foggia': 'FG',
+  'lecce': 'LE', 'taranto': 'TA',
+  // Calabria
+  'catanzaro': 'CZ', 'cosenza': 'CS', 'crotone': 'KR', 'reggio calabria': 'RC', 'vibo valentia': 'VV',
+  // Sicilia
+  'palermo': 'PA', 'agrigento': 'AG', 'caltanissetta': 'CL', 'catania': 'CT', 'enna': 'EN',
+  'messina': 'ME', 'ragusa': 'RG', 'siracusa': 'SR', 'trapani': 'TP',
+  // Sardegna
+  'cagliari': 'CA', 'carbonia-iglesias': 'CI', 'medio campidano': 'VS', 'nuoro': 'NU',
+  'ogliastra': 'OG', 'olbia-tempio': 'OT', 'oristano': 'OR', 'sassari': 'SS', 'sud sardegna': 'SU',
+  // Altre regioni
+  'genova': 'GE', 'imperia': 'IM', 'la spezia': 'SP', 'savona': 'SV',
+  'trieste': 'TS', 'gorizia': 'GO', 'pordenone': 'PN', 'udine': 'UD',
+  'ancona': 'AN', 'ascoli piceno': 'AP', 'fermo': 'FM', 'macerata': 'MC', 'pesaro e urbino': 'PU',
+  'perugia': 'PG', 'terni': 'TR',
+  'l\'aquila': 'AQ', 'chieti': 'CH', 'pescara': 'PE', 'teramo': 'TE',
+  'campobasso': 'CB', 'isernia': 'IS',
+  'matera': 'MT', 'potenza': 'PZ',
+  'aosta': 'AO', 'valle d\'aosta': 'AO',
+  'trento': 'TN', 'bolzano': 'BZ', 'south tyrol': 'BZ'
 }
 
 interface AddressAutocompleteProps {
@@ -24,6 +70,7 @@ interface AddressAutocompleteProps {
     postcode: string
     county?: string
     state_code?: string
+    housenumber?: string
   }) => void
   placeholder?: string
   error?: string
@@ -47,6 +94,25 @@ export default function AddressAutocomplete({
   const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const GEOAPIFY_API_KEY = 'e747705240b54b55b0e6fa293f9f744b'
+
+  // Helper function to extract province code from address
+  const getProvinceCode = (result: AddressResult): string => {
+    // Try to extract from county, state_district, or city
+    const candidates = [
+      result.county,
+      result.state_district,
+      result.city
+    ].filter(Boolean).map(s => s!.toLowerCase().trim())
+
+    for (const candidate of candidates) {
+      if (PROVINCE_MAP[candidate]) {
+        return PROVINCE_MAP[candidate]
+      }
+    }
+
+    // If nothing found, return empty string
+    return ''
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -130,7 +196,7 @@ export default function AddressAutocomplete({
 
     const city = result.city || ''
     const postcode = result.postcode || ''
-    const province = result.county || result.state_code || ''
+    const provinceCode = getProvinceCode(result)
     const country = result.country || 'Italia'
 
     // Build complete formatted address: Via Roma 10, 20121 Milano (MI), Italia
@@ -138,13 +204,13 @@ export default function AddressAutocomplete({
 
     if (postcode && city) {
       fullAddress = `${streetAddress}, ${postcode} ${city}`
-      if (province) {
-        fullAddress += ` (${province})`
+      if (provinceCode) {
+        fullAddress += ` (${provinceCode})`
       }
     } else if (city) {
       fullAddress = `${streetAddress}, ${city}`
-      if (province) {
-        fullAddress += ` (${province})`
+      if (provinceCode) {
+        fullAddress += ` (${provinceCode})`
       }
     }
 
@@ -163,7 +229,8 @@ export default function AddressAutocomplete({
         city,
         postcode,
         county: result.county,
-        state_code: result.state_code
+        state_code: provinceCode,  // Now returns the correct 2-letter province code
+        housenumber: result.housenumber  // Pass house number separately
       })
     }
   }

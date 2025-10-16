@@ -19,7 +19,7 @@ export default function DashboardOverview({ onSectionChange }: DashboardOverview
 
   const quickActions: QuickAction[] = [
     { title: 'Nuova Fattura', description: 'Crea fattura elettronica', icon: Plus, color: 'bg-primary-600', section: 'fatture' },
-    { title: 'Analisi AI', description: 'Analizza i tuoi dati', icon: Brain, color: 'bg-accent-600', section: 'analisi-ai' },
+    { title: 'Analisi SWOT', description: 'Analizza i tuoi dati', icon: Brain, color: 'bg-accent-600', section: 'analisi-ai' },
     { title: 'Simulazione Imposte', description: 'Calcola imposte ATECO', icon: Calculator, color: 'bg-purple-600', section: 'simulazione-imposte' },
     { title: 'Chat Consulente', description: 'Parla con il tuo CFO', icon: MessageSquare, color: 'bg-orange-600', section: 'consulenza' }
   ]

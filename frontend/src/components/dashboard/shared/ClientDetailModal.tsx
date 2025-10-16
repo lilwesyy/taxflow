@@ -95,6 +95,7 @@ export default function ClientDetailModal({
         aliquotaIva: editedClient.aliquotaIva,
         fiscalCode: editedClient.codiceFiscale,
         address: editedClient.indirizzo,
+        numeroCivico: editedClient.numeroCivico,
         status: editedClient.status,
         note: editedClient.note
       })
@@ -270,7 +271,8 @@ export default function ClientDetailModal({
                         if (editedClient) {
                           setEditedClient({
                             ...editedClient,
-                            indirizzo: address.full
+                            indirizzo: address.full,
+                            numeroCivico: address.housenumber || ''
                           })
                         }
                       }}
@@ -282,6 +284,22 @@ export default function ClientDetailModal({
                   </div>
                 ) : (
                   <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{displayClient?.indirizzo || 'Non disponibile'}</p>
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Numero Civico</label>
+                {isEditMode ? (
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      value={editedClient?.numeroCivico || ''}
+                      onChange={(e) => handleInputChange('numeroCivico', e.target.value)}
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm"
+                      placeholder="1"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">{displayClient?.numeroCivico || 'Non disponibile'}</p>
                 )}
               </div>
             </div>

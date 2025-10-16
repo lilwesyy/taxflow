@@ -10,6 +10,7 @@ export interface IClient extends Document {
 
   // Indirizzo
   indirizzo: string
+  numeroCivico?: string
   cap: string
   comune: string
   provincia: string
@@ -60,6 +61,10 @@ const ClientSchema = new Schema<IClient>(
     indirizzo: {
       type: String,
       required: true,
+      trim: true
+    },
+    numeroCivico: {
+      type: String,
       trim: true
     },
     cap: {

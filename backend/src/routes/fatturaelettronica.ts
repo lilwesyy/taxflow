@@ -2,11 +2,13 @@ import express from 'express'
 import axios from 'axios'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
 import User from '../models/User'
+import FatturaElettronica from '../models/FatturaElettronica'
 
 const router = express.Router()
 
 // Fattura Elettronica API Configuration
-const FATTURA_API_KEY = process.env.FATTURA_ELETTRONICA_API_KEY || ''
+const FATTURA_API_USERNAME = process.env.FATTURA_ELETTRONICA_USERNAME || ''
+const FATTURA_API_PASSWORD = process.env.FATTURA_ELETTRONICA_PASSWORD || ''
 const FATTURA_API_MODE = process.env.FATTURA_ELETTRONICA_API_MODE || 'test'
 const FATTURA_API_URL = FATTURA_API_MODE === 'prod'
   ? 'https://fattura-elettronica-api.it/ws2.0/prod'
@@ -25,13 +27,13 @@ let cachedToken: TokenCache | null = null
  * First call uses Basic Auth, subsequent calls use cached Bearer token
  */
 async function getFatturaElettronicaHeaders(): Promise<Record<string, string>> {
-  if (!FATTURA_API_KEY) {
-    throw new Error('Fattura Elettronica API key not configured')
+  if (!FATTURA_API_USERNAME || !FATTURA_API_PASSWORD) {
+    throw new Error('Fattura Elettronica API credentials not configured (username and password required)')
   }
 
   // Check if we have a valid cached token
   if (cachedToken && cachedToken.expires > new Date()) {
-    console.log('🔑 Using cached Bearer token (expires:', cachedToken.expires.toISOString() + ')')
+    // console.log('🔑 Using cached Bearer token (expires:', cachedToken.expires.toISOString() + ')')
     return {
       'Authorization': `Bearer ${cachedToken.token}`,
       'Content-Type': 'application/json',
@@ -40,10 +42,11 @@ async function getFatturaElettronicaHeaders(): Promise<Record<string, string>> {
   }
 
   // Use Basic Auth for first call
-  const apiKeyTrimmed = FATTURA_API_KEY.trim()
-  const auth = Buffer.from(`${apiKeyTrimmed}:`).toString('base64')
+  const username = FATTURA_API_USERNAME.trim()
+  const password = FATTURA_API_PASSWORD.trim()
+  const auth = Buffer.from(`${username}:${password}`).toString('base64')
 
-  console.log('🔐 Using Basic Auth (token not cached or expired)')
+  console.log('🔐 Using Basic Auth with username:', username.substring(0, 5) + '***')
 
   return {
     'Authorization': `Basic ${auth}`,
@@ -64,7 +67,7 @@ function updateTokenCache(headers: any) {
       token,
       expires: new Date(expires)
     }
-    console.log('✅ Bearer token cached (expires:', expires + ')')
+    // console.log('✅ Bearer token cached (expires:', expires + ')')
   }
 }
 
@@ -203,7 +206,20 @@ router.get('/aziende', authMiddleware, async (req: AuthRequest, res) => {
     } catch (apiError: any) {
       console.error('API error fetching company:', apiError.response?.data || apiError.message)
 
-      // Fallback to local data if API fails
+      // If company doesn't exist on API (404), clear local data
+      if (apiError.response?.status === 404) {
+        console.log('⚠️  Company not found on API, clearing local data')
+        user.fatturaElettronica = undefined
+        await user.save()
+
+        return res.json({
+          success: false,
+          message: 'Company not found on API',
+          hasCompany: false
+        })
+      }
+
+      // For other errors, fallback to local data
       res.json({
         success: true,
         company: user.fatturaElettronica,
@@ -237,6 +253,7 @@ router.put('/aziende', authMiddleware, async (req: AuthRequest, res) => {
     }
 
     console.log('📝 Updating company:', user.fatturaElettronica.aziendaId)
+    console.log('📋 Update payload:', JSON.stringify(req.body, null, 2))
 
     const headers = await getFatturaElettronicaHeaders()
     const response = await axios.put(
@@ -360,7 +377,10 @@ router.post('/fatture', authMiddleware, async (req: AuthRequest, res) => {
     }
 
     console.log('📤 Sending invoice via Fattura Elettronica API...')
+    console.log('🌐 API Mode:', FATTURA_API_MODE)
+    console.log('🔗 API URL:', FATTURA_API_URL)
     console.log('Format:', format)
+    console.log('Company ID:', user.fatturaElettronica.aziendaId)
     console.log('Company P.IVA:', user.fatturaElettronica.piva)
 
     const headers = await getFatturaElettronicaHeaders()
@@ -369,6 +389,8 @@ router.post('/fatture', authMiddleware, async (req: AuthRequest, res) => {
     if (format === 'xml') {
       headers['Content-Type'] = 'application/xml'
     }
+
+    console.log('📋 Invoice payload:', JSON.stringify(data, null, 2))
 
     const response = await axios.post(
       `${FATTURA_API_URL}/fatture`,
@@ -379,6 +401,77 @@ router.post('/fatture', authMiddleware, async (req: AuthRequest, res) => {
     updateTokenCache(response.headers)
 
     console.log('✅ Invoice sent:', response.data.id)
+
+    // Salva la fattura nel database
+    try {
+      // Calcola i totali
+      const righe = data.righe || []
+      let importoTotale = 0
+      let importoIVA = 0
+
+      righe.forEach((riga: any) => {
+        const prezzoUnitario = parseFloat(riga.PrezzoUnitario) || 0
+        const quantita = riga.Quantita || 1
+        const aliquotaIVA = riga.AliquotaIVA || 0
+
+        const subtotale = prezzoUnitario * quantita
+        const ivaRiga = (subtotale * aliquotaIVA) / 100
+
+        importoTotale += subtotale
+        importoIVA += ivaRiga
+      })
+
+      const importoTotaleConIVA = importoTotale + importoIVA
+
+      const fatturaDb = new FatturaElettronica({
+        userId: req.user.userId,
+        aziendaId: user.fatturaElettronica.aziendaId,
+        fatturaApiId: response.data.id.toString(),
+        pivaMittente: data.piva_mittente,
+        ragioneSocialeMittente: user.fatturaElettronica.ragioneSociale || user.name,
+        destinatario: {
+          codiceSDI: data.destinatario.CodiceSDI,
+          partitaIva: data.destinatario.PartitaIVA,
+          codiceFiscale: data.destinatario.CodiceFiscale,
+          denominazione: data.destinatario.Denominazione,
+          indirizzo: data.destinatario.Indirizzo,
+          cap: data.destinatario.CAP,
+          comune: data.destinatario.Comune,
+          provincia: data.destinatario.Provincia,
+          nazione: data.destinatario.Nazione || 'IT',
+          pec: data.destinatario.PEC
+        },
+        documento: {
+          numero: data.documento.Numero,
+          data: data.documento.Data,
+          tipo: data.documento.tipo
+        },
+        righe: righe.map((riga: any) => ({
+          descrizione: riga.Descrizione,
+          prezzoUnitario: parseFloat(riga.PrezzoUnitario) || 0,
+          quantita: riga.Quantita || 1,
+          unitaMisura: riga.UnitaMisura,
+          aliquotaIVA: riga.AliquotaIVA || 0
+        })),
+        importoTotale,
+        importoIVA,
+        importoTotaleConIVA,
+        pagamento: data.pagamento ? {
+          modalitaPagamento: data.pagamento.ModalitaPagamento,
+          iban: data.pagamento.IBAN,
+          dataScadenza: data.pagamento.DataScadenza
+        } : undefined,
+        status: 'inviata',
+        dataInvio: new Date(),
+        payloadOriginale: data
+      })
+
+      await fatturaDb.save()
+      console.log('💾 Fattura salvata nel database con ID:', fatturaDb._id)
+    } catch (dbError: any) {
+      console.error('⚠️ Errore nel salvataggio della fattura nel DB:', dbError.message)
+      // Non blocchiamo la risposta se il DB fallisce
+    }
 
     res.json({
       success: true,
@@ -398,7 +491,7 @@ router.post('/fatture', authMiddleware, async (req: AuthRequest, res) => {
 
 /**
  * GET /api/fatturaelettronica/fatture
- * Get list of invoices with optional filters
+ * Get list of invoices from local database
  */
 router.get('/fatture', authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -417,57 +510,75 @@ router.get('/fatture', authMiddleware, async (req: AuthRequest, res) => {
     const {
       page = '1',
       per_page = '100',
-      unread,
       date_from,
       date_to,
-      partita_iva,
-      numero_documento,
-      tipo_documento
+      status
     } = req.query
 
-    console.log('📥 Fetching invoices...')
+    // console.log('📥 Fetching invoices from database...')
 
-    const headers = await getFatturaElettronicaHeaders()
-    const params: any = {
-      page: parseInt(page as string),
-      per_page: parseInt(per_page as string)
+    // Build query filters
+    const query: any = { userId: req.user.userId }
+
+    if (date_from || date_to) {
+      query['documento.data'] = {}
+      if (date_from) query['documento.data'].$gte = date_from
+      if (date_to) query['documento.data'].$lte = date_to
     }
 
-    // Add optional filters
-    if (unread) params.unread = unread
-    if (date_from) params.date_from = date_from
-    if (date_to) params.date_to = date_to
-    if (partita_iva) params.partita_iva = partita_iva
-    if (numero_documento) params.numero_documento = numero_documento
-    if (tipo_documento) params.tipo_documento = tipo_documento
+    if (status) {
+      query.status = status
+    }
 
-    const response = await axios.get(
-      `${FATTURA_API_URL}/fatture`,
-      {
-        params,
-        headers
-      }
-    )
+    // Pagination
+    const pageNum = parseInt(page as string)
+    const perPage = parseInt(per_page as string)
+    const skip = (pageNum - 1) * perPage
 
-    updateTokenCache(response.headers)
+    // Fetch invoices from database
+    const invoices = await FatturaElettronica.find(query)
+      .sort({ dataInvio: -1 })
+      .skip(skip)
+      .limit(perPage)
+      .lean()
 
-    const invoices = response.data || []
+    const total = await FatturaElettronica.countDocuments(query)
 
-    console.log(`✅ Fetched ${invoices.length} invoices`)
+    // console.log(`✅ Fetched ${invoices.length} invoices from database (total: ${total})`)
+
+    // Transform to API format for compatibility with frontend
+    const transformedInvoices = invoices.map((inv: any) => ({
+      id: inv.fatturaApiId,
+      _id: inv._id,
+      numero: inv.documento.numero,
+      data: inv.documento.data,
+      cliente: inv.destinatario.denominazione,
+      pivaMittente: inv.pivaMittente,
+      importo: inv.importoTotale,
+      iva: inv.importoIVA,
+      totale: inv.importoTotaleConIVA,
+      status: inv.status,
+      dataInvio: inv.dataInvio,
+      righe: inv.righe,
+      destinatario: inv.destinatario,
+      pagamento: inv.pagamento
+    }))
 
     res.json({
       success: true,
-      invoices,
-      total: invoices.length,
-      hasMore: response.headers['link']?.includes('rel="next"')
+      invoices: transformedInvoices,
+      sent: transformedInvoices, // For compatibility
+      received: [], // We only track sent invoices
+      total,
+      hasMore: total > skip + invoices.length
     })
   } catch (error: any) {
-    console.error('Get invoices error:', error.response?.data || error.message)
+    console.error('Get invoices error:', error.message)
 
-    res.status(error.response?.status || 500).json({
+    res.status(500).json({
       success: false,
       message: 'Failed to get invoices',
-      error: error.response?.data || error.message
+      error: error.message
     })
   }
 })
@@ -506,6 +617,141 @@ router.get('/fatture/:id/pdf', authMiddleware, async (req: AuthRequest, res) => 
     res.status(error.response?.status || 500).json({
       success: false,
       message: 'Failed to download PDF'
+    })
+  }
+})
+
+/**
+ * Helper function to map SDI status to our internal status enum
+ */
+function mapSdiStatusToInternal(sdiStato: string): string {
+  const statusMap: Record<string, string> = {
+    'INVI': 'inviata',          // Inviata al SDI
+    'PREN': 'presa_in_carico',  // Presa in carico dal SDI
+    'CONS': 'consegnata',       // Consegnata al destinatario
+    'NONC': 'non_consegnata',   // Non consegnata
+    'ERRO': 'errore',           // Errore di elaborazione
+    'ACCE': 'accettata',        // Accettata (PA)
+    'RIFI': 'rifiutata',        // Rifiutata (PA)
+    'DECO': 'accettata'         // Decorrenza termini (PA) - consideriamo come accettata
+  }
+
+  return statusMap[sdiStato] || 'in_attesa'
+}
+
+/**
+ * POST /api/fatturaelettronica/fatture/:id/sync-status
+ * Synchronize invoice status from Fattura Elettronica API
+ */
+router.post('/fatture/:id/sync-status', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (req.user?.role !== 'business') {
+      return res.status(403).json({ message: 'Only business users can sync invoice status' })
+    }
+
+    const { id } = req.params // Can be MongoDB _id or fatturaApiId
+
+    console.log('🔄 Syncing status for invoice:', id)
+
+    // Find invoice in database - try both _id and fatturaApiId
+    let fattura = null
+
+    // Try finding by MongoDB _id first
+    try {
+      fattura = await FatturaElettronica.findOne({
+        _id: id,
+        userId: req.user.userId
+      })
+    } catch (error) {
+      // If _id is not valid MongoDB ObjectId, it will throw error
+      console.log('Not a valid MongoDB _id, trying fatturaApiId')
+    }
+
+    // If not found by _id, try by fatturaApiId
+    if (!fattura) {
+      fattura = await FatturaElettronica.findOne({
+        fatturaApiId: id,
+        userId: req.user.userId
+      })
+    }
+
+    if (!fattura) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invoice not found'
+      })
+    }
+
+    console.log('📡 Fetching status from API for invoice ID:', fattura.fatturaApiId)
+
+    // Fetch invoice status from API
+    const headers = await getFatturaElettronicaHeaders()
+    const response = await axios.get(
+      `${FATTURA_API_URL}/fatture/${fattura.fatturaApiId}`,
+      { headers }
+    )
+
+    updateTokenCache(response.headers)
+
+    const apiData = response.data
+
+    // console.log('📥 API Response:', JSON.stringify(apiData, null, 2))
+
+    // Extract status information
+    const sdiStato = apiData.sdi_stato || apiData.stato || 'INVI'
+    const sdiStatoDescrizione = apiData.sdi_stato_descrizione || apiData.stato_descrizione || ''
+    const identificativoSdI = apiData.sdi_identificativo || apiData.identificativo_sdi || fattura.identificativoSdI
+
+    // Map to internal status
+    const nuovoStatus = mapSdiStatusToInternal(sdiStato)
+
+    console.log('✏️  Updating status:', {
+      oldStatus: fattura.status,
+      newStatus: nuovoStatus,
+      sdiStato,
+      sdiStatoDescrizione
+    })
+
+    // Update invoice in database
+    fattura.status = nuovoStatus as any
+    fattura.sdiStato = sdiStato
+    fattura.sdiStatoDescrizione = sdiStatoDescrizione
+    fattura.identificativoSdI = identificativoSdI
+    fattura.ultimaVerificaStatus = new Date()
+
+    await fattura.save()
+
+    // console.log('✅ Status updated successfully')
+
+    res.json({
+      success: true,
+      message: 'Invoice status synchronized successfully',
+      invoice: {
+        _id: fattura._id,
+        fatturaApiId: fattura.fatturaApiId,
+        numero: fattura.documento.numero,
+        status: fattura.status,
+        sdiStato: fattura.sdiStato,
+        sdiStatoDescrizione: fattura.sdiStatoDescrizione,
+        identificativoSdI: fattura.identificativoSdI,
+        ultimaVerificaStatus: fattura.ultimaVerificaStatus
+      }
+    })
+  } catch (error: any) {
+    console.error('Sync status error:', error.response?.data || error.message)
+
+    // If invoice not found on API, mark as error
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invoice not found on Fattura Elettronica API'
+      })
+    }
+
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: 'Failed to sync invoice status',
+      error: error.response?.data || error.message
     })
   }
 })

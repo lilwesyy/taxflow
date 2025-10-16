@@ -105,6 +105,7 @@ router.get('/list', authMiddleware, adminMiddleware, async (req: AuthRequest, re
         consulenze: consulenzeCount,
         pendingRequests: client.pendingRequests || 0,
         indirizzo: client.address || '',
+        numeroCivico: (client as any).numeroCivico || '',
         codiceFiscale: client.fiscalCode || '',
         regimeContabile: client.regimeContabile || 'Forfettario',
         aliquotaIva: client.aliquotaIva || '5%',
@@ -221,6 +222,7 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
       consulenze: consulenzeCount,
       pendingRequests: client.pendingRequests || 0,
       indirizzo: client.address || '',
+      numeroCivico: (client as any).numeroCivico || '',
       codiceFiscale: client.fiscalCode || '',
       regimeContabile: client.regimeContabile || 'Forfettario',
       aliquotaIva: client.aliquotaIva || '5%',
@@ -256,7 +258,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
       name, email, phone, company, piva, codiceAteco, regimeContabile,
       aliquotaIva, fatturato, status, pendingRequests, consulenze,
       fatturePagate, fattureInAttesa, documentiForniti, prossimaTasse,
-      note, address, fiscalCode
+      note, address, fiscalCode, numeroCivico
     } = req.body
 
     // Update fields if provided
@@ -279,6 +281,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
     if (note !== undefined) client.note = note
     if (address !== undefined) client.address = address
     if (fiscalCode !== undefined) client.fiscalCode = fiscalCode
+    if (numeroCivico !== undefined) (client as any).numeroCivico = numeroCivico
 
     // Update ultimaAttivita
     client.ultimaAttivita = new Date()

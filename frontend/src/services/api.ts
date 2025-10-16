@@ -784,6 +784,20 @@ class ApiService {
     return response.blob()
   }
 
+  async syncInvoiceStatus(invoiceId: string) {
+    const response = await fetch(`${API_BASE_URL}/fatturaelettronica/fatture/${invoiceId}/sync-status`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to sync invoice status')
+    }
+
+    return response.json()
+  }
+
   // Business Clients Management (Clienti dei clienti di TaxFlow)
   async getBusinessClients() {
     const response = await fetch(`${API_BASE_URL}/business-clients/list`, {
@@ -818,6 +832,7 @@ class ApiService {
     partitaIva?: string
     codiceFiscale: string
     indirizzo: string
+    numeroCivico?: string
     cap: string
     comune: string
     provincia: string
@@ -847,6 +862,7 @@ class ApiService {
     partitaIva?: string
     codiceFiscale?: string
     indirizzo?: string
+    numeroCivico?: string
     cap?: string
     comune?: string
     provincia?: string

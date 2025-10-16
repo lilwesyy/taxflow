@@ -509,7 +509,7 @@ export default function FeedbackConsulente() {
               <option value="">Seleziona il servizio</option>
               <option value="Consulenza Fiscale">Consulenza Fiscale</option>
               <option value="Business Plan">Business Plan</option>
-              <option value="Analisi AI">Analisi AI</option>
+              <option value="Analisi SWOT">Analisi SWOT</option>
               <option value="Apertura Partita IVA">Apertura Partita IVA</option>
               <option value="Gestione Contabilità">Gestione Contabilità</option>
               <option value="Altro">Altro</option>

@@ -51,7 +51,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
 
     // Strumenti di analisi e pianificazione
     { id: 'simulazione-imposte', name: 'Simulazione Imposte', icon: Calculator },
-    { id: 'analisi-ai', name: 'Analisi AI', icon: Brain },
+    { id: 'analisi-ai', name: 'Analisi SWOT', icon: Brain },
     { id: 'business-plan', name: 'Business Plan', icon: Target },
 
     // Consulenza e feedback
