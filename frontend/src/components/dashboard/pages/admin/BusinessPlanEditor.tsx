@@ -8,6 +8,10 @@ import BusinessPlanSection from './BusinessPlanSection'
 import BusinessPlanPreview from './BusinessPlanPreview'
 import AIQuestionnaireForm, { AIQuestionnaireData } from './AIQuestionnaireForm'
 import Modal from '../../../common/Modal'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import api from '../../../../services/api'
+import logoImage from '../../../../assets/logo.png'
 
 interface PurchasedService {
   _id: string
@@ -15,6 +19,7 @@ interface PurchasedService {
     _id: string
     name: string
     email: string
+    phone?: string
   }
   serviceType: string
   status: 'pending' | 'in_progress' | 'completed'
@@ -315,6 +320,18 @@ export default function BusinessPlanEditor({
   const [showAIQuestionnaire, setShowAIQuestionnaire] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
 
+  // AI Suggestions state
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false)
+  const [currentSuggestionSection, setCurrentSuggestionSection] = useState<string>('')
+  const [suggestionText, setSuggestionText] = useState('')
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
+
+  // Manual save status
+  const [manualSaveStatus, setManualSaveStatus] = useState<'idle' | 'saved'>('idle')
+
+  // PDF export status
+  const [pdfExportStatus, setPdfExportStatus] = useState<'idle' | 'exporting' | 'exported'>('idle')
+
   const [formData, setFormData] = useState<BusinessPlanData>({
     executiveSummary: initialData?.executiveSummary || '',
     idea: initialData?.idea || '',
@@ -511,8 +528,250 @@ export default function BusinessPlanEditor({
   }
 
   const handleExportPDF = async () => {
-    showToast('Funzionalità Export PDF in arrivo!', 'info')
-    // TODO: Implement PDF export
+    try {
+      setPdfExportStatus('exporting')
+      showToast('Generazione PDF in corso...', 'info')
+
+      // Converti SVG in PNG perché html2canvas ha problemi con SVG inline
+      const svgToPng = (svgString: string, width: number, height: number, color: string = 'white'): Promise<string> => {
+        return new Promise((resolve) => {
+          const svg = `<svg width="${width}" height="${height}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="${color}">${svgString}</svg>`
+          const img = new Image()
+          const blob = new Blob([svg], { type: 'image/svg+xml' })
+          const url = URL.createObjectURL(blob)
+
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')!
+            ctx.drawImage(img, 0, 0, width, height)
+            URL.revokeObjectURL(url)
+            resolve(canvas.toDataURL('image/png'))
+          }
+          img.src = url
+        })
+      }
+
+      // Converti logo in bianco
+      const convertLogoToWhite = async (imgSrc: string): Promise<string> => {
+        return new Promise((resolve) => {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')!
+            ctx.drawImage(img, 0, 0)
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            const data = imageData.data
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i + 3] > 0) {
+                data[i] = 255
+                data[i + 1] = 255
+                data[i + 2] = 255
+              }
+            }
+            ctx.putImageData(imageData, 0, 0)
+            resolve(canvas.toDataURL('image/png'))
+          }
+          img.src = imgSrc
+        })
+      }
+
+      const whiteLogoSrc = await convertLogoToWhite(logoImage)
+
+      // Converti solo l'icona FileText per "Business Plan"
+      const fileIconPng = await svgToPng('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />', 32, 32)
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      const pageWidth = 210 // A4 width in mm
+      const pageHeight = 297 // A4 height in mm
+      let isFirstPage = true
+
+      // Helper to capture and add element to PDF
+      const captureAndAddToPDF = async (element: HTMLElement) => {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        })
+
+        const imgWidth = pageWidth
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+        // If content is taller than a page, we might need multiple pages for this section
+        if (imgHeight > pageHeight) {
+          // For tall content, split across multiple pages
+          let heightLeft = imgHeight
+          let position = 0
+
+          while (heightLeft > 0) {
+            if (!isFirstPage) {
+              pdf.addPage()
+            }
+            isFirstPage = false
+
+            const imgData = canvas.toDataURL('image/png')
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+            heightLeft -= pageHeight
+            position = heightLeft - imgHeight
+          }
+        } else {
+          // Content fits in one page
+          if (!isFirstPage) {
+            pdf.addPage()
+          }
+          isFirstPage = false
+
+          const imgData = canvas.toDataURL('image/png')
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+        }
+      }
+
+      // Create temporary container
+      const container = document.createElement('div')
+      container.style.position = 'absolute'
+      container.style.left = '-9999px'
+      container.style.width = '210mm'
+      document.body.appendChild(container)
+
+      const { createRoot } = await import('react-dom/client')
+
+      // Sections to export
+      const sections = [
+        { title: 'Executive Summary', content: formData.executiveSummary },
+        { title: "L'Idea", content: formData.idea },
+        { title: 'Business Model', content: formData.businessModel },
+        { title: 'Analisi di Mercato e Concorrenza', content: formData.marketAnalysis },
+        { title: 'Il Team', content: formData.team },
+        { title: 'Roadmap e Go-to-Market', content: formData.roadmap },
+        { title: 'Piano Economico-Finanziario', content: formData.financialPlan },
+        { title: 'Proiezioni Ricavi', content: formData.revenueProjections },
+        ...formData.customSections.map(cs => ({ title: cs.title, content: cs.content }))
+      ].filter(s => s.content)
+
+      // Capture header + first section (Executive Summary) together on first page
+      const root = createRoot(container)
+      await new Promise<void>((resolve) => {
+        const firstSection = sections[0]
+        root.render(
+          <div className="bg-white">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
+              <div style={{ marginBottom: '24px', overflow: 'hidden' }}>
+                <div style={{ float: 'left' }}>
+                  <img src={fileIconPng} alt="" style={{ width: '32px', height: '32px', display: 'inline-block', marginRight: '12px', verticalAlign: 'middle' }} />
+                  <span style={{ fontSize: '14px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'inline-block', verticalAlign: 'middle', lineHeight: '32px' }}>Business Plan</span>
+                </div>
+                <div style={{ float: 'right' }}>
+                  <img src={whiteLogoSrc} alt="Logo" style={{ height: '48px', display: 'block' }} />
+                </div>
+              </div>
+              <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '8px' }}>{service.userId.name}</h1>
+              <div>
+                {service.userId.email && (
+                  <div style={{ marginBottom: '8px' }}>
+                    <span style={{ fontSize: '18px', color: 'rgba(191, 219, 254, 1)' }}>{service.userId.email}</span>
+                  </div>
+                )}
+                {service.userId.phone && (
+                  <div style={{ marginBottom: '8px' }}>
+                    <span style={{ fontSize: '18px', color: 'rgba(191, 219, 254, 1)' }}>{service.userId.phone}</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(59, 130, 246, 0.5)' }}>
+                <div style={{ display: 'inline-block', marginRight: '24px' }}>
+                  <span style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 1)' }}>{new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                <div style={{ display: 'inline-block' }}>
+                  <span style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 1)' }}>TaxFlow Consulting</span>
+                </div>
+              </div>
+            </div>
+            {/* First Section */}
+            {firstSection && (
+              <div className="px-8 py-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+                  {firstSection.title}
+                </h2>
+                <div
+                  className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: firstSection.content }}
+                />
+              </div>
+            )}
+          </div>
+        )
+        setTimeout(resolve, 500)
+      })
+
+      // Capture header + first section together
+      const firstPageElement = container.firstChild as HTMLElement
+      if (firstPageElement) {
+        await captureAndAddToPDF(firstPageElement)
+      }
+
+      root.unmount()
+
+      // Capture remaining sections on separate pages
+      for (let i = 1; i < sections.length; i++) {
+        const section = sections[i]
+        // Clear container
+        container.innerHTML = ''
+        const sectionRoot = createRoot(container)
+
+        await new Promise<void>((resolve) => {
+          sectionRoot.render(
+            <div className="bg-white px-8 py-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+                {section.title}
+              </h2>
+              <div
+                className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: section.content }}
+              />
+            </div>
+          )
+          setTimeout(resolve, 300)
+        })
+
+        const sectionElement = container.firstChild as HTMLElement
+        if (sectionElement) {
+          await captureAndAddToPDF(sectionElement)
+        }
+
+        sectionRoot.unmount()
+      }
+
+      // Cleanup
+      root.unmount()
+      document.body.removeChild(container)
+
+      // Save PDF
+      const fileName = `business-plan-${service.userId.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`
+      pdf.save(fileName)
+
+      setPdfExportStatus('exported')
+      showToast('Business Plan esportato con successo!', 'success')
+
+      // Torna a "Esporta PDF" dopo 5 secondi
+      setTimeout(() => {
+        setPdfExportStatus('idle')
+      }, 5000)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      setPdfExportStatus('idle')
+      showToast('Errore nell\'esportazione del PDF', 'error')
+    }
   }
 
   const confirmReset = async () => {
@@ -553,6 +812,56 @@ export default function BusinessPlanEditor({
     } catch (error) {
       console.error('Error resetting business plan:', error)
       showToast('Errore nel reset del business plan', 'error')
+    }
+  }
+
+  const handleAISuggest = async (sectionKey: string) => {
+    try {
+      setCurrentSuggestionSection(sectionKey)
+      setShowSuggestionModal(true)
+      setIsLoadingSuggestion(true)
+      setSuggestionText('')
+
+      const currentContent = formData[sectionKey as keyof Omit<BusinessPlanData, 'customSections'>] as string
+
+      const response = await api.generateBusinessPlanSuggestion({
+        section: sectionKey,
+        currentContent: currentContent || '',
+        context: {
+          clientName: service.userId.name,
+          clientEmail: service.userId.email
+        }
+      })
+
+      if (response.success !== false && response.suggestion) {
+        setSuggestionText(response.suggestion)
+      } else {
+        throw new Error('Nessun suggerimento ricevuto')
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestion:', error)
+      showToast('Errore nel caricamento dei suggerimenti AI', 'error')
+      setShowSuggestionModal(false)
+    } finally {
+      setIsLoadingSuggestion(false)
+    }
+  }
+
+  const applySuggestion = () => {
+    if (suggestionText && currentSuggestionSection) {
+      // Chiudi la sezione corrente per forzare il re-render del RichTextEditor
+      setExpandedSections(prev => prev.filter(id => id !== currentSuggestionSection))
+
+      // Applica il suggerimento
+      updateSection(currentSuggestionSection as keyof Omit<BusinessPlanData, 'customSections'>, suggestionText)
+
+      // Riapri la sezione dopo un breve delay
+      setTimeout(() => {
+        setExpandedSections(prev => [...prev, currentSuggestionSection])
+      }, 100)
+
+      setShowSuggestionModal(false)
+      showToast('Suggerimento applicato con successo!', 'success')
     }
   }
 
@@ -732,17 +1041,34 @@ export default function BusinessPlanEditor({
 
             <button
               onClick={handleExportPDF}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={pdfExportStatus === 'exporting'}
+              className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-all duration-200 ${
+                pdfExportStatus === 'exported'
+                  ? 'border-green-600 text-green-600 bg-green-50'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <Download className="h-4 w-4" />
-              <span>Esporta PDF</span>
+              {pdfExportStatus === 'exporting' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              <span>
+                {pdfExportStatus === 'exporting' && 'Esportazione...'}
+                {pdfExportStatus === 'exported' && 'Esportato'}
+                {pdfExportStatus === 'idle' && 'Esporta PDF'}
+              </span>
             </button>
           </div>
         </div>
       </div>
 
       {viewMode === 'preview' ? (
-        <BusinessPlanPreview data={formData} clientName={service.userId.name} />
+        <BusinessPlanPreview
+          data={formData}
+          clientName={service.userId.name}
+          clientEmail={service.userId.email}
+        />
       ) : (
         <>
           {/* Sections */}
@@ -758,7 +1084,7 @@ export default function BusinessPlanEditor({
                 onChange={(value) => updateSection(key as keyof Omit<BusinessPlanData, 'customSections'>, value)}
                 isExpanded={expandedSections.includes(key)}
                 onToggle={() => toggleSection(key)}
-                onAISuggest={() => {/* TODO: Implement AI suggestions per section */}}
+                onAISuggest={() => handleAISuggest(key)}
               />
             ))}
 
@@ -806,16 +1132,28 @@ export default function BusinessPlanEditor({
                   onClick={async () => {
                     try {
                       await onSave({ ...formData, creationMode: creationMode || undefined })
+                      setManualSaveStatus('saved')
                       showToast('Bozza salvata con successo!', 'success')
+
+                      // Torna a "Salva Bozza" dopo 5 secondi
+                      setTimeout(() => {
+                        setManualSaveStatus('idle')
+                      }, 5000)
                     } catch (error) {
                       showToast('Errore nel salvataggio della bozza', 'error')
                     }
                   }}
                   disabled={isUpdating}
-                  className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2"
+                  className={`px-6 py-3 border rounded-lg disabled:opacity-50 transition-all duration-200 flex items-center space-x-2 ${
+                    manualSaveStatus === 'saved'
+                      ? 'border-green-600 text-green-600 bg-green-50'
+                      : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                  }`}
                 >
                   <Save className="h-4 w-4" />
-                  <span>Salva Bozza</span>
+                  <span>
+                    {manualSaveStatus === 'saved' ? 'Salvato' : 'Salva Bozza'}
+                  </span>
                 </button>
 
                 <button
@@ -876,6 +1214,52 @@ export default function BusinessPlanEditor({
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* AI Suggestions Modal */}
+      <Modal
+        isOpen={showSuggestionModal}
+        onClose={() => setShowSuggestionModal(false)}
+        title="Suggerimenti AI per la Sezione"
+        maxWidth="3xl"
+      >
+        {isLoadingSuggestion ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-600">Generazione suggerimenti in corso...</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Suggerimento AI:</strong> L'AI ha analizzato il contenuto corrente e ha generato dei suggerimenti per migliorare questa sezione.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+              <div
+                className="prose prose-sm max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ __html: suggestionText }}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowSuggestionModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Chiudi
+              </button>
+              <button
+                onClick={applySuggestion}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Applica Suggerimento</span>
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

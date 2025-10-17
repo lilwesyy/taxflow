@@ -1040,6 +1040,26 @@ class ApiService {
 
     return response.json()
   }
+
+  // Business Plan Management
+  async generateBusinessPlanSuggestion(data: {
+    section: string
+    currentContent?: string
+    context?: any
+  }) {
+    const response = await fetch(`${API_BASE_URL}/business-plan/suggest`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to generate suggestion')
+    }
+
+    return response.json()
+  }
 }
 
 export default new ApiService()
