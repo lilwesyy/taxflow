@@ -269,10 +269,10 @@ async function generateSectionSuggestion(
 
 ${currentContent}
 
-Fornisci suggerimenti concreti, dettagliati e professionali. Mantieni lo stile formale e usa formattazione markdown.`
+Fornisci suggerimenti concreti, dettagliati e professionali. Mantieni lo stile formale e usa formattazione HTML con tag <p>, <h3>, <ul>, <li>, <strong>, <em>.`
     : `Genera un contenuto professionale e dettagliato per la sezione "${sectionDesc}" di un business plan.
 
-Usa formattazione markdown e fornisci contenuti specifici e realistici.`
+Usa formattazione HTML (tag: <p>, <h3>, <ul>, <li>, <strong>, <em>) e fornisci contenuti specifici e realistici.`
 
   try {
     const completion = await openai.chat.completions.create({
