@@ -4,6 +4,7 @@ import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import ATECOAutocomplete from '../../../common/ATECOAutocomplete'
 import AddressAutocomplete from '../../../common/AddressAutocomplete'
+import Modal from '../../../common/Modal'
 
 interface Session {
   id: string
@@ -47,6 +48,7 @@ export default function Impostazioni() {
   const [loadingInvoices, setLoadingInvoices] = useState(false)
   const [subscriptionData, setSubscriptionData] = useState<any>(null)
   const [loadingSubscription, setLoadingSubscription] = useState(false)
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
 
   const [profileData, setProfileData] = useState({
     nome: 'Mario',
@@ -449,11 +451,15 @@ export default function Impostazioni() {
     }
   }
 
-  const handleCancelSubscription = async () => {
-    if (!confirm('Sei sicuro di voler cancellare il tuo abbonamento? Rimarrà attivo fino alla fine del periodo corrente.')) {
-      return
-    }
+  const handleOpenCancelModal = () => {
+    setIsCancelModalOpen(true)
+  }
 
+  const handleCloseCancelModal = () => {
+    setIsCancelModalOpen(false)
+  }
+
+  const handleConfirmCancelSubscription = async () => {
     setLoading(true)
     try {
       const API_URL = import.meta.env.VITE_API_URL || '/api'
@@ -466,6 +472,7 @@ export default function Impostazioni() {
 
       if (response.ok) {
         showToast('Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo corrente.', 'success')
+        setIsCancelModalOpen(false)
         loadSubscriptionDetails() // Reload to show updated status
       } else {
         const error = await response.json()
@@ -1783,7 +1790,7 @@ export default function Impostazioni() {
               </button>
             ) : (
               <button
-                onClick={handleCancelSubscription}
+                onClick={handleOpenCancelModal}
                 disabled={loading || !hasSubscription}
                 className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -1934,6 +1941,87 @@ export default function Impostazioni() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
         {renderTabContent()}
       </div>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      {isCancelModalOpen && (
+        <Modal
+          isOpen={isCancelModalOpen}
+          onClose={handleCloseCancelModal}
+          title="Conferma cancellazione abbonamento"
+          maxWidth="2xl"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Sei sicuro di voler cancellare il tuo abbonamento?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Il tuo abbonamento <span className="font-semibold">{subscriptionData?.subscription?.plan?.name || 'P.IVA Forfettari'}</span> verrà cancellato.
+                  Non ti verrà addebitato altro, ma <span className="font-semibold text-orange-600">l'abbonamento rimarrà attivo fino alla fine del periodo corrente</span>.
+                </p>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
+                  <div className="flex items-start space-x-2">
+                    <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-orange-900 font-medium">Cosa succede dopo la cancellazione?</p>
+                      <ul className="mt-2 space-y-1 text-sm text-orange-800">
+                        <li className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>L'abbonamento rimane attivo fino a <span className="font-semibold">{subscriptionData?.subscription?.current_period_end ? new Date(subscriptionData.subscription.current_period_end * 1000).toLocaleDateString('it-IT') : 'fine periodo'}</span></span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>Mantieni l'accesso a tutte le funzionalità fino alla scadenza</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>Non verrai riaddebitat o automaticamente</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>Potrai riattivare l'abbonamento in qualsiasi momento prima della scadenza</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>Dopo la scadenza, potrai scegliere un nuovo piano per continuare</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCloseCancelModal}
+                disabled={loading}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-xs sm:text-sm disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleConfirmCancelSubscription}
+                disabled={loading}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-xs sm:text-sm disabled:opacity-50 flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    Cancellazione...
+                  </>
+                ) : (
+                  'Conferma cancellazione'
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
