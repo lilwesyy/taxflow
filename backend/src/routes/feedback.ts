@@ -91,6 +91,28 @@ router.post('/create', authMiddleware, async (req: AuthRequest, res: Response) =
 
     await feedback.save()
 
+    // Send email notification to admin/consultant
+    try {
+      if (consultantId) {
+        const consultant = await User.findById(consultantId)
+        if (consultant && consultant.role === 'admin') {
+          const { sendNewFeedbackNotificationToAdmin } = await import('../utils/emailService')
+          const feedbackUrl = `${process.env.FRONTEND_URL || 'https://taxflow.it'}/dashboard?feedbackId=${feedback._id}`
+          await sendNewFeedbackNotificationToAdmin(
+            consultant.email,
+            user.name,
+            message,
+            rating,
+            feedbackUrl
+          )
+          console.log(`📧 New feedback notification sent to admin ${consultant.email}`)
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending feedback notification email:', emailError)
+      // Don't block feedback creation if email fails
+    }
+
     res.json({
       success: true,
       message: 'Feedback inviato con successo',
@@ -243,6 +265,24 @@ router.post('/:id/respond', authMiddleware, adminMiddleware, async (req: AuthReq
     feedback.status = 'responded'
 
     await feedback.save()
+
+    // Send email to client with response
+    try {
+      const client = await User.findById(feedback.clientId)
+      if (client) {
+        const { sendFeedbackResponseEmail } = await import('../utils/emailService')
+        await sendFeedbackResponseEmail(
+          client.email,
+          client.name,
+          feedback.message,
+          response
+        )
+        console.log(`📧 Feedback response email sent to client ${client.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending feedback response email:', emailError)
+      // Don't block feedback response if email fails
+    }
 
     res.json({
       success: true,

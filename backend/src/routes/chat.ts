@@ -257,6 +257,27 @@ router.post('/conversations/:conversationId/messages', authenticateToken, async 
       attachments: message.attachments
     }
 
+    // Send email notification if admin replied to client
+    try {
+      if (userRole === 'admin') {
+        const client = await User.findById(conversation.businessUserId)
+        const admin = await User.findById(userId)
+        if (client && admin) {
+          const { sendConsultationResponseEmail } = await import('../utils/emailService')
+          await sendConsultationResponseEmail(
+            client.email,
+            client.name,
+            conversation.argomento,
+            admin.name
+          )
+          console.log(`📧 Consultation response email sent to client ${client.email}`)
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending consultation response email:', emailError)
+      // Don't block message sending if email fails
+    }
+
     res.status(201).json(formattedMessage)
   } catch (error) {
     console.error('Error sending message:', error)
@@ -379,6 +400,40 @@ router.post('/conversations', authenticateToken, async (req: AuthRequest, res) =
 
     // Populate admin info before returning
     await conversation.populate('adminUserId', 'name email professionalRole')
+
+    // Send emails for consultation request
+    try {
+      const client = await User.findById(businessUserId)
+      if (client && userRole === 'business') {
+        // Send confirmation email to client
+        const { sendConsultationRequestEmail } = await import('../utils/emailService')
+        await sendConsultationRequestEmail(
+          client.email,
+          client.name,
+          argomento
+        )
+        console.log(`📧 Consultation request email sent to client ${client.email}`)
+
+        // Send notification email to admin (if assigned)
+        if (conversationAdminUserId) {
+          const admin = await User.findById(conversationAdminUserId)
+          if (admin) {
+            const { sendNewConsultationNotificationToAdmin } = await import('../utils/emailService')
+            const conversationUrl = `${process.env.FRONTEND_URL || 'https://taxflow.it'}/dashboard?conversationId=${conversation._id}`
+            await sendNewConsultationNotificationToAdmin(
+              admin.email,
+              client.name,
+              argomento,
+              conversationUrl
+            )
+            console.log(`📧 New consultation notification sent to admin ${admin.email}`)
+          }
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending consultation emails:', emailError)
+      // Don't block conversation creation if email fails
+    }
 
     res.status(201).json(conversation)
   } catch (error) {

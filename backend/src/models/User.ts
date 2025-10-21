@@ -54,6 +54,7 @@ interface IUser extends mongoose.Document {
   registrationApprovalStatus?: 'pending' | 'approved' | 'rejected'  // First approval: can login
   pivaFormSubmitted?: boolean  // Has submitted P.IVA form
   pivaApprovalStatus?: 'pending' | 'approved' | 'rejected'  // Second approval: full access
+  pivaRejectionReason?: string  // Reason for rejection if pivaApprovalStatus is 'rejected'
 
   // Stripe & Subscription
   stripeCustomerId?: string
@@ -187,6 +188,7 @@ const UserSchema = new mongoose.Schema({
   registrationApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   pivaFormSubmitted: { type: Boolean, default: false },
   pivaApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'] },
+  pivaRejectionReason: { type: String },
 
   // Stripe & Subscription
   stripeCustomerId: { type: String },

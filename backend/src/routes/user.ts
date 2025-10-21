@@ -277,6 +277,22 @@ router.post('/pending-registrations/:userId/approve', authMiddleware, validateOb
 
     await targetUser.save()
 
+    // Send approval/rejection email
+    try {
+      if (approved) {
+        const { sendRegistrationApprovalEmail } = await import('../utils/emailService')
+        await sendRegistrationApprovalEmail(targetUser.email, targetUser.name)
+        console.log(`📧 Registration approval email sent to ${targetUser.email}`)
+      } else {
+        const { sendRegistrationRejectionEmail } = await import('../utils/emailService')
+        await sendRegistrationRejectionEmail(targetUser.email, targetUser.name, note)
+        console.log(`📧 Registration rejection email sent to ${targetUser.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending registration approval/rejection email:', emailError)
+      // Don't block the approval/rejection process if email fails
+    }
+
     res.json({
       success: true,
       message: approved ? 'Registrazione approvata. L\'utente può ora effettuare il login.' : 'Registrazione respinta',

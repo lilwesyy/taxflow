@@ -7,7 +7,7 @@ import Session from '../models/Session'
 import { UAParser } from 'ua-parser-js'
 import { validate } from '../middleware/validate'
 import { loginSchema, registerSchema, verify2FASchema } from '../validators/auth'
-import { sendPasswordResetEmail } from '../utils/emailService'
+import { sendPasswordResetEmail, sendRegistrationConfirmationEmail } from '../utils/emailService'
 
 const router = Router()
 
@@ -238,6 +238,15 @@ router.post('/register', async (req: Request, res: Response) => {
     await user.save()
 
     const token = generateToken((user._id as any).toString(), user.role)
+
+    // Send registration confirmation email
+    try {
+      await sendRegistrationConfirmationEmail(user.email, user.name)
+      console.log(`📧 Registration confirmation email sent to ${user.email}`)
+    } catch (emailError) {
+      console.error('Error sending registration confirmation email:', emailError)
+      // Don't block registration if email fails
+    }
 
     res.status(201).json({
       success: true,

@@ -5,6 +5,15 @@ import Conversation from '../models/Conversation'
 import Invoice from '../models/Invoice'
 import User from '../models/User'
 import PurchasedService from '../models/PurchasedService'
+import {
+  sendPivaApprovalEmail,
+  sendPivaRejectionEmail,
+  sendPaymentSuccessEmail,
+  sendPaymentFailedEmail,
+  sendSubscriptionCreatedEmail,
+  sendSubscriptionUpdatedEmail,
+  sendSubscriptionCanceledEmail
+} from '../utils/emailService'
 
 const router = express.Router()
 
@@ -135,6 +144,24 @@ router.post('/approve-with-plan', authenticateToken, async (req: AuthRequest, re
     console.log('   - subscriptionStatus:', user.subscriptionStatus)
     console.log(`✅ Invoice ${invoiceNumber} created (pending)`)
 
+    // Send approval email
+    try {
+      const frontendUrl = process.env.FRONTEND_URL || 'https://taxflow.it'
+      const paymentUrl = `${frontendUrl}/dashboard?action=complete-payment`
+
+      await sendPivaApprovalEmail(
+        user.email,
+        user.name,
+        selectedPlan.name,
+        totalAmount,
+        paymentUrl
+      )
+      console.log(`📧 Approval email sent to ${user.email}`)
+    } catch (emailError) {
+      console.error('Error sending approval email:', emailError)
+      // Don't block the approval process if email fails
+    }
+
     res.json({
       success: true,
       message: 'Utente approvato. L\'utente deve completare il pagamento.',
@@ -149,6 +176,70 @@ router.post('/approve-with-plan', authenticateToken, async (req: AuthRequest, re
   } catch (error) {
     console.error('Error approving user with plan:', error)
     res.status(500).json({ error: 'Errore durante l\'approvazione' })
+  }
+})
+
+// Reject P.IVA request with reason
+router.post('/reject-piva', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userRole = req.user!.role
+
+    // Only admin can reject
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Solo gli admin possono rifiutare richieste' })
+    }
+
+    const { userId, reason } = req.body
+
+    if (!userId || !reason) {
+      return res.status(400).json({ error: 'userId e reason sono obbligatori' })
+    }
+
+    // Find user
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    // Check if user has submitted P.IVA form
+    if (!user.pivaFormSubmitted) {
+      return res.status(400).json({ error: 'L\'utente non ha inviato la richiesta P.IVA' })
+    }
+
+    // Update user with rejected status
+    user.pivaApprovalStatus = 'rejected'
+    user.pivaRejectionReason = reason
+
+    await user.save()
+
+    console.log(`❌ User ${userId} P.IVA request rejected`)
+    console.log('   - Reason:', reason)
+
+    // Send rejection email
+    try {
+      await sendPivaRejectionEmail(
+        user.email,
+        user.name,
+        reason
+      )
+      console.log(`📧 Rejection email sent to ${user.email}`)
+    } catch (emailError) {
+      console.error('Error sending rejection email:', emailError)
+      // Don't block the rejection process if email fails
+    }
+
+    res.json({
+      success: true,
+      message: 'Richiesta P.IVA rifiutata',
+      data: {
+        userId: user._id,
+        pivaApprovalStatus: user.pivaApprovalStatus,
+        rejectionReason: reason
+      }
+    })
+  } catch (error) {
+    console.error('Error rejecting P.IVA request:', error)
+    res.status(500).json({ error: 'Errore durante il rifiuto della richiesta' })
   }
 })
 
@@ -573,6 +664,24 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       await invoice.save()
       console.log('✅ Payment succeeded and invoice created:', conversationId)
     }
+
+    // Send payment confirmation email to client
+    try {
+      const user = conversation.businessUserId as any
+      if (user && user.email) {
+        await sendPaymentSuccessEmail(
+          user.email,
+          user.name || 'Cliente',
+          conversation.importo * 1.22, // Total with IVA
+          `Consulenza: ${conversation.argomento}`,
+          undefined // TODO: Add invoice PDF URL when available
+        )
+        console.log(`📧 Payment confirmation email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending payment confirmation email:', emailError)
+      // Don't block the payment success if email fails
+    }
   } catch (error) {
     console.error('Error handling payment success:', error)
   }
@@ -600,6 +709,24 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     await conversation.save()
 
     console.log('❌ Payment failed for conversation:', conversationId)
+
+    // Send payment failed email to client
+    try {
+      const user = await User.findById(conversation.businessUserId)
+      if (user && user.email) {
+        const retryUrl = `${process.env.FRONTEND_URL || 'https://taxflow.it'}/dashboard?action=retry-payment&conversationId=${conversationId}`
+        await sendPaymentFailedEmail(
+          user.email,
+          user.name,
+          conversation.importo * 1.22, // Total with IVA
+          retryUrl
+        )
+        console.log(`📧 Payment failed email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending payment failed email:', emailError)
+      // Don't block the payment failed handler if email fails
+    }
   } catch (error) {
     console.error('Error handling payment failure:', error)
   }
@@ -795,6 +922,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         } else {
           console.log(`✅ First payment completed for user ${user._id}. Account activated. Invoice already exists.`)
         }
+
+        // Send subscription created email
+        try {
+          if (user.selectedPlan && user.subscriptionCurrentPeriodEnd) {
+            await sendSubscriptionCreatedEmail(
+              user.email,
+              user.name,
+              user.selectedPlan.name,
+              user.selectedPlan.price,
+              user.selectedPlan.interval,
+              user.subscriptionCurrentPeriodEnd
+            )
+            console.log(`📧 Subscription created email sent to ${user.email}`)
+          }
+        } catch (emailError) {
+          console.error('Error sending subscription created email:', emailError)
+          // Don't block the checkout if email fails
+        }
     }
 
     console.log(`✅ Checkout completed for user ${userId}`)
@@ -865,6 +1010,22 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     await user.save()
 
     console.log(`❌ Subscription deleted for user ${user._id}`)
+
+    // Send subscription canceled email
+    try {
+      if (user.selectedPlan && user.subscriptionCurrentPeriodEnd) {
+        await sendSubscriptionCanceledEmail(
+          user.email,
+          user.name,
+          user.selectedPlan.name,
+          user.subscriptionCurrentPeriodEnd
+        )
+        console.log(`📧 Subscription canceled email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending subscription canceled email:', emailError)
+      // Don't block the subscription deletion if email fails
+    }
   } catch (error) {
     console.error('Error handling subscription deleted:', error)
   }

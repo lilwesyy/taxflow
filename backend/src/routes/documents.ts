@@ -208,6 +208,43 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
 
     await document.save()
 
+    // Send email notifications
+    try {
+      const uploader = await User.findById(userId)
+      if (uploader) {
+        if (userRole === 'business') {
+          // Business uploaded document - send confirmation to client and notification to admin
+          const { sendDocumentUploadedEmail } = await import('../utils/emailService')
+          await sendDocumentUploadedEmail(
+            uploader.email,
+            uploader.name,
+            file.originalname,
+            categoria
+          )
+          console.log(`📧 Document upload confirmation sent to client ${uploader.email}`)
+
+          // TODO: Send notification to assigned admin if exists
+          // For now, we'll skip this as we'd need to know which admin is assigned to this client
+        } else if (userRole === 'admin' && targetClientId) {
+          // Admin uploaded for client - send notification to client
+          const client = await User.findById(targetClientId)
+          if (client) {
+            const { sendDocumentUploadedEmail } = await import('../utils/emailService')
+            await sendDocumentUploadedEmail(
+              client.email,
+              client.name,
+              file.originalname,
+              categoria
+            )
+            console.log(`📧 Document upload notification sent to client ${client.email}`)
+          }
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending document upload emails:', emailError)
+      // Don't block document upload if email fails
+    }
+
     res.status(201).json({
       message: 'Documento caricato con successo',
       document: {
