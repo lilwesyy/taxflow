@@ -29,6 +29,7 @@
     "multer": "^2.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "recharts": "^3.3.0",
     "serve": "^14.2.5"
   },
   "devDependencies": {

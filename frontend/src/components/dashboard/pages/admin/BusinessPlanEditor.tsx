@@ -8,11 +8,37 @@ import BusinessPlanSection from './BusinessPlanSection'
 import BusinessPlanPreview from './BusinessPlanPreview'
 import AIQuestionnaireForm, { AIQuestionnaireData } from './AIQuestionnaireForm'
 import Modulo662Form, { Modulo662Data } from './Modulo662Form'
+import TeamSectionEditor from './TeamSectionEditor'
+import FinancialPlanEditor from './FinancialPlanEditor'
+import MarketAnalysisEditor from './MarketAnalysisEditor'
+import SWOTEditor from './SWOTEditor'
+import BusinessModelCanvasEditor from './BusinessModelCanvasEditor'
+import ExecutiveSummaryEditor from './ExecutiveSummaryEditor'
+import IdeaEditor from './IdeaEditor'
+import BusinessModelEditor from './BusinessModelEditor'
+import RoadmapEditor from './RoadmapEditor'
+import RevenueProjectionsEditor from './RevenueProjectionsEditor'
+import QuestionnaireEditor from './QuestionnaireEditor'
 import Modal from '../../../common/Modal'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import api from '../../../../services/api'
 import logoImage from '../../../../assets/logo.png'
+import {
+  TeamSectionData,
+  FinancialPlanData,
+  MarketAnalysisData,
+  SWOTData,
+  BusinessModelCanvasData,
+  ExecutiveSummaryData,
+  IdeaData,
+  BusinessModelData,
+  RoadmapData,
+  RevenueProjectionsData,
+  QuestionnaireData,
+  BusinessPlanSectionType,
+  BusinessPlanSectionData
+} from '../../../../types/businessPlan'
 
 interface PurchasedService {
   _id: string
@@ -32,27 +58,35 @@ interface CustomSection {
   id: string
   title: string
   content: string
-  type?: 'modulo662' | 'regular'
-  data?: Modulo662Data
+  type?: BusinessPlanSectionType
+  data?: BusinessPlanSectionData | Modulo662Data
 }
 
-interface BusinessPlanData {
-  executiveSummary: string
-  idea: string
-  businessModel: string
-  marketAnalysis: string
-  team: string
-  roadmap: string
-  financialPlan: string
-  revenueProjections: string
+interface LocalBusinessPlanData {
+  executiveSummary: string // Legacy: kept for backward compatibility
+  executiveSummaryData?: ExecutiveSummaryData // New: structured executive summary data
+  idea: string // Legacy: kept for backward compatibility
+  ideaData?: IdeaData // New: structured idea data
+  businessModel: string // Legacy: kept for backward compatibility
+  businessModelData?: BusinessModelData // New: structured business model data
+  marketAnalysis: string // Legacy: kept for backward compatibility
+  marketAnalysisData?: MarketAnalysisData // New: structured market analysis data
+  team: string // Legacy: kept for backward compatibility
+  teamData?: TeamSectionData // New: structured team data
+  roadmap: string // Legacy: kept for backward compatibility
+  roadmapData?: RoadmapData // New: structured roadmap data
+  financialPlan: string // Legacy: kept for backward compatibility
+  financialPlanData?: FinancialPlanData // New: structured financial plan data
+  revenueProjections: string // Legacy: kept for backward compatibility
+  revenueProjectionsData?: RevenueProjectionsData // New: structured revenue projections data
   customSections: CustomSection[]
 }
 
 interface BusinessPlanEditorProps {
   service: PurchasedService
-  initialData?: Partial<BusinessPlanData> & { creationMode?: 'ai' | 'template' | 'scratch' }
-  onSave: (data: BusinessPlanData & { creationMode?: 'ai' | 'template' | 'scratch' }) => void
-  onComplete: (data: BusinessPlanData & { creationMode?: 'ai' | 'template' | 'scratch' }) => void
+  initialData?: Partial<LocalBusinessPlanData> & { creationMode?: 'ai' | 'template' | 'scratch' }
+  onSave: (data: LocalBusinessPlanData & { creationMode?: 'ai' | 'template' | 'scratch' }) => void
+  onComplete: (data: LocalBusinessPlanData & { creationMode?: 'ai' | 'template' | 'scratch' }) => void
   onSuspend: () => void
   isUpdating: boolean
 }
@@ -335,21 +369,120 @@ export default function BusinessPlanEditor({
   // PDF export status
   const [pdfExportStatus, setPdfExportStatus] = useState<'idle' | 'exporting' | 'exported'>('idle')
 
-  const [formData, setFormData] = useState<BusinessPlanData>({
+  // Track if the component has been initialized to prevent auto-save on mount
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [formData, setFormData] = useState<LocalBusinessPlanData>({
     executiveSummary: initialData?.executiveSummary || '',
+    executiveSummaryData: initialData?.executiveSummaryData || {
+      companyName: '',
+      sector: '',
+      mainObjective: '',
+      keyStrategy: '',
+      strengthPoints: [],
+      financialProjections: {}
+    },
     idea: initialData?.idea || '',
+    ideaData: initialData?.ideaData || {
+      problem: '',
+      solution: '',
+      valueProposition: [],
+      vision: ''
+    },
     businessModel: initialData?.businessModel || '',
+    businessModelData: initialData?.businessModelData || {
+      revenueStreams: [],
+      customerSegments: [],
+      distributionChannels: [],
+      costStructure: { fixedCosts: [], variableCosts: [] }
+    },
     marketAnalysis: initialData?.marketAnalysis || '',
+    marketAnalysisData: initialData?.marketAnalysisData || {
+      competitors: [],
+      segments: []
+    },
     team: initialData?.team || '',
+    teamData: initialData?.teamData || {
+      members: [],
+      orgChartType: 'hierarchical',
+      description: ''
+    },
     roadmap: initialData?.roadmap || '',
+    roadmapData: initialData?.roadmapData || {
+      milestones: [],
+      phases: [],
+      visualizationType: 'timeline'
+    },
     financialPlan: initialData?.financialPlan || '',
+    financialPlanData: initialData?.financialPlanData || {
+      projectionYears: [],
+      scenarios: [],
+      currency: 'EUR',
+      notes: ''
+    },
     revenueProjections: initialData?.revenueProjections || '',
+    revenueProjectionsData: initialData?.revenueProjectionsData || {
+      streams: [],
+      projectionYears: [],
+      scenarios: []
+    },
     customSections: initialData?.customSections || []
   })
 
+  // Sync formData when initialData changes (but not on initial mount)
+  useEffect(() => {
+    if (!isInitialized) {
+      setIsInitialized(true)
+      return
+    }
+
+    // Only update if initialData has actual content
+    if (initialData) {
+      setFormData({
+        executiveSummary: initialData.executiveSummary || '',
+        executiveSummaryData: initialData.executiveSummaryData || formData.executiveSummaryData,
+        idea: initialData.idea || '',
+        ideaData: initialData.ideaData || formData.ideaData,
+        businessModel: initialData.businessModel || '',
+        businessModelData: initialData.businessModelData || formData.businessModelData,
+        marketAnalysis: initialData.marketAnalysis || '',
+        marketAnalysisData: initialData.marketAnalysisData || formData.marketAnalysisData,
+        team: initialData.team || '',
+        teamData: initialData.teamData || formData.teamData,
+        roadmap: initialData.roadmap || '',
+        roadmapData: initialData.roadmapData || formData.roadmapData,
+        financialPlan: initialData.financialPlan || '',
+        financialPlanData: initialData.financialPlanData || formData.financialPlanData,
+        revenueProjections: initialData.revenueProjections || '',
+        revenueProjectionsData: initialData.revenueProjectionsData || formData.revenueProjectionsData,
+        customSections: initialData.customSections || []
+      })
+    }
+  }, [initialData])
+
   // Auto-save effect
   useEffect(() => {
-    if (!formData.executiveSummary && !formData.idea) return
+    // Don't auto-save until component is initialized
+    if (!isInitialized) return
+
+    // Check if there's any meaningful content to save
+    const hasLegacyContent = formData.executiveSummary || formData.idea ||
+                            formData.businessModel || formData.marketAnalysis ||
+                            formData.team || formData.roadmap ||
+                            formData.financialPlan || formData.revenueProjections
+
+    const hasStructuredData = formData.executiveSummaryData?.companyName ||
+                             formData.ideaData?.problem ||
+                             formData.businessModelData?.revenueStreams?.length ||
+                             formData.marketAnalysisData?.competitors?.length ||
+                             formData.teamData?.members?.length ||
+                             formData.roadmapData?.milestones?.length ||
+                             formData.financialPlanData?.scenarios?.length ||
+                             formData.revenueProjectionsData?.streams?.length
+
+    const hasCustomSections = formData.customSections?.length > 0
+
+    // Only auto-save if there's actual content
+    if (!hasLegacyContent && !hasStructuredData && !hasCustomSections) return
 
     setAutoSaveStatus('unsaved')
     const timer = setTimeout(() => {
@@ -413,15 +546,322 @@ export default function BusinessPlanEditor({
   }
 
   const applyTemplate = async () => {
-    const templateData: BusinessPlanData = {
+    const currentYear = new Date().getFullYear()
+
+    const templateData: LocalBusinessPlanData = {
       executiveSummary: SECTION_TEMPLATES.executiveSummary.template,
+      executiveSummaryData: {
+        companyName: service.userId.name,
+        sector: 'Tecnologia / Software',
+        mainObjective: 'Diventare il leader di mercato nella digitalizzazione delle PMI italiane',
+        keyStrategy: 'Offrire una piattaforma SaaS innovativa con pricing competitivo e supporto personalizzato',
+        strengthPoints: [
+          'Proposta di valore unica e differenziante',
+          'Team esperto con track record comprovato',
+          'Modello di business scalabile e sostenibile',
+          'Opportunità di mercato in forte crescita'
+        ],
+        financialProjections: {
+          breakEvenMonths: 18,
+          revenueGrowthPercent: 150,
+          yearlyProjections: `Anno 1: €250k, Anno 2: €625k, Anno 3: €1.5M`
+        }
+      },
       idea: SECTION_TEMPLATES.idea.template,
+      ideaData: {
+        problem: 'Le PMI italiane affrontano difficoltà nella gestione digitale dei processi aziendali, con software complessi, costosi e poco intuitivi che richiedono formazione specializzata.',
+        solution: 'Una piattaforma SaaS all-in-one che integra gestione clienti, fatturazione, contabilità e analytics in un\'unica interfaccia intuitiva, accessibile via web e mobile.',
+        valueProposition: [
+          'Interfaccia intuitiva senza necessità di formazione',
+          'Prezzo competitivo con piano gratuito',
+          'Supporto clienti in italiano 7/7',
+          'Integrazione con commercialisti e consulenti'
+        ],
+        vision: 'Diventare il punto di riferimento per la digitalizzazione delle PMI italiane, aiutando 100.000+ aziende a gestire il proprio business in modo efficiente entro 5 anni.'
+      },
       businessModel: SECTION_TEMPLATES.businessModel.template,
+      businessModelData: {
+        revenueStreams: [
+          {
+            id: 'revenue_1',
+            name: 'Abbonamento Base',
+            description: 'Piano mensile per piccole imprese (1-5 utenti)',
+            margin: 70
+          },
+          {
+            id: 'revenue_2',
+            name: 'Abbonamento Professional',
+            description: 'Piano mensile per medie imprese (6-20 utenti)',
+            margin: 75
+          },
+          {
+            id: 'revenue_3',
+            name: 'Servizi Premium',
+            description: 'Consulenza e personalizzazioni su richiesta',
+            margin: 60
+          }
+        ],
+        customerSegments: [
+          {
+            id: 'segment_1',
+            name: 'Piccole Imprese',
+            description: 'Aziende con 1-10 dipendenti, fatturato fino a €500k/anno',
+            type: 'primary'
+          },
+          {
+            id: 'segment_2',
+            name: 'Studi Professionali',
+            description: 'Commercialisti, consulenti, avvocati con necessità di gestione clienti',
+            type: 'secondary'
+          }
+        ],
+        distributionChannels: [
+          {
+            id: 'channel_1',
+            name: 'Vendita Diretta Online',
+            description: 'Sito web con sistema di onboarding automatico'
+          },
+          {
+            id: 'channel_2',
+            name: 'Partnership con Commercialisti',
+            description: 'Network di commercialisti che consigliano la soluzione ai clienti'
+          },
+          {
+            id: 'channel_3',
+            name: 'Digital Marketing',
+            description: 'Google Ads, Facebook Ads, Content Marketing, SEO'
+          }
+        ],
+        costStructure: {
+          fixedCosts: [
+            { name: 'Personale', description: 'Salari e contributi team' },
+            { name: 'Ufficio', description: 'Affitto e utilities' },
+            { name: 'Infrastruttura Cloud', description: 'Server, database, CDN' },
+            { name: 'Software e Tools', description: 'Licenze software necessari per operare' }
+          ],
+          variableCosts: [
+            { name: 'Marketing e Pubblicità', description: 'Campagne digital e acquisizione clienti' },
+            { name: 'Customer Support', description: 'Costi per supporto clienti (scalabile)' },
+            { name: 'Transazioni', description: 'Commissioni su pagamenti e gateway' }
+          ]
+        }
+      },
       marketAnalysis: SECTION_TEMPLATES.marketAnalysis.template,
+      marketAnalysisData: {
+        competitors: [
+          {
+            id: 'comp_1',
+            name: 'Competitor A',
+            description: 'Leader di mercato con 15% market share',
+            strengths: 'Brand consolidato, ampia gamma di funzionalità',
+            weaknesses: 'Prezzo elevato, interfaccia complessa, scarso supporto',
+            marketShare: 15
+          },
+          {
+            id: 'comp_2',
+            name: 'Competitor B',
+            description: 'Soluzione economica con focus su piccole imprese',
+            strengths: 'Prezzo competitivo, semplice da usare',
+            weaknesses: 'Funzionalità limitate, no supporto avanzato',
+            marketShare: 8
+          }
+        ],
+        segments: [
+          {
+            id: 'seg_1',
+            name: 'Piccole Imprese Italia',
+            size: 500000000,
+            growth: 5.5,
+            description: 'Mercato italiano PMI con fatturato fino a €1M'
+          },
+          {
+            id: 'seg_2',
+            name: 'Professionisti e Consulenti',
+            size: 200000000,
+            growth: 7.2,
+            description: 'Studi professionali e consulenti indipendenti'
+          }
+        ],
+        totalMarketSize: 700000000,
+        targetMarketSize: 150000000,
+        marketGrowthRate: 6.2
+      },
       team: SECTION_TEMPLATES.team.template,
+      teamData: {
+        members: [
+          {
+            id: 'member_1',
+            name: service.userId.name,
+            role: 'CEO & Founder',
+            department: 'Management',
+            description: 'Esperienza pluriennale nel settore tech e gestione aziendale'
+          },
+          {
+            id: 'member_2',
+            name: '[Nome CTO]',
+            role: 'CTO',
+            department: 'Tech',
+            description: 'Sviluppo software e architettura cloud, 10+ anni esperienza',
+            parentId: 'member_1'
+          },
+          {
+            id: 'member_3',
+            name: '[Nome CSO]',
+            role: 'Chief Sales Officer',
+            department: 'Sales',
+            description: 'Vendite B2B e partnership strategiche',
+            parentId: 'member_1'
+          }
+        ],
+        orgChartType: 'hierarchical',
+        description: 'Team compatto ed esperto con competenze complementari'
+      },
       roadmap: SECTION_TEMPLATES.roadmap.template,
+      roadmapData: {
+        milestones: [
+          {
+            id: 'milestone_1',
+            title: 'MVP e Beta Testing',
+            description: 'Lancio Minimum Viable Product con 50 beta testers',
+            startDate: `${currentYear}-01-01`,
+            endDate: `${currentYear}-03-31`,
+            status: 'completed',
+            phase: 'Fase 1 - Development',
+            deliverables: ['Piattaforma MVP', 'Feedback report', 'Bug fixes']
+          },
+          {
+            id: 'milestone_2',
+            title: 'Lancio Ufficiale',
+            description: 'Lancio pubblico della piattaforma',
+            startDate: `${currentYear}-04-01`,
+            endDate: `${currentYear}-06-30`,
+            status: 'in_progress',
+            phase: 'Fase 2 - Launch',
+            deliverables: ['Piattaforma v1.0', 'Campagna marketing', 'Documentazione']
+          },
+          {
+            id: 'milestone_3',
+            title: 'Scaling e Crescita',
+            description: 'Obiettivo 500 clienti paganti',
+            startDate: `${currentYear}-07-01`,
+            endDate: `${currentYear}-12-31`,
+            status: 'planned',
+            phase: 'Fase 3 - Growth',
+            deliverables: ['Nuove features', 'Team expansion', 'Partnership']
+          }
+        ],
+        phases: [
+          {
+            id: 'phase_1',
+            name: 'Development',
+            color: '#3B82F6',
+            startDate: `${currentYear}-01-01`,
+            endDate: `${currentYear}-03-31`
+          },
+          {
+            id: 'phase_2',
+            name: 'Launch',
+            color: '#22C55E',
+            startDate: `${currentYear}-04-01`,
+            endDate: `${currentYear}-06-30`
+          },
+          {
+            id: 'phase_3',
+            name: 'Growth',
+            color: '#F59E0B',
+            startDate: `${currentYear}-07-01`,
+            endDate: `${currentYear}-12-31`
+          }
+        ],
+        visualizationType: 'timeline'
+      },
       financialPlan: SECTION_TEMPLATES.financialPlan.template,
+      financialPlanData: {
+        projectionYears: [`${currentYear}`, `${currentYear + 1}`, `${currentYear + 2}`],
+        scenarios: [
+          {
+            id: 'scenario_conservativo',
+            name: 'Conservativo',
+            description: 'Scenario prudente con crescita moderata',
+            costCategories: [
+              {
+                id: 'cost_1',
+                name: 'Personale',
+                values: {
+                  [`${currentYear}`]: 80000,
+                  [`${currentYear + 1}`]: 120000,
+                  [`${currentYear + 2}`]: 180000
+                },
+                isRecurring: true
+              },
+              {
+                id: 'cost_2',
+                name: 'Marketing',
+                values: {
+                  [`${currentYear}`]: 30000,
+                  [`${currentYear + 1}`]: 45000,
+                  [`${currentYear + 2}`]: 60000
+                },
+                isRecurring: true
+              }
+            ],
+            revenueCategories: [
+              {
+                id: 'rev_1',
+                name: 'Abbonamenti',
+                values: {
+                  [`${currentYear}`]: 150000,
+                  [`${currentYear + 1}`]: 350000,
+                  [`${currentYear + 2}`]: 700000
+                },
+                isRecurring: true
+              }
+            ]
+          }
+        ],
+        currency: 'EUR',
+        notes: 'Proiezioni basate su tasso di conversione 3%, CAC €150, LTV €1200'
+      },
       revenueProjections: SECTION_TEMPLATES.revenueProjections.template,
+      revenueProjectionsData: {
+        projectionYears: [`${currentYear}`, `${currentYear + 1}`, `${currentYear + 2}`],
+        streams: [
+          {
+            id: 'stream_1',
+            name: 'Abbonamento Base',
+            description: 'Piano €49/mese',
+            pricing: 49,
+            projectedUnits: {
+              [`${currentYear}`]: 150,
+              [`${currentYear + 1}`]: 400,
+              [`${currentYear + 2}`]: 800
+            }
+          },
+          {
+            id: 'stream_2',
+            name: 'Abbonamento Professional',
+            description: 'Piano €149/mese',
+            pricing: 149,
+            projectedUnits: {
+              [`${currentYear}`]: 50,
+              [`${currentYear + 1}`]: 150,
+              [`${currentYear + 2}`]: 350
+            }
+          }
+        ],
+        scenarios: [
+          {
+            id: 'scenario_conservativo',
+            name: 'Conservativo',
+            multiplier: 0.7
+          },
+          {
+            id: 'scenario_ottimistico',
+            name: 'Ottimistico',
+            multiplier: 1.3
+          }
+        ]
+      },
       customSections: []
     }
 
@@ -485,19 +925,70 @@ export default function BusinessPlanEditor({
     }
   }
 
-  const updateSection = (section: keyof Omit<BusinessPlanData, 'customSections'>, value: string) => {
+  const updateSection = (section: keyof Omit<LocalBusinessPlanData, 'customSections'>, value: string) => {
     setFormData(prev => ({
       ...prev,
       [section]: value
     }))
   }
 
-  const addCustomSection = () => {
-    const newSection: CustomSection = {
-      id: `custom_${Date.now()}`,
-      title: 'Nuova Sezione',
-      content: ''
+  const addCustomSection = (type?: BusinessPlanSectionType) => {
+    let newSection: CustomSection
+
+    switch (type) {
+      case 'swot':
+        newSection = {
+          id: `custom_${Date.now()}`,
+          title: 'Analisi SWOT',
+          content: '',
+          type: 'swot',
+          data: {
+            strengths: [],
+            weaknesses: [],
+            opportunities: [],
+            threats: []
+          } as SWOTData
+        }
+        break
+      case 'business_model_canvas':
+        newSection = {
+          id: `custom_${Date.now()}`,
+          title: 'Business Model Canvas',
+          content: '',
+          type: 'business_model_canvas',
+          data: {
+            keyPartners: '',
+            keyActivities: '',
+            keyResources: '',
+            valuePropositions: '',
+            customerRelationships: '',
+            channels: '',
+            customerSegments: '',
+            costStructure: '',
+            revenueStreams: ''
+          } as BusinessModelCanvasData
+        }
+        break
+      case 'questionnaire':
+        newSection = {
+          id: `custom_${Date.now()}`,
+          title: 'Questionario Strategico',
+          content: '',
+          type: 'questionnaire',
+          data: {
+            items: [],
+            notes: ''
+          } as QuestionnaireData
+        }
+        break
+      default:
+        newSection = {
+          id: `custom_${Date.now()}`,
+          title: 'Nuova Sezione',
+          content: ''
+        }
     }
+
     setFormData(prev => ({
       ...prev,
       customSections: [...prev.customSections, newSection]
@@ -505,7 +996,7 @@ export default function BusinessPlanEditor({
     setExpandedSections(prev => [...prev, newSection.id])
   }
 
-  const updateCustomSection = (id: string, field: 'title' | 'content' | 'data', value: string | Modulo662Data) => {
+  const updateCustomSection = (id: string, field: 'title' | 'content' | 'data', value: string | BusinessPlanSectionData | Modulo662Data) => {
     setFormData(prev => ({
       ...prev,
       customSections: prev.customSections.map(section =>
@@ -796,20 +1287,34 @@ export default function BusinessPlanEditor({
         throw new Error('Errore nel reset del business plan')
       }
 
-      // Notify parent to reload data by calling onSave with empty data
-      await onSave({
+      // Reset all form data to empty
+      const emptyData = {
         executiveSummary: '',
+        executiveSummaryData: undefined,
         idea: '',
+        ideaData: undefined,
         businessModel: '',
+        businessModelData: undefined,
         marketAnalysis: '',
+        marketAnalysisData: undefined,
         team: '',
+        teamData: undefined,
         roadmap: '',
+        roadmapData: undefined,
         financialPlan: '',
+        financialPlanData: undefined,
         revenueProjections: '',
+        revenueProjectionsData: undefined,
         customSections: [],
-        creationMode: undefined
-      })
+        creationMode: undefined  // This removes the creation mode from saved data
+      }
 
+      // Notify parent to reload data by calling onSave with empty data
+      await onSave(emptyData)
+
+      // Reset local state to show creation mode selection
+      setCreationMode(null)  // This is the key - reset to null to show selection screen
+      setFormData(emptyData)
       setShowResetModal(false)
       showToast('Puoi scegliere di nuovo la modalità di creazione', 'info')
     } catch (error) {
@@ -825,7 +1330,7 @@ export default function BusinessPlanEditor({
       setIsLoadingSuggestion(true)
       setSuggestionText('')
 
-      const currentContent = formData[sectionKey as keyof Omit<BusinessPlanData, 'customSections'>] as string
+      const currentContent = formData[sectionKey as keyof Omit<LocalBusinessPlanData, 'customSections'>] as string
 
       const response = await api.generateBusinessPlanSuggestion({
         section: sectionKey,
@@ -856,7 +1361,7 @@ export default function BusinessPlanEditor({
       setExpandedSections(prev => prev.filter(id => id !== currentSuggestionSection))
 
       // Applica il suggerimento
-      updateSection(currentSuggestionSection as keyof Omit<BusinessPlanData, 'customSections'>, suggestionText)
+      updateSection(currentSuggestionSection as keyof Omit<LocalBusinessPlanData, 'customSections'>, suggestionText)
 
       // Riapri la sezione dopo un breve delay
       setTimeout(() => {
@@ -1076,23 +1581,208 @@ export default function BusinessPlanEditor({
         <>
           {/* Sections */}
           <div className="space-y-4">
-            {Object.entries(SECTION_TEMPLATES).map(([key, template]) => (
-              <BusinessPlanSection
-                key={key}
-                id={key}
-                title={template.title}
-                description={template.description}
-                placeholder={template.placeholder}
-                value={formData[key as keyof Omit<BusinessPlanData, 'customSections'>] as string}
-                onChange={(value) => updateSection(key as keyof Omit<BusinessPlanData, 'customSections'>, value)}
-                isExpanded={expandedSections.includes(key)}
-                onToggle={() => toggleSection(key)}
-                onAISuggest={() => handleAISuggest(key)}
-              />
-            ))}
+            {Object.entries(SECTION_TEMPLATES).map(([key, template]) => {
+              // Special handling for Executive Summary section - use structured editor
+              if (key === 'executiveSummary') {
+                return (
+                  <ExecutiveSummaryEditor
+                    key={key}
+                    data={formData.executiveSummaryData || { companyName: '', sector: '', mainObjective: '', keyStrategy: '', strengthPoints: [], financialProjections: {} }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, executiveSummaryData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Idea section - use structured editor
+              if (key === 'idea') {
+                return (
+                  <IdeaEditor
+                    key={key}
+                    data={formData.ideaData || { problem: '', solution: '', valueProposition: [], vision: '' }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, ideaData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Business Model section - use structured editor
+              if (key === 'businessModel') {
+                return (
+                  <BusinessModelEditor
+                    key={key}
+                    data={formData.businessModelData || { revenueStreams: [], customerSegments: [], distributionChannels: [], costStructure: { fixedCosts: [], variableCosts: [] } }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, businessModelData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Market Analysis section - use structured editor
+              if (key === 'marketAnalysis') {
+                return (
+                  <MarketAnalysisEditor
+                    key={key}
+                    data={formData.marketAnalysisData || { competitors: [], segments: [] }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, marketAnalysisData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Team section - use structured editor
+              if (key === 'team') {
+                return (
+                  <TeamSectionEditor
+                    key={key}
+                    data={formData.teamData || { members: [], orgChartType: 'hierarchical', description: '' }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, teamData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Roadmap section - use structured editor
+              if (key === 'roadmap') {
+                return (
+                  <RoadmapEditor
+                    key={key}
+                    data={formData.roadmapData || { milestones: [], phases: [], visualizationType: 'timeline' }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, roadmapData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Financial Plan section - use structured editor
+              if (key === 'financialPlan') {
+                return (
+                  <FinancialPlanEditor
+                    key={key}
+                    data={formData.financialPlanData || { projectionYears: [], scenarios: [], currency: 'EUR', notes: '' }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, financialPlanData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Special handling for Revenue Projections section - use structured editor
+              if (key === 'revenueProjections') {
+                return (
+                  <RevenueProjectionsEditor
+                    key={key}
+                    data={formData.revenueProjectionsData || { streams: [], projectionYears: [], scenarios: [] }}
+                    onChange={(data) => setFormData(prev => ({ ...prev, revenueProjectionsData: data }))}
+                    isExpanded={expandedSections.includes(key)}
+                    onToggle={() => toggleSection(key)}
+                  />
+                )
+              }
+
+              // Regular sections with rich text editor (if any remain)
+              return (
+                <BusinessPlanSection
+                  key={key}
+                  id={key}
+                  title={template.title}
+                  description={template.description}
+                  placeholder={template.placeholder}
+                  value={formData[key as keyof Omit<LocalBusinessPlanData, 'customSections'>] as string}
+                  onChange={(value) => updateSection(key as keyof Omit<LocalBusinessPlanData, 'customSections'>, value)}
+                  isExpanded={expandedSections.includes(key)}
+                  onToggle={() => toggleSection(key)}
+                  onAISuggest={() => handleAISuggest(key)}
+                />
+              )
+            })}
 
             {/* Custom Sections */}
             {formData.customSections.map((section) => {
+              // Team section with structured data
+              if (section.type === 'team' && section.data) {
+                return (
+                  <TeamSectionEditor
+                    key={section.id}
+                    data={section.data as TeamSectionData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
+              // Financial Plan section with structured data
+              if (section.type === 'financial_plan' && section.data) {
+                return (
+                  <FinancialPlanEditor
+                    key={section.id}
+                    data={section.data as FinancialPlanData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
+              // Market Analysis section with structured data
+              if (section.type === 'market_analysis' && section.data) {
+                return (
+                  <MarketAnalysisEditor
+                    key={section.id}
+                    data={section.data as MarketAnalysisData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
+              // SWOT Analysis section with structured data
+              if (section.type === 'swot' && section.data) {
+                return (
+                  <SWOTEditor
+                    key={section.id}
+                    data={section.data as SWOTData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
+              // Business Model Canvas section with structured data
+              if (section.type === 'business_model_canvas' && section.data) {
+                return (
+                  <BusinessModelCanvasEditor
+                    key={section.id}
+                    data={section.data as BusinessModelCanvasData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
+              // Questionnaire section with structured data
+              if (section.type === 'questionnaire' && section.data) {
+                return (
+                  <QuestionnaireEditor
+                    key={section.id}
+                    data={section.data as QuestionnaireData}
+                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                    isExpanded={expandedSections.includes(section.id)}
+                    onToggle={() => toggleSection(section.id)}
+                  />
+                )
+              }
+
               // Special handling for Modulo 662 sections
               if (section.type === 'modulo662' && section.data) {
                 const isExpanded = expandedSections.includes(section.id)
@@ -1141,7 +1831,7 @@ export default function BusinessPlanEditor({
                     {isExpanded && (
                       <div className="p-6 border-t border-gray-100 bg-gray-50">
                         <Modulo662Form
-                          initialData={section.data}
+                          initialData={section.data as Modulo662Data}
                           onSave={(data) => updateCustomSection(section.id, 'data', data)}
                           clientName={service.userId.name}
                           clientEmail={service.userId.email}
@@ -1171,14 +1861,37 @@ export default function BusinessPlanEditor({
               )
             })}
 
-            {/* Add Custom Section Button */}
-            <button
-              onClick={addCustomSection}
-              className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 flex items-center justify-center space-x-2 text-gray-600 hover:text-blue-600"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="font-medium">Aggiungi Sezione Personalizzata</span>
-            </button>
+            {/* Add Custom Section Buttons */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Aggiungi Sezione Aggiuntiva</h3>
+
+              {/* Questionnaire Button */}
+              <button
+                onClick={() => addCustomSection('questionnaire')}
+                className="w-full p-4 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-400 hover:bg-blue-100 transition-all duration-200 flex flex-col items-center space-y-2 text-blue-700 hover:text-blue-800"
+              >
+                <div className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="font-medium text-sm">Aggiungi Questionario Strategico</span>
+                </div>
+                <span className="text-xs text-blue-600">Domande di validazione per il business plan</span>
+              </button>
+
+              {/* Generic Custom Section Button */}
+              <button
+                onClick={() => addCustomSection()}
+                className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-500 hover:bg-gray-50 transition-all duration-200 flex flex-col items-center space-y-2 text-gray-600 hover:text-gray-700"
+              >
+                <div className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="font-medium text-sm">Aggiungi Sezione Personalizzata</span>
+                </div>
+                <span className="text-xs text-gray-500">Sezione con testo libero</span>
+              </button>
+              <p className="text-xs text-gray-500 italic">
+                Tutte le sezioni standard del business plan sono già incluse sopra
+              </p>
+            </div>
           </div>
 
           {/* Action Buttons */}

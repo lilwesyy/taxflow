@@ -3,6 +3,19 @@ import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import { useToast } from '../../../../context/ToastContext'
 import BusinessPlanEditor from './BusinessPlanEditor'
+import {
+  BusinessPlanSectionType,
+  BusinessPlanSectionData,
+  ExecutiveSummaryData,
+  IdeaData,
+  BusinessModelData,
+  MarketAnalysisData,
+  TeamSectionData,
+  RoadmapData,
+  FinancialPlanData,
+  RevenueProjectionsData
+} from '../../../../types/businessPlan'
+import { Modulo662Data } from './Modulo662Form'
 
 const MAX_OPEN_TABS = 4
 
@@ -29,17 +42,27 @@ interface PurchasedService {
   businessPlanContent?: {
     creationMode?: 'ai' | 'template' | 'scratch'
     executiveSummary?: string
+    executiveSummaryData?: ExecutiveSummaryData
     idea?: string
+    ideaData?: IdeaData
     businessModel?: string
+    businessModelData?: BusinessModelData
     marketAnalysis?: string
+    marketAnalysisData?: MarketAnalysisData
     team?: string
+    teamData?: TeamSectionData
     roadmap?: string
+    roadmapData?: RoadmapData
     financialPlan?: string
+    financialPlanData?: FinancialPlanData
     revenueProjections?: string
+    revenueProjectionsData?: RevenueProjectionsData
     customSections?: Array<{
       id: string
       title: string
       content: string
+      type?: BusinessPlanSectionType
+      data?: BusinessPlanSectionData | Modulo662Data
     }>
     // Legacy fields (manteniamo per retrocompatibilità)
     objective?: string
@@ -107,6 +130,7 @@ export default function BusinessPlans() {
           ...prev,
           [service._id]: {
             creationMode: service.businessPlanContent?.creationMode,
+            // Legacy text fields
             executiveSummary: service.businessPlanContent?.executiveSummary || '',
             idea: service.businessPlanContent?.idea || '',
             businessModel: service.businessPlanContent?.businessModel || '',
@@ -115,6 +139,15 @@ export default function BusinessPlans() {
             roadmap: service.businessPlanContent?.roadmap || '',
             financialPlan: service.businessPlanContent?.financialPlan || '',
             revenueProjections: service.businessPlanContent?.revenueProjections || '',
+            // Structured data fields - MUST include these!
+            executiveSummaryData: service.businessPlanContent?.executiveSummaryData,
+            ideaData: service.businessPlanContent?.ideaData,
+            businessModelData: service.businessPlanContent?.businessModelData,
+            marketAnalysisData: service.businessPlanContent?.marketAnalysisData,
+            teamData: service.businessPlanContent?.teamData,
+            roadmapData: service.businessPlanContent?.roadmapData,
+            financialPlanData: service.businessPlanContent?.financialPlanData,
+            revenueProjectionsData: service.businessPlanContent?.revenueProjectionsData,
             customSections: service.businessPlanContent?.customSections || []
           }
         }))
@@ -488,8 +521,11 @@ export default function BusinessPlans() {
       )
     }
 
+    // Use tabFormData if available, otherwise construct from service data
+    // Ensure ALL fields are properly passed, including structured data
     const formData = tabFormData[activeTab as string] || {
       creationMode: service.businessPlanContent?.creationMode,
+      // Legacy text fields
       executiveSummary: service.businessPlanContent?.executiveSummary || '',
       idea: service.businessPlanContent?.idea || '',
       businessModel: service.businessPlanContent?.businessModel || '',
@@ -498,6 +534,15 @@ export default function BusinessPlans() {
       roadmap: service.businessPlanContent?.roadmap || '',
       financialPlan: service.businessPlanContent?.financialPlan || '',
       revenueProjections: service.businessPlanContent?.revenueProjections || '',
+      // Structured data fields - CRITICAL: Must pass these or they'll be lost!
+      executiveSummaryData: service.businessPlanContent?.executiveSummaryData || null,
+      ideaData: service.businessPlanContent?.ideaData || null,
+      businessModelData: service.businessPlanContent?.businessModelData || null,
+      marketAnalysisData: service.businessPlanContent?.marketAnalysisData || null,
+      teamData: service.businessPlanContent?.teamData || null,
+      roadmapData: service.businessPlanContent?.roadmapData || null,
+      financialPlanData: service.businessPlanContent?.financialPlanData || null,
+      revenueProjectionsData: service.businessPlanContent?.revenueProjectionsData || null,
       customSections: service.businessPlanContent?.customSections || []
     }
 
@@ -533,8 +578,8 @@ export default function BusinessPlans() {
 
         console.log('Business plan saved to database')
 
-        // Reload services to get updated data including creationMode
-        await loadServices()
+        // DO NOT reload services - it causes empty re-saves!
+        // await loadServices()
       } catch (error) {
         console.error('Error saving business plan:', error)
         throw error // Re-throw to let the caller handle it

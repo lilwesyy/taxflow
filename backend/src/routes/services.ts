@@ -297,8 +297,10 @@ router.post('/update-business-plan', authenticateToken, async (req: AuthRequest,
 
     // Update business plan content (intermediate save)
     if (service.serviceType === 'business_plan') {
-      service.businessPlanContent = {
+      // Create a new object to ensure Mongoose detects changes
+      const businessPlanContent = {
         creationMode: content.creationMode,
+        // Legacy text fields
         executiveSummary: content.executiveSummary || '',
         idea: content.idea || '',
         businessModel: content.businessModel || '',
@@ -307,6 +309,15 @@ router.post('/update-business-plan', authenticateToken, async (req: AuthRequest,
         roadmap: content.roadmap || '',
         financialPlan: content.financialPlan || '',
         revenueProjections: content.revenueProjections || '',
+        // Structured data fields - ensure they're saved even if undefined
+        executiveSummaryData: content.executiveSummaryData || null,
+        ideaData: content.ideaData || null,
+        businessModelData: content.businessModelData || null,
+        marketAnalysisData: content.marketAnalysisData || null,
+        teamData: content.teamData || null,
+        roadmapData: content.roadmapData || null,
+        financialPlanData: content.financialPlanData || null,
+        revenueProjectionsData: content.revenueProjectionsData || null,
         customSections: content.customSections || [],
         // Legacy fields
         objective: content.objective || '',
@@ -315,6 +326,12 @@ router.post('/update-business-plan', authenticateToken, async (req: AuthRequest,
         alerts: content.alerts || '',
         pdfUrl: content.pdfUrl || ''
       }
+
+      // Assign the entire object at once
+      service.businessPlanContent = businessPlanContent
+
+      // Mark the subdocument as modified to ensure Mongoose saves it
+      service.markModified('businessPlanContent')
     }
 
     // Save without changing status (it stays in_progress)
@@ -358,15 +375,37 @@ router.post('/complete-service', authenticateToken, async (req: AuthRequest, res
 
     // Update content based on service type
     if (service.serviceType === 'business_plan') {
-      service.businessPlanContent = {
+      const businessPlanContent = {
+        creationMode: content.creationMode,
+        // Legacy text fields
         executiveSummary: content.executiveSummary || '',
-        objective: content.objective || '',
+        idea: content.idea || '',
+        businessModel: content.businessModel || '',
         marketAnalysis: content.marketAnalysis || '',
+        team: content.team || '',
+        roadmap: content.roadmap || '',
+        financialPlan: content.financialPlan || '',
+        revenueProjections: content.revenueProjections || '',
+        // Structured data fields
+        executiveSummaryData: content.executiveSummaryData || null,
+        ideaData: content.ideaData || null,
+        businessModelData: content.businessModelData || null,
+        marketAnalysisData: content.marketAnalysisData || null,
+        teamData: content.teamData || null,
+        roadmapData: content.roadmapData || null,
+        financialPlanData: content.financialPlanData || null,
+        revenueProjectionsData: content.revenueProjectionsData || null,
+        customSections: content.customSections || [],
+        // Legacy fields
+        objective: content.objective || '',
         timeSeriesForecasting: content.timeSeriesForecasting || '',
         budgetSimulation: content.budgetSimulation || '',
         alerts: content.alerts || '',
         pdfUrl: pdfUrl || ''
       }
+
+      service.businessPlanContent = businessPlanContent
+      service.markModified('businessPlanContent')
     } else if (service.serviceType === 'analisi_swot') {
       service.analisiSWOTContent = {
         strengths: content.strengths || '',

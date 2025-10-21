@@ -14,7 +14,7 @@ const BusinessPlanContentSchema = new Schema({
   // Creation mode tracking
   creationMode: { type: String, enum: ['ai', 'template', 'scratch'] },
 
-  // New structure fields
+  // Legacy text fields (for backward compatibility)
   executiveSummary: { type: String },
   idea: { type: String },
   businessModel: { type: String },
@@ -23,6 +23,17 @@ const BusinessPlanContentSchema = new Schema({
   roadmap: { type: String },
   financialPlan: { type: String },
   revenueProjections: { type: String },
+
+  // New structured data fields
+  executiveSummaryData: { type: Schema.Types.Mixed },
+  ideaData: { type: Schema.Types.Mixed },
+  businessModelData: { type: Schema.Types.Mixed },
+  marketAnalysisData: { type: Schema.Types.Mixed },
+  teamData: { type: Schema.Types.Mixed },
+  roadmapData: { type: Schema.Types.Mixed },
+  financialPlanData: { type: Schema.Types.Mixed },
+  revenueProjectionsData: { type: Schema.Types.Mixed },
+
   customSections: [CustomSectionSchema],
 
   // Legacy fields (for backward compatibility)
@@ -54,7 +65,7 @@ export interface IPurchasedService extends Document {
   businessPlanContent?: {
     // Creation mode tracking
     creationMode?: 'ai' | 'template' | 'scratch'
-    // New structure fields
+    // Legacy text fields
     executiveSummary?: string
     idea?: string
     businessModel?: string
@@ -63,12 +74,21 @@ export interface IPurchasedService extends Document {
     roadmap?: string
     financialPlan?: string
     revenueProjections?: string
+    // New structured data fields
+    executiveSummaryData?: any
+    ideaData?: any
+    businessModelData?: any
+    marketAnalysisData?: any
+    teamData?: any
+    roadmapData?: any
+    financialPlanData?: any
+    revenueProjectionsData?: any
     customSections?: Array<{
       id: string
       title: string
       content?: string // Optional for modulo662
-      type?: string // 'modulo662' | 'regular'
-      data?: any // For structured data like Modulo662Data
+      type?: string // 'modulo662' | 'regular' | 'questionnaire' | etc.
+      data?: any // For structured data like Modulo662Data, QuestionnaireData, etc.
     }>
     // Legacy fields (for backward compatibility)
     objective?: string

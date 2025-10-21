@@ -146,7 +146,9 @@ app.use(cors({
 // Stripe webhook needs raw body - must be before express.json()
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }))
 
-app.use(express.json())
+// Increase JSON body size limit for business plan data (default is 100kb)
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Rate Limiting
 // General API rate limiter
