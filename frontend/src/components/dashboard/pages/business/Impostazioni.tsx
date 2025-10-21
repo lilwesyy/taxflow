@@ -45,6 +45,8 @@ export default function Impostazioni() {
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loadingInvoices, setLoadingInvoices] = useState(false)
+  const [subscriptionData, setSubscriptionData] = useState<any>(null)
+  const [loadingSubscription, setLoadingSubscription] = useState(false)
 
   const [profileData, setProfileData] = useState({
     nome: 'Mario',
@@ -262,10 +264,11 @@ export default function Impostazioni() {
     }
   }, [activeTab, token])
 
-  // Load invoices when subscription tab is active
+  // Load invoices and subscription when subscription tab is active
   useEffect(() => {
     if (activeTab === 'subscription' && token) {
       loadInvoices()
+      loadSubscriptionDetails()
     }
   }, [activeTab, token])
 
@@ -414,6 +417,136 @@ export default function Impostazioni() {
       showToast('Errore nel caricamento delle fatture', 'error')
     } finally {
       setLoadingInvoices(false)
+    }
+  }
+
+  const loadSubscriptionDetails = async () => {
+    setLoadingSubscription(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/stripe/subscription/current`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionData(data)
+
+        // Update paymentSettings based on subscription data
+        if (data.hasSubscription) {
+          setPaymentSettings(prev => ({
+            ...prev,
+            autoRinnovo: !data.subscription.cancel_at_period_end
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load subscription:', error)
+    } finally {
+      setLoadingSubscription(false)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Sei sicuro di voler cancellare il tuo abbonamento? Rimarrà attivo fino alla fine del periodo corrente.')) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/stripe/subscription/cancel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        showToast('Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo corrente.', 'success')
+        loadSubscriptionDetails() // Reload to show updated status
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la cancellazione')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReactivateSubscription = async () => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/stripe/subscription/reactivate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        showToast('Abbonamento riattivato con successo!', 'success')
+        loadSubscriptionDetails() // Reload to show updated status
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la riattivazione')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleToggleAutoRenew = async (enabled: boolean) => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+
+      if (enabled) {
+        // Reactivate (turn auto-renew ON)
+        const response = await fetch(`${API_URL}/stripe/subscription/reactivate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          showToast('Auto-rinnovo attivato', 'success')
+          setPaymentSettings(prev => ({ ...prev, autoRinnovo: true }))
+          loadSubscriptionDetails()
+        } else {
+          throw new Error('Errore durante l\'attivazione auto-rinnovo')
+        }
+      } else {
+        // Cancel at period end (turn auto-renew OFF)
+        const response = await fetch(`${API_URL}/stripe/subscription/cancel`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          showToast('Auto-rinnovo disattivato. L\'abbonamento scadrà alla fine del periodo.', 'info')
+          setPaymentSettings(prev => ({ ...prev, autoRinnovo: false }))
+          loadSubscriptionDetails()
+        } else {
+          throw new Error('Errore durante la disattivazione auto-rinnovo')
+        }
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+      // Revert toggle on error
+      setPaymentSettings(prev => ({ ...prev, autoRinnovo: !enabled }))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -1446,56 +1579,88 @@ export default function Impostazioni() {
     )
 
   const renderSubscriptionTab = () => {
-    // Get user's selected plan details
-    const userPlan = user?.selectedPlan
+    // Get subscription data
+    const hasSubscription = subscriptionData?.hasSubscription || false
+    const subscription = subscriptionData?.subscription
+    const userPlan = subscription?.plan || user?.selectedPlan
     const planName = userPlan?.name || 'Piano P.IVA Forfettari'
     const planPrice = userPlan?.price || 0
     const planInterval = userPlan?.interval === 'year' ? 'anno' : 'mese'
 
-    // Calculate next renewal date based on interval
+    // Get subscription status
+    const getSubscriptionStatus = () => {
+      if (!hasSubscription) return 'Nessun abbonamento'
+      if (subscription?.cancel_at_period_end) return 'In scadenza'
+      if (subscription?.status === 'active') return 'Attivo'
+      if (subscription?.status === 'past_due') return 'Pagamento scaduto'
+      if (subscription?.status === 'canceled') return 'Cancellato'
+      return subscription?.status || 'Sconosciuto'
+    }
+
+    const getStatusColor = () => {
+      if (!hasSubscription) return 'from-gray-600 to-gray-700'
+      if (subscription?.cancel_at_period_end) return 'from-orange-600 to-orange-700'
+      if (subscription?.status === 'active') return 'from-blue-600 to-blue-700'
+      if (subscription?.status === 'past_due') return 'from-red-600 to-red-700'
+      return 'from-gray-600 to-gray-700'
+    }
+
+    // Get next renewal date from subscription data
     const getNextRenewalDate = () => {
-      if (!paymentSettings.autoRinnovo) {
-        return 'Non programmato'
+      if (!hasSubscription || !subscription?.current_period_end) {
+        return 'Non disponibile'
       }
-      const nextRenewal = new Date()
-      if (userPlan?.interval === 'year') {
-        nextRenewal.setFullYear(nextRenewal.getFullYear() + 1)
-      } else {
-        nextRenewal.setMonth(nextRenewal.getMonth() + 1)
+      if (subscription.cancel_at_period_end) {
+        return `Scade il ${new Date(subscription.current_period_end * 1000).toLocaleDateString('it-IT')}`
       }
-      return nextRenewal.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      return new Date(subscription.current_period_end * 1000).toLocaleDateString('it-IT')
     }
 
     return (
       <div className="space-y-6">
         {/* Current Subscription Status */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <CreditCard className="h-8 w-8" />
-              <div>
-                <h2 className="text-2xl font-bold">{planName}</h2>
-                <p className="text-blue-100 text-sm">Il tuo abbonamento è attivo e include tutte le funzionalità premium</p>
+        {loadingSubscription ? (
+          <div className="bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl shadow-lg p-6 animate-pulse">
+            <div className="h-20 bg-gray-300 rounded"></div>
+          </div>
+        ) : (
+          <div className={`bg-gradient-to-r ${getStatusColor()} rounded-xl shadow-lg p-6 text-white`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-8 w-8" />
+                <div>
+                  <h2 className="text-2xl font-bold">{planName}</h2>
+                  <p className="text-blue-100 text-sm">
+                    {hasSubscription && subscription?.status === 'active'
+                      ? 'Il tuo abbonamento è attivo e include tutte le funzionalità premium'
+                      : subscription?.cancel_at_period_end
+                      ? 'Il tuo abbonamento scadrà alla fine del periodo corrente'
+                      : 'Stato abbonamento'
+                    }
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-8">
-              <div className="text-center">
-                <p className="text-3xl font-bold">Attivo</p>
-                <p className="text-blue-100 text-sm">Stato</p>
-              </div>
-              <div className="h-12 w-px bg-blue-400"></div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">{getNextRenewalDate()}</p>
-                <p className="text-blue-100 text-sm">Prossimo rinnovo</p>
-              </div>
-              <div className="h-12 w-px bg-blue-400"></div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">€{planPrice}/{planInterval}</p>
-                <p className="text-blue-100 text-sm">Prezzo</p>
+              <div className="flex items-center space-x-8">
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{getSubscriptionStatus()}</p>
+                  <p className="text-blue-100 text-sm">Stato</p>
+                </div>
+                <div className="h-12 w-px bg-blue-400"></div>
+                <div className="text-center">
+                  <p className="text-xl font-bold">{getNextRenewalDate()}</p>
+                  <p className="text-blue-100 text-sm">
+                    {subscription?.cancel_at_period_end ? 'Data scadenza' : 'Prossimo rinnovo'}
+                  </p>
+                </div>
+                <div className="h-12 w-px bg-blue-400"></div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">€{planPrice}/{planInterval}</p>
+                  <p className="text-blue-100 text-sm">Prezzo</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Subscription Features */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
@@ -1549,7 +1714,11 @@ export default function Impostazioni() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Auto-rinnovo Card */}
-            <div className="group relative overflow-hidden rounded-xl p-5 bg-green-600 hover:bg-green-700 hover:shadow-md transition-all duration-200">
+            <div className={`group relative overflow-hidden rounded-xl p-5 transition-all duration-200 ${
+              paymentSettings.autoRinnovo
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-orange-600 hover:bg-orange-700'
+            } hover:shadow-md`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center mb-2">
@@ -1558,22 +1727,32 @@ export default function Impostazioni() {
                     </div>
                     <h5 className="font-semibold text-white">Auto-rinnovo</h5>
                   </div>
-                  <p className="text-sm text-green-100 ml-13">Il tuo abbonamento si rinnoverà automaticamente</p>
+                  <p className="text-sm text-white/80 ml-13">
+                    {paymentSettings.autoRinnovo
+                      ? 'Il tuo abbonamento si rinnoverà automaticamente'
+                      : 'L\'abbonamento scadrà alla fine del periodo'
+                    }
+                  </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer ml-3">
                   <input
                     type="checkbox"
                     checked={paymentSettings.autoRinnovo}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, autoRinnovo: e.target.checked }))}
+                    disabled={loading || !hasSubscription}
+                    onChange={(e) => handleToggleAutoRenew(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-white/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white/30"></div>
+                  <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-white/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white/30 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                 </label>
               </div>
             </div>
 
             {/* Cambia Piano Card */}
-            <button className="group text-left rounded-xl p-5 bg-blue-600 hover:bg-blue-700 hover:shadow-md transition-all duration-200">
+            <button
+              onClick={() => showToast('Funzionalità in sviluppo. Contatta il supporto per cambiare piano.', 'info')}
+              disabled={loading || !hasSubscription}
+              className="group text-left rounded-xl p-5 bg-blue-600 hover:bg-blue-700 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <div className="flex items-start">
                 <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                   <CreditCard className="h-5 w-5 text-white" />
@@ -1585,31 +1764,40 @@ export default function Impostazioni() {
               </div>
             </button>
 
-            {/* Sospendi Abbonamento Card */}
-            <button className="group text-left rounded-xl p-5 bg-orange-600 hover:bg-orange-700 hover:shadow-md transition-all duration-200">
-              <div className="flex items-start">
-                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
-                  <Clock className="h-5 w-5 text-white" />
+            {/* Riattiva o Cancella Abbonamento */}
+            {subscription?.cancel_at_period_end ? (
+              <button
+                onClick={handleReactivateSubscription}
+                disabled={loading}
+                className="group text-left rounded-xl p-5 bg-green-600 hover:bg-green-700 hover:shadow-md transition-all duration-200 disabled:opacity-50"
+              >
+                <div className="flex items-start">
+                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
+                    <CheckCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-semibold text-white mb-1">Riattiva Abbonamento</h5>
+                    <p className="text-sm text-green-100">Annulla la cancellazione e continua con il tuo abbonamento</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h5 className="font-semibold text-white mb-1">Sospendi Abbonamento</h5>
-                  <p className="text-sm text-orange-100">Metti in pausa temporaneamente il tuo abbonamento</p>
+              </button>
+            ) : (
+              <button
+                onClick={handleCancelSubscription}
+                disabled={loading || !hasSubscription}
+                className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-start">
+                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
+                    <AlertTriangle className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-semibold text-white mb-1">Cancella Abbonamento</h5>
+                    <p className="text-sm text-red-100">Termina il tuo abbonamento (rimarrà attivo fino alla scadenza)</p>
+                  </div>
                 </div>
-              </div>
-            </button>
-
-            {/* Cancella Abbonamento Card */}
-            <button className="group text-left rounded-xl p-5 bg-red-600 hover:bg-red-700 hover:shadow-md transition-all duration-200">
-              <div className="flex items-start">
-                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-3">
-                  <AlertTriangle className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h5 className="font-semibold text-white mb-1">Cancella Abbonamento</h5>
-                  <p className="text-sm text-red-100">Termina definitivamente il tuo abbonamento</p>
-                </div>
-              </div>
-            </button>
+              </button>
+            )}
           </div>
         </div>
 

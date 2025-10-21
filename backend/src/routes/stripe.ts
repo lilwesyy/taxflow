@@ -1129,4 +1129,175 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   }
 }
 
+// ====================================
+// SUBSCRIPTION MANAGEMENT ENDPOINTS
+// ====================================
+
+// Cancel user subscription (business user only)
+router.post('/subscription/cancel', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    if (userRole !== 'business') {
+      return res.status(403).json({ error: 'Solo gli utenti business possono cancellare l\'abbonamento' })
+    }
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    if (!user.stripeSubscriptionId) {
+      return res.status(400).json({ error: 'Nessun abbonamento attivo trovato' })
+    }
+
+    // Cancel subscription at period end (so user can use it until expiry)
+    const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+      cancel_at_period_end: true
+    })
+
+    // Update user data
+    user.subscriptionCancelAtPeriodEnd = true
+    await user.save()
+
+    console.log(`📋 Subscription ${user.stripeSubscriptionId} will be canceled at period end for user ${userId}`)
+
+    // Send cancellation email
+    try {
+      if (user.selectedPlan && user.subscriptionCurrentPeriodEnd) {
+        await sendSubscriptionCanceledEmail(
+          user.email,
+          user.name,
+          user.selectedPlan.name,
+          user.subscriptionCurrentPeriodEnd
+        )
+        console.log(`📧 Subscription cancellation email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending cancellation email:', emailError)
+      // Don't block the cancellation if email fails
+    }
+
+    res.json({
+      success: true,
+      message: 'Abbonamento programmato per la cancellazione alla fine del periodo corrente',
+      subscription: {
+        id: subscription.id,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        current_period_end: (subscription as any).current_period_end
+      }
+    })
+  } catch (error) {
+    console.error('Error canceling subscription:', error)
+    res.status(500).json({ error: 'Errore durante la cancellazione dell\'abbonamento' })
+  }
+})
+
+// Reactivate canceled subscription (undo cancel)
+router.post('/subscription/reactivate', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    if (userRole !== 'business') {
+      return res.status(403).json({ error: 'Solo gli utenti business possono riattivare l\'abbonamento' })
+    }
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    if (!user.stripeSubscriptionId) {
+      return res.status(400).json({ error: 'Nessun abbonamento trovato' })
+    }
+
+    // Reactivate by setting cancel_at_period_end to false
+    const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+      cancel_at_period_end: false
+    })
+
+    // Update user data
+    user.subscriptionCancelAtPeriodEnd = false
+    user.subscriptionStatus = 'active' as any
+    await user.save()
+
+    console.log(`✅ Subscription ${user.stripeSubscriptionId} reactivated for user ${userId}`)
+
+    // Send reactivation email (using subscription updated email)
+    try {
+      if (user.selectedPlan) {
+        await sendSubscriptionUpdatedEmail(
+          user.email,
+          user.name,
+          user.selectedPlan.name, // old plan (same)
+          user.selectedPlan.name, // new plan (same, just reactivated)
+          user.selectedPlan.price
+        )
+        console.log(`📧 Subscription reactivation email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('Error sending reactivation email:', emailError)
+      // Don't block the reactivation if email fails
+    }
+
+    res.json({
+      success: true,
+      message: 'Abbonamento riattivato con successo',
+      subscription: {
+        id: subscription.id,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        status: subscription.status
+      }
+    })
+  } catch (error) {
+    console.error('Error reactivating subscription:', error)
+    res.status(500).json({ error: 'Errore durante la riattivazione dell\'abbonamento' })
+  }
+})
+
+// Get current subscription details
+router.get('/subscription/current', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId
+    const userRole = req.user!.role
+
+    if (userRole !== 'business') {
+      return res.status(403).json({ error: 'Solo gli utenti business possono accedere all\'abbonamento' })
+    }
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' })
+    }
+
+    if (!user.stripeSubscriptionId) {
+      return res.json({
+        hasSubscription: false,
+        subscription: null
+      })
+    }
+
+    // Get subscription from Stripe
+    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId)
+
+    res.json({
+      hasSubscription: true,
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        current_period_start: (subscription as any).current_period_start,
+        current_period_end: (subscription as any).current_period_end,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        canceled_at: subscription.canceled_at,
+        plan: user.selectedPlan
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching subscription:', error)
+    res.status(500).json({ error: 'Errore durante il recupero dell\'abbonamento' })
+  }
+})
+
 export default router
