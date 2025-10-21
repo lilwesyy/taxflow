@@ -1005,20 +1005,31 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       return
     }
 
-    user.subscriptionStatus = 'canceled' as any
-    user.status = 'inactive'
+    // Reset subscription data - user goes back to "pending_payment" state
+    // This way they'll see the plan selection page again (like after P.IVA approval)
+    const planName = user.selectedPlan?.name || 'Abbonamento'
+    const periodEnd = user.subscriptionCurrentPeriodEnd
+
+    user.stripeSubscriptionId = undefined
+    user.subscriptionStatus = 'pending_payment' as any  // Back to payment selection state
+    user.selectedPlan = undefined
+    user.subscriptionCurrentPeriodStart = undefined
+    user.subscriptionCurrentPeriodEnd = undefined
+    user.subscriptionCancelAtPeriodEnd = false
+    // Keep status as 'active' and pivaApprovalStatus as 'approved' so they can re-subscribe
+
     await user.save()
 
-    console.log(`❌ Subscription deleted for user ${user._id}`)
+    console.log(`❌ Subscription deleted for user ${user._id} - reset to pending_payment state`)
 
     // Send subscription canceled email
     try {
-      if (user.selectedPlan && user.subscriptionCurrentPeriodEnd) {
+      if (planName && periodEnd) {
         await sendSubscriptionCanceledEmail(
           user.email,
           user.name,
-          user.selectedPlan.name,
-          user.subscriptionCurrentPeriodEnd
+          planName,
+          periodEnd
         )
         console.log(`📧 Subscription canceled email sent to ${user.email}`)
       }

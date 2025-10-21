@@ -3,6 +3,7 @@ import AdminDashboard from './dashboard/AdminDashboard'
 import PendingApproval from './PendingApproval'
 import RegistrationSuccess from './RegistrationSuccess'
 import PivaRequestForm from './PivaRequestForm'
+import PaymentPending from './PaymentPending'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
 
@@ -67,6 +68,12 @@ export default function Dashboard({ onLogout, userRole, userName, userEmail }: D
     // Step 3: P.IVA form submitted, waiting for final approval
     if (user?.pivaFormSubmitted && user?.pivaApprovalStatus === 'pending') {
       return <PendingApproval />
+    }
+
+    // Step 3.5: P.IVA approved but subscription not active (payment pending or expired)
+    // This includes users whose subscription expired/canceled - they need to re-subscribe
+    if (user?.pivaApprovalStatus === 'approved' && user?.subscriptionStatus !== 'active') {
+      return <PaymentPending onLogout={onLogout} />
     }
 
     // Step 4: Rejected
