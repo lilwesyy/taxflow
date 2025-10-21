@@ -1034,6 +1034,75 @@ export default function BusinessPlanEditor({
 
       const pageWidth = 210 // A4 width in mm
       const pageHeight = 297 // A4 height in mm
+      const margin = 10 // Margine in mm
+      let currentYPosition = margin
+      let isFirstPage = true
+
+      // Helper function to add element to PDF with smart pagination
+      const addElementToPDF = async (element: HTMLElement, isHeader: boolean = false) => {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        })
+
+        const imgWidth = pageWidth
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+        // Check if we need a new page (unless it's the first element or a header)
+        if (!isFirstPage && !isHeader && currentYPosition + imgHeight > pageHeight - margin) {
+          pdf.addPage()
+          currentYPosition = margin
+        }
+
+        const imgData = canvas.toDataURL('image/png')
+
+        // If element is taller than one page, split it across multiple pages
+        if (imgHeight > pageHeight - 2 * margin) {
+          let remainingHeight = imgHeight
+          let sourceY = 0
+
+          while (remainingHeight > 0) {
+            const availableHeight = pageHeight - currentYPosition - margin
+            const heightToRender = Math.min(availableHeight, remainingHeight)
+
+            // Create a temporary canvas for this slice
+            const sliceCanvas = document.createElement('canvas')
+            sliceCanvas.width = canvas.width
+            sliceCanvas.height = (heightToRender / imgHeight) * canvas.height
+
+            const ctx = sliceCanvas.getContext('2d')!
+            ctx.drawImage(
+              canvas,
+              0, (sourceY / imgHeight) * canvas.height,
+              canvas.width, sliceCanvas.height,
+              0, 0,
+              canvas.width, sliceCanvas.height
+            )
+
+            const sliceData = sliceCanvas.toDataURL('image/png')
+            pdf.addImage(sliceData, 'PNG', 0, currentYPosition, imgWidth, heightToRender)
+
+            remainingHeight -= heightToRender
+            sourceY += heightToRender
+
+            if (remainingHeight > 0) {
+              pdf.addPage()
+              currentYPosition = margin
+            } else {
+              currentYPosition += heightToRender
+            }
+          }
+        } else {
+          pdf.addImage(imgData, 'PNG', 0, currentYPosition, imgWidth, imgHeight)
+          currentYPosition += imgHeight
+        }
+
+        if (isHeader) {
+          isFirstPage = false
+        }
+      }
 
       // Create temporary container
       const container = document.createElement('div')
@@ -1045,11 +1114,11 @@ export default function BusinessPlanEditor({
       document.body.appendChild(container)
 
       const { createRoot } = await import('react-dom/client')
-      const root = createRoot(container)
 
-      // Render the complete BusinessPlanPreview component
+      // Render and capture header first
+      const headerRoot = createRoot(container)
       await new Promise<void>((resolve) => {
-        root.render(
+        headerRoot.render(
           <BusinessPlanPreview
             data={formData}
             clientName={service.userId.name}
@@ -1057,43 +1126,33 @@ export default function BusinessPlanEditor({
             clientPhone={service.userId.phone}
           />
         )
-        // Wait for rendering and any charts to load
-        setTimeout(resolve, 2000)
+        setTimeout(resolve, 1500)
       })
 
-      // Capture the rendered preview
       const previewElement = container.firstChild as HTMLElement
       if (previewElement) {
-        const canvas = await html2canvas(previewElement, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: previewElement.scrollWidth,
-          windowHeight: previewElement.scrollHeight
-        })
+        // Find header element
+        const headerElement = previewElement.querySelector('.bg-gradient-to-r') as HTMLElement
+        if (headerElement) {
+          await addElementToPDF(headerElement, true)
+        }
 
-        const imgWidth = pageWidth
-        const imgHeight = (canvas.height * imgWidth) / canvas.width
+        // Find content container
+        const contentElement = previewElement.querySelector('.p-8') as HTMLElement
+        if (contentElement) {
+          // Get all section elements (each has mb-8 class)
+          const sections = contentElement.querySelectorAll('.mb-8, > div')
 
-        // Add image to PDF with pagination
-        let heightLeft = imgHeight
-        let position = 0
-
-        while (heightLeft > 0) {
-          if (position !== 0) {
-            pdf.addPage()
+          for (const section of Array.from(sections)) {
+            if (section instanceof HTMLElement && section.offsetHeight > 0) {
+              await addElementToPDF(section, false)
+            }
           }
-
-          const imgData = canvas.toDataURL('image/png')
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-          heightLeft -= pageHeight
-          position = heightLeft - imgHeight
         }
       }
 
       // Cleanup
-      root.unmount()
+      headerRoot.unmount()
       document.body.removeChild(container)
 
       // Save PDF
