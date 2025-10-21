@@ -20,8 +20,7 @@ import RoadmapEditor from './RoadmapEditor'
 import RevenueProjectionsEditor from './RevenueProjectionsEditor'
 import QuestionnaireEditor from './QuestionnaireEditor'
 import Modal from '../../../common/Modal'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+import html2pdf from 'html2pdf.js'
 import api from '../../../../services/api'
 // logoImage import removed - not needed anymore since we use BusinessPlanPreview component
 import {
@@ -1026,15 +1025,6 @@ export default function BusinessPlanEditor({
       setPdfExportStatus('exporting')
       showToast('Generazione PDF in corso...', 'info')
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
-
-      const pageWidth = 210 // A4 width in mm
-      const pageHeight = 297 // A4 height in mm
-
       // Create temporary container
       const container = document.createElement('div')
       container.style.position = 'absolute'
@@ -1058,79 +1048,57 @@ export default function BusinessPlanEditor({
           />
         )
         // Wait for rendering and any charts to load
-        setTimeout(resolve, 2500)
+        setTimeout(resolve, 3000)
       })
 
-      // Capture the rendered preview
+      // Get the rendered element
       const previewElement = container.firstChild as HTMLElement
+
       if (previewElement) {
-        const canvas = await html2canvas(previewElement, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: previewElement.scrollWidth,
-          windowHeight: previewElement.scrollHeight
-        })
-
-        const imgWidth = pageWidth
-        const pageHeightInCanvas = (pageHeight * canvas.width) / pageWidth
-
-        let heightLeft = canvas.height
-        let position = 0
-        let page = 0
-
-        // Add pages with proper slicing to avoid cutting content
-        while (heightLeft > 0) {
-          if (page > 0) {
-            pdf.addPage()
-          }
-
-          // Create a slice of the canvas for this page
-          const sliceCanvas = document.createElement('canvas')
-          const sliceHeight = Math.min(pageHeightInCanvas, heightLeft)
-
-          sliceCanvas.width = canvas.width
-          sliceCanvas.height = sliceHeight
-
-          const ctx = sliceCanvas.getContext('2d')!
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
-
-          ctx.drawImage(
-            canvas,
-            0, position,
-            canvas.width, sliceHeight,
-            0, 0,
-            canvas.width, sliceHeight
-          )
-
-          const sliceData = sliceCanvas.toDataURL('image/png')
-          const sliceImgHeight = (sliceHeight * pageWidth) / canvas.width
-
-          pdf.addImage(sliceData, 'PNG', 0, 0, imgWidth, sliceImgHeight)
-
-          heightLeft -= pageHeightInCanvas
-          position += pageHeightInCanvas
-          page++
+        // Configure html2pdf options with proper page break handling
+        const opt = {
+          margin: [8, 8, 8, 8] as [number, number, number, number],
+          filename: `business-plan-${service.userId.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.92 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            letterRendering: true,
+            windowWidth: 1400
+          },
+          jsPDF: {
+            unit: 'mm' as const,
+            format: 'a4' as const,
+            orientation: 'portrait' as const,
+            compress: true,
+            hotfixes: ['px_scaling']
+          },
+          pagebreak: {
+            mode: ['css', 'legacy'],
+            before: '.page-break-before',
+            after: '.page-break-after',
+            avoid: 'h2, h3, h4, table, img, svg'
+          },
+          enableLinks: false
         }
+
+        // Generate PDF
+        await html2pdf().set(opt).from(previewElement).save()
+
+        setPdfExportStatus('exported')
+        showToast('Business Plan esportato con successo!', 'success')
+
+        // Torna a "Esporta PDF" dopo 5 secondi
+        setTimeout(() => {
+          setPdfExportStatus('idle')
+        }, 5000)
       }
 
       // Cleanup
       root.unmount()
       document.body.removeChild(container)
-
-      // Save PDF
-      const fileName = `business-plan-${service.userId.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`
-      pdf.save(fileName)
-
-      setPdfExportStatus('exported')
-      showToast('Business Plan esportato con successo!', 'success')
-
-      // Torna a "Esporta PDF" dopo 5 secondi
-      setTimeout(() => {
-        setPdfExportStatus('idle')
-      }, 5000)
     } catch (error) {
       console.error('Error exporting PDF:', error)
       setPdfExportStatus('idle')

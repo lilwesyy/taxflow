@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileText, Calendar, User, Mail, Phone } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import {
   LineChart,
   Line,
@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts'
-import Logo from '../../../common/Logo'
+import logoImg from '../../../../assets/logo.png'
 import Modulo662Preview from './Modulo662Preview'
 import { Modulo662Data } from './Modulo662Form'
 import {
@@ -82,8 +82,8 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     if (!content) return null
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           {title}
         </h2>
         <div
@@ -101,12 +101,12 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const summary = data.executiveSummaryData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           Executive Summary
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <p className="text-gray-700 leading-relaxed">
             <strong>{summary.companyName}</strong> opera nel settore <strong>{summary.sector}</strong> con l'obiettivo di creare valore attraverso soluzioni innovative e un modello di business sostenibile.
           </p>
@@ -137,9 +137,9 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
           )}
 
           {summary.financialProjections && (
-            <div>
+            <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Proiezioni Finanziarie</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
+              <table className="w-full border-collapse border border-gray-300 text-sm" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <tbody>
                   {summary.financialProjections.breakEvenMonths && (
                     <tr className="border-b border-gray-300">
@@ -181,12 +181,12 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const idea = data.ideaData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           L'Idea Imprenditoriale
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {idea.problem && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Il Problema</h3>
@@ -240,12 +240,12 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const model = data.businessModelData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           Modello di Business
         </h2>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {model.revenueStreams && model.revenueStreams.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Flussi di Ricavi</h3>
@@ -374,104 +374,112 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     )
   }
 
-  // Market Analysis Preview
+  // Market Analysis Preview - Part 1: Market Size and Segments
   const renderMarketAnalysis = () => {
     if (!data.marketAnalysisData) return renderSection('Analisi di Mercato e Concorrenza', data.marketAnalysis)
 
     const market = data.marketAnalysisData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
-          Analisi di Mercato e Concorrenza
-        </h2>
+      <>
+        {/* Part 1: Analisi di Mercato */}
+        <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+          <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+            Analisi di Mercato
+          </h2>
 
-        <div className="space-y-6">
-          {(market.totalMarketSize || market.targetMarketSize || market.marketGrowthRate) && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Dimensioni del Mercato</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <tbody>
-                  {market.totalMarketSize && (
-                    <tr className="border-b border-gray-300">
-                      <td className="p-2 bg-gray-50 font-medium w-1/3">Mercato Totale Indirizzabile (TAM)</td>
-                      <td className="p-2 font-semibold">{formatCurrency(market.totalMarketSize)}</td>
-                    </tr>
-                  )}
-                  {market.targetMarketSize && (
-                    <tr className="border-b border-gray-300">
-                      <td className="p-2 bg-gray-50 font-medium">Mercato Target Obiettivo (SAM)</td>
-                      <td className="p-2 font-semibold">{formatCurrency(market.targetMarketSize)}</td>
-                    </tr>
-                  )}
-                  {market.marketGrowthRate && (
-                    <tr>
-                      <td className="p-2 bg-gray-50 font-medium">Tasso di Crescita Annuo (CAGR)</td>
-                      <td className="p-2 font-semibold">{market.marketGrowthRate}%</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {market.segments && market.segments.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Segmenti di Mercato</h3>
-
-              {/* Market Segments Chart */}
-              <div className="mb-6 p-4 bg-gray-50 rounded">
-                <h4 className="font-semibold text-gray-900 mb-3">Dimensione dei Segmenti di Mercato</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={market.segments.map(s => ({ name: s.name, Dimensione: s.size, Crescita: s.growth }))}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `€${(value / 1000000).toFixed(1)}M`} />
-                    <Tooltip formatter={(value: number, name: string) => {
-                      if (name === 'Dimensione') return formatCurrency(value)
-                      return `${value}%`
-                    }} />
-                    <Legend />
-                    <Bar dataKey="Dimensione" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
+          <div className="space-y-4">
+            {(market.totalMarketSize || market.targetMarketSize || market.marketGrowthRate) && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Dimensioni del Mercato</h3>
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <tbody>
+                    {market.totalMarketSize && (
+                      <tr className="border-b border-gray-300">
+                        <td className="p-2 bg-gray-50 font-medium w-1/3">Mercato Totale Indirizzabile (TAM)</td>
+                        <td className="p-2 font-semibold">{formatCurrency(market.totalMarketSize)}</td>
+                      </tr>
+                    )}
+                    {market.targetMarketSize && (
+                      <tr className="border-b border-gray-300">
+                        <td className="p-2 bg-gray-50 font-medium">Mercato Target Obiettivo (SAM)</td>
+                        <td className="p-2 font-semibold">{formatCurrency(market.targetMarketSize)}</td>
+                      </tr>
+                    )}
+                    {market.marketGrowthRate && (
+                      <tr>
+                        <td className="p-2 bg-gray-50 font-medium">Tasso di Crescita Annuo (CAGR)</td>
+                        <td className="p-2 font-semibold">{market.marketGrowthRate}%</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
+            )}
 
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2 border border-gray-300 text-left">Segmento</th>
-                    <th className="p-2 border border-gray-300 text-left">Descrizione</th>
-                    <th className="p-2 border border-gray-300 text-right">Dimensione</th>
-                    <th className="p-2 border border-gray-300 text-right">Crescita %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {market.segments.map((segment) => (
-                    <tr key={segment.id} className="border-b border-gray-300">
-                      <td className="p-2 border border-gray-300 font-medium">{segment.name}</td>
-                      <td className="p-2 border border-gray-300">{segment.description}</td>
-                      <td className="p-2 border border-gray-300 text-right font-semibold">{formatCurrency(segment.size)}</td>
-                      <td className="p-2 border border-gray-300 text-right">{segment.growth}%</td>
+            {market.segments && market.segments.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Segmenti di Mercato</h3>
+
+                {/* Market Segments Chart */}
+                <div className="mb-6 p-4 bg-gray-50 rounded">
+                  <h4 className="font-semibold text-gray-900 mb-3">Dimensione dei Segmenti di Mercato</h4>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={market.segments.map(s => ({ name: s.name, Dimensione: s.size, Crescita: s.growth }))}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis tickFormatter={(value) => `€${(value / 1000000).toFixed(1)}M`} />
+                      <Tooltip formatter={(value: number, name: string) => {
+                        if (name === 'Dimensione') return formatCurrency(value)
+                        return `${value}%`
+                      }} />
+                      <Legend />
+                      <Bar dataKey="Dimensione" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 border border-gray-300 text-left">Segmento</th>
+                      <th className="p-2 border border-gray-300 text-left">Descrizione</th>
+                      <th className="p-2 border border-gray-300 text-right">Dimensione</th>
+                      <th className="p-2 border border-gray-300 text-right">Crescita %</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {market.segments.map((segment) => (
+                      <tr key={segment.id} className="border-b border-gray-300">
+                        <td className="p-2 border border-gray-300 font-medium">{segment.name}</td>
+                        <td className="p-2 border border-gray-300">{segment.description}</td>
+                        <td className="p-2 border border-gray-300 text-right font-semibold">{formatCurrency(segment.size)}</td>
+                        <td className="p-2 border border-gray-300 text-right">{segment.growth}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
 
-          {market.competitors && market.competitors.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Analisi della Concorrenza</h3>
+        {/* Part 2: Analisi della Concorrenza - New Page */}
+        {market.competitors && market.competitors.length > 0 && (
+          <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
+            <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+              Analisi della Concorrenza
+            </h2>
 
+            <div className="space-y-4">
               {/* Market Share Pie Chart */}
               {market.competitors.some(c => c.marketShare) && (
                 <div className="mb-6 p-4 bg-gray-50 rounded">
                   <h4 className="font-semibold text-gray-900 mb-3">Distribuzione Quote di Mercato</h4>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
                         data={market.competitors
@@ -531,16 +539,16 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
                   )}
                 </div>
               ))}
-            </div>
-          )}
 
-          {market.notes && (
-            <div className="text-sm text-gray-600 italic">
-              <strong>Note:</strong> {market.notes}
+              {market.notes && (
+                <div className="text-sm text-gray-600 italic">
+                  <strong>Note:</strong> {market.notes}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </>
     )
   }
 
@@ -551,12 +559,12 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const team = data.teamData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           Il Team
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {team.description && (
             <p className="text-gray-700 leading-relaxed mb-4">{team.description}</p>
           )}
@@ -626,190 +634,220 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
       delayed: 'In Ritardo'
     }
 
+    // Split milestones into chunks of 3
+    const chunkMilestones = (milestones: any[], chunkSize: number) => {
+      const chunks = []
+      for (let i = 0; i < milestones.length; i += chunkSize) {
+        chunks.push(milestones.slice(i, i + chunkSize))
+      }
+      return chunks
+    }
+
+    const milestoneChunks = roadmap.milestones && roadmap.milestones.length > 0
+      ? chunkMilestones(roadmap.milestones, 3)
+      : []
+
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
-          Roadmap e Strategia di Go-to-Market
-        </h2>
+      <>
+        {/* Part 1: Overview, Phases, and Timeline - One Page */}
+        <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+          <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+            Roadmap e Strategia di Go-to-Market
+          </h2>
 
-        <div className="space-y-6">
-          {roadmap.visualizationType && (
-            <p className="text-sm text-gray-600">
-              <strong>Tipo di visualizzazione:</strong> {roadmap.visualizationType === 'timeline' ? 'Timeline' : roadmap.visualizationType === 'gantt' ? 'Gantt' : 'Fasi'}
-            </p>
-          )}
+          <div className="space-y-4">
+            {roadmap.visualizationType && (
+              <p className="text-sm text-gray-600">
+                <strong>Tipo di visualizzazione:</strong> {roadmap.visualizationType === 'timeline' ? 'Timeline' : roadmap.visualizationType === 'gantt' ? 'Gantt' : 'Fasi'}
+              </p>
+            )}
 
-          {roadmap.phases && roadmap.phases.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Fasi del Progetto</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2 border border-gray-300 text-left">Fase</th>
-                    <th className="p-2 border border-gray-300 text-left">Data Inizio</th>
-                    <th className="p-2 border border-gray-300 text-left">Data Fine</th>
-                    <th className="p-2 border border-gray-300 text-left">Durata</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {roadmap.phases.map((phase) => {
-                    const start = new Date(phase.startDate)
-                    const end = new Date(phase.endDate)
-                    const diffTime = Math.abs(end.getTime() - start.getTime())
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+            {roadmap.phases && roadmap.phases.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Fasi del Progetto</h3>
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 border border-gray-300 text-left">Fase</th>
+                      <th className="p-2 border border-gray-300 text-left">Data Inizio</th>
+                      <th className="p-2 border border-gray-300 text-left">Data Fine</th>
+                      <th className="p-2 border border-gray-300 text-left">Durata</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roadmap.phases.map((phase) => {
+                      const start = new Date(phase.startDate)
+                      const end = new Date(phase.endDate)
+                      const diffTime = Math.abs(end.getTime() - start.getTime())
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-                    return (
-                      <tr key={phase.id} className="border-b border-gray-300">
-                        <td className="p-2 border border-gray-300 font-medium">{phase.name}</td>
-                        <td className="p-2 border border-gray-300">{start.toLocaleDateString('it-IT')}</td>
-                        <td className="p-2 border border-gray-300">{end.toLocaleDateString('it-IT')}</td>
-                        <td className="p-2 border border-gray-300">{diffDays} giorni</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {roadmap.milestones && roadmap.milestones.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Milestone Principali</h3>
-
-              {/* Milestone Timeline Visualization */}
-              <div className="mb-6 p-4 bg-gray-50 rounded">
-                <h4 className="font-semibold text-gray-900 mb-3">Timeline Milestone</h4>
-                <ResponsiveContainer width="100%" height={Math.max(300, roadmap.milestones.length * 50)}>
-                  <BarChart
-                    layout="vertical"
-                    data={roadmap.milestones.map((milestone) => {
-                      const start = new Date(milestone.startDate).getTime()
-                      const end = milestone.endDate ? new Date(milestone.endDate).getTime() : start
-                      return {
-                        name: milestone.title,
-                        start: start,
-                        duration: end - start,
-                        status: milestone.status
-                      }
+                      return (
+                        <tr key={phase.id} className="border-b border-gray-300">
+                          <td className="p-2 border border-gray-300 font-medium">{phase.name}</td>
+                          <td className="p-2 border border-gray-300">{start.toLocaleDateString('it-IT')}</td>
+                          <td className="p-2 border border-gray-300">{end.toLocaleDateString('it-IT')}</td>
+                          <td className="p-2 border border-gray-300">{diffDays} giorni</td>
+                        </tr>
+                      )
                     })}
-                    margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}
-                    />
-                    <YAxis type="category" dataKey="name" width={140} />
-                    <Tooltip
-                      formatter={(value: any, name: string) => {
-                        if (name === 'start') return new Date(value).toLocaleDateString('it-IT')
-                        if (name === 'duration') return `${Math.ceil(value / (1000 * 60 * 60 * 24))} giorni`
-                        return value
-                      }}
-                    />
-                    <Bar dataKey="duration" stackId="a">
-                      {roadmap.milestones.map((milestone, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            milestone.status === 'completed' ? '#10b981' :
-                            milestone.status === 'in_progress' ? '#3b82f6' :
-                            milestone.status === 'delayed' ? '#ef4444' : '#9ca3af'
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-                <div className="mt-3 flex flex-wrap gap-3 text-xs">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded mr-1"></div>
-                    <span>Completato</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>
-                    <span>In Corso</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-gray-400 rounded mr-1"></div>
-                    <span>Pianificato</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-red-500 rounded mr-1"></div>
-                    <span>In Ritardo</span>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {roadmap.milestones && roadmap.milestones.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Milestone Principali</h3>
+
+                {/* Milestone Timeline Visualization */}
+                <div className="mb-6 p-4 bg-gray-50 rounded">
+                  <h4 className="font-semibold text-gray-900 mb-3">Timeline Milestone</h4>
+                  <ResponsiveContainer width="100%" height={Math.max(250, roadmap.milestones.length * 40)}>
+                    <BarChart
+                      layout="vertical"
+                      data={roadmap.milestones.map((milestone) => {
+                        const start = new Date(milestone.startDate).getTime()
+                        const end = milestone.endDate ? new Date(milestone.endDate).getTime() : start
+                        return {
+                          name: milestone.title,
+                          start: start,
+                          duration: end - start,
+                          status: milestone.status
+                        }
+                      })}
+                      margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        type="number"
+                        domain={['dataMin', 'dataMax']}
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}
+                      />
+                      <YAxis type="category" dataKey="name" width={140} />
+                      <Tooltip
+                        formatter={(value: any, name: string) => {
+                          if (name === 'start') return new Date(value).toLocaleDateString('it-IT')
+                          if (name === 'duration') return `${Math.ceil(value / (1000 * 60 * 60 * 24))} giorni`
+                          return value
+                        }}
+                      />
+                      <Bar dataKey="duration" stackId="a">
+                        {roadmap.milestones.map((milestone, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              milestone.status === 'completed' ? '#10b981' :
+                              milestone.status === 'in_progress' ? '#3b82f6' :
+                              milestone.status === 'delayed' ? '#ef4444' : '#9ca3af'
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded mr-1"></div>
+                      <span>Completato</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>
+                      <span>In Corso</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-gray-400 rounded mr-1"></div>
+                      <span>Pianificato</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded mr-1"></div>
+                      <span>In Ritardo</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              {roadmap.milestones.map((milestone, idx) => (
-                <div key={milestone.id} className="mb-4 border border-gray-300 p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900">{idx + 1}. {milestone.title}</h4>
-                    <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded font-medium">
-                      {statusLabels[milestone.status]}
-                    </span>
-                  </div>
-
-                  <p className="text-gray-700 mb-3">{milestone.description}</p>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                    <div>
-                      <strong className="text-gray-900">Data Inizio:</strong>
-                      <span className="text-gray-700 ml-2">{new Date(milestone.startDate).toLocaleDateString('it-IT')}</span>
-                    </div>
-                    {milestone.endDate && (
-                      <div>
-                        <strong className="text-gray-900">Data Fine:</strong>
-                        <span className="text-gray-700 ml-2">{new Date(milestone.endDate).toLocaleDateString('it-IT')}</span>
-                      </div>
-                    )}
-                    {milestone.phase && (
-                      <div>
-                        <strong className="text-gray-900">Fase:</strong>
-                        <span className="text-gray-700 ml-2">{milestone.phase}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {milestone.deliverables && milestone.deliverables.length > 0 && (
-                    <div className="mt-3">
-                      <p className="font-semibold text-sm text-gray-900 mb-1">Deliverables:</p>
-                      <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
-                        {milestone.deliverables.map((deliverable, idx) => (
-                          <li key={idx}>{deliverable}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {milestone.team && milestone.team.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-600">
-                        <strong>Team assegnato:</strong> {milestone.team.join(', ')}
-                      </p>
-                    </div>
-                  )}
-
-                  {milestone.dependencies && milestone.dependencies.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-600">
-                        <strong>Dipendenze:</strong> {milestone.dependencies.length} milestone precedenti
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {roadmap.notes && (
-            <div className="text-sm text-gray-600 italic">
-              <strong>Note:</strong> {roadmap.notes}
-            </div>
-          )}
+            {roadmap.notes && (
+              <div className="text-sm text-gray-600 italic">
+                <strong>Note:</strong> {roadmap.notes}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Part 2: Milestone Details - Max 3 per page */}
+        {milestoneChunks.map((chunk, chunkIndex) => (
+          <div key={`milestone-chunk-${chunkIndex}`} className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+              Milestone Principali - Dettaglio {chunkIndex > 0 ? `(${chunkIndex + 1})` : ''}
+            </h3>
+
+            <div className="space-y-4">
+              {chunk.map((milestone, idx) => {
+                const globalIndex = chunkIndex * 3 + idx
+                return (
+                  <div key={milestone.id} className="mb-4 border border-gray-300 p-4" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900">{globalIndex + 1}. {milestone.title}</h4>
+                      <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded font-medium">
+                        {statusLabels[milestone.status as keyof typeof statusLabels]}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-700 mb-3">{milestone.description}</p>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                      <div>
+                        <strong className="text-gray-900">Data Inizio:</strong>
+                        <span className="text-gray-700 ml-2">{new Date(milestone.startDate).toLocaleDateString('it-IT')}</span>
+                      </div>
+                      {milestone.endDate && (
+                        <div>
+                          <strong className="text-gray-900">Data Fine:</strong>
+                          <span className="text-gray-700 ml-2">{new Date(milestone.endDate).toLocaleDateString('it-IT')}</span>
+                        </div>
+                      )}
+                      {milestone.phase && (
+                        <div>
+                          <strong className="text-gray-900">Fase:</strong>
+                          <span className="text-gray-700 ml-2">{milestone.phase}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {milestone.deliverables && milestone.deliverables.length > 0 && (
+                      <div className="mt-3">
+                        <p className="font-semibold text-sm text-gray-900 mb-1">Deliverables:</p>
+                        <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
+                          {milestone.deliverables.map((deliverable: string, delivIdx: number) => (
+                            <li key={delivIdx}>{deliverable}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {milestone.team && milestone.team.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-600">
+                          <strong>Team assegnato:</strong> {milestone.team.join(', ')}
+                        </p>
+                      </div>
+                    )}
+
+                    {milestone.dependencies && milestone.dependencies.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-600">
+                          <strong>Dipendenze:</strong> {milestone.dependencies.length} milestone precedenti
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </>
     )
   }
 
@@ -820,12 +858,12 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const financial = data.financialPlanData
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           Piano Economico-Finanziario
         </h2>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <p className="text-sm text-gray-600">
             <strong>Anni di proiezione:</strong> {financial.projectionYears.join(', ')} | <strong>Valuta:</strong> {financial.currency}
           </p>
@@ -838,9 +876,9 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
               )}
 
               {scenario.costCategories && scenario.costCategories.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-4" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <h4 className="font-semibold text-gray-900 mb-2">Categorie di Costo</h4>
-                  <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <table className="w-full border-collapse border border-gray-300 text-sm" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <thead>
                       <tr className="bg-gray-100">
                         <th className="p-2 border border-gray-300 text-left">Categoria</th>
@@ -879,9 +917,9 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
               )}
 
               {scenario.revenueCategories && scenario.revenueCategories.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-4" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <h4 className="font-semibold text-gray-900 mb-2">Categorie di Ricavo</h4>
-                  <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <table className="w-full border-collapse border border-gray-300 text-sm" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <thead>
                       <tr className="bg-gray-100">
                         <th className="p-2 border border-gray-300 text-left">Categoria</th>
@@ -967,7 +1005,7 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
                   {/* Financial Trend Chart */}
                   <div className="mt-6 p-4 bg-gray-50 rounded">
                     <h4 className="font-semibold text-gray-900 mb-3">Andamento Finanziario nel Tempo</h4>
-                    <ResponsiveContainer width="100%" height={350}>
+                    <ResponsiveContainer width="100%" height={280}>
                       <LineChart
                         data={financial.projectionYears.map((year) => {
                           const totalRevenue = scenario.revenueCategories.reduce((sum, rev) => sum + (rev.values[year] || 0), 0)
@@ -1023,100 +1061,77 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     })
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
-          Proiezioni dei Ricavi
-        </h2>
+      <>
+        {/* Part 1: Main Revenue Projections */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+            Proiezioni dei Ricavi
+          </h2>
 
-        <div className="space-y-6">
-          {revenue.streams && revenue.streams.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Dettaglio Flussi di Ricavo per Anno</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2 border border-gray-300 text-left">Flusso di Ricavo</th>
-                    <th className="p-2 border border-gray-300 text-left">Descrizione</th>
-                    <th className="p-2 border border-gray-300 text-right">Prezzo Unitario</th>
-                    {revenue.projectionYears.map((year) => (
-                      <th key={year} className="p-2 border border-gray-300 text-right" colSpan={2}>{year}</th>
-                    ))}
-                  </tr>
-                  <tr className="bg-gray-50 text-xs">
-                    <th className="p-1 border border-gray-300"></th>
-                    <th className="p-1 border border-gray-300"></th>
-                    <th className="p-1 border border-gray-300"></th>
-                    {revenue.projectionYears.map((year) => (
-                      <React.Fragment key={`${year}-headers`}>
-                        <th className="p-1 border border-gray-300 text-right">Unità</th>
-                        <th className="p-1 border border-gray-300 text-right">Ricavo</th>
-                      </React.Fragment>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {revenue.streams.map((stream) => (
-                    <tr key={stream.id} className="border-b border-gray-300">
-                      <td className="p-2 border border-gray-300 font-medium">{stream.name}</td>
-                      <td className="p-2 border border-gray-300 text-sm">{stream.description}</td>
-                      <td className="p-2 border border-gray-300 text-right font-semibold">{formatCurrency(stream.pricing)}</td>
+          <div className="space-y-4">
+            {revenue.streams && revenue.streams.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Dettaglio Flussi di Ricavo per Anno</h3>
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 border border-gray-300 text-left">Flusso di Ricavo</th>
+                      <th className="p-2 border border-gray-300 text-left">Descrizione</th>
+                      <th className="p-2 border border-gray-300 text-right">Prezzo Unitario</th>
                       {revenue.projectionYears.map((year) => (
-                        <React.Fragment key={`${stream.id}-${year}`}>
-                          <td className="p-2 border border-gray-300 text-right">
-                            {stream.projectedUnits[year] || 0}
-                          </td>
-                          <td className="p-2 border border-gray-300 text-right font-semibold">
-                            {formatCurrency((stream.projectedUnits[year] || 0) * stream.pricing)}
-                          </td>
+                        <th key={year} className="p-2 border border-gray-300 text-right" colSpan={2}>{year}</th>
+                      ))}
+                    </tr>
+                    <tr className="bg-gray-50 text-xs">
+                      <th className="p-1 border border-gray-300"></th>
+                      <th className="p-1 border border-gray-300"></th>
+                      <th className="p-1 border border-gray-300"></th>
+                      {revenue.projectionYears.map((year) => (
+                        <React.Fragment key={`${year}-headers`}>
+                          <th className="p-1 border border-gray-300 text-right">Unità</th>
+                          <th className="p-1 border border-gray-300 text-right">Ricavo</th>
                         </React.Fragment>
                       ))}
                     </tr>
-                  ))}
-                  <tr className="bg-gray-100 font-bold">
-                    <td colSpan={3} className="p-2 border border-gray-300 text-right">Totale Ricavi</td>
-                    {revenue.projectionYears.map((year) => (
-                      <td key={year} colSpan={2} className="p-2 border border-gray-300 text-right text-green-700 text-base">
-                        {formatCurrency(totals[year])}
-                      </td>
+                  </thead>
+                  <tbody>
+                    {revenue.streams.map((stream) => (
+                      <tr key={stream.id} className="border-b border-gray-300">
+                        <td className="p-2 border border-gray-300 font-medium">{stream.name}</td>
+                        <td className="p-2 border border-gray-300 text-sm">{stream.description}</td>
+                        <td className="p-2 border border-gray-300 text-right font-semibold">{formatCurrency(stream.pricing)}</td>
+                        {revenue.projectionYears.map((year) => (
+                          <React.Fragment key={`${stream.id}-${year}`}>
+                            <td className="p-2 border border-gray-300 text-right">
+                              {stream.projectedUnits[year] || 0}
+                            </td>
+                            <td className="p-2 border border-gray-300 text-right font-semibold">
+                              {formatCurrency((stream.projectedUnits[year] || 0) * stream.pricing)}
+                            </td>
+                          </React.Fragment>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                </tbody>
-              </table>
+                    <tr className="bg-gray-100 font-bold">
+                      <td colSpan={3} className="p-2 border border-gray-300 text-right">Totale Ricavi</td>
+                      {revenue.projectionYears.map((year) => (
+                        <td key={year} colSpan={2} className="p-2 border border-gray-300 text-right text-green-700 text-base">
+                          {formatCurrency(totals[year])}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
 
-              {/* Revenue Projection Chart */}
-              <div className="mt-6 p-4 bg-gray-50 rounded">
-                <h4 className="font-semibold text-gray-900 mb-3">Andamento Ricavi Totali per Anno</h4>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart
-                    data={revenue.projectionYears.map((year) => ({
-                      year,
-                      Ricavi: totals[year]
-                    }))}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Legend />
-                    <Bar dataKey="Ricavi" fill="#10b981" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Revenue by Stream Chart */}
-              {revenue.streams.length > 1 && (
+                {/* Revenue Projection Chart */}
                 <div className="mt-6 p-4 bg-gray-50 rounded">
-                  <h4 className="font-semibold text-gray-900 mb-3">Ricavi per Flusso nel Tempo</h4>
-                  <ResponsiveContainer width="100%" height={350}>
+                  <h4 className="font-semibold text-gray-900 mb-3">Andamento Ricavi Totali per Anno</h4>
+                  <ResponsiveContainer width="100%" height={280}>
                     <BarChart
-                      data={revenue.projectionYears.map((year) => {
-                        const yearData: any = { year }
-                        revenue.streams.forEach(stream => {
-                          yearData[stream.name] = (stream.projectedUnits[year] || 0) * stream.pricing
-                        })
-                        return yearData
-                      })}
+                      data={revenue.projectionYears.map((year) => ({
+                        year,
+                        Ricavi: totals[year]
+                      }))}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
@@ -1124,74 +1139,105 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
                       <YAxis tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
                       <Tooltip formatter={(value: number) => formatCurrency(value)} />
                       <Legend />
-                      {revenue.streams.map((stream, idx) => (
-                        <Bar
-                          key={stream.id}
-                          dataKey={stream.name}
-                          stackId="a"
-                          fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][idx % 6]}
-                        />
-                      ))}
+                      <Bar dataKey="Ricavi" fill="#10b981" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {revenue.scenarios && revenue.scenarios.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Analisi per Scenari</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2 border border-gray-300 text-left">Scenario</th>
-                    <th className="p-2 border border-gray-300 text-center">Moltiplicatore</th>
-                    {revenue.projectionYears.map((year) => (
-                      <th key={year} className="p-2 border border-gray-300 text-right">{year}</th>
-                    ))}
-                    <th className="p-2 border border-gray-300 text-right">Media Annua</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="bg-blue-50 font-semibold">
-                    <td className="p-2 border border-gray-300">Scenario Base</td>
-                    <td className="p-2 border border-gray-300 text-center">1.0x</td>
-                    {revenue.projectionYears.map((year) => (
-                      <td key={year} className="p-2 border border-gray-300 text-right">
-                        {formatCurrency(totals[year])}
-                      </td>
-                    ))}
-                    <td className="p-2 border border-gray-300 text-right">
-                      {formatCurrency(Object.values(totals).reduce((a, b) => a + b, 0) / revenue.projectionYears.length)}
-                    </td>
-                  </tr>
-                  {revenue.scenarios.map((scenario) => (
-                    <tr key={scenario.id} className="border-b border-gray-300">
-                      <td className="p-2 border border-gray-300 font-medium">{scenario.name}</td>
-                      <td className="p-2 border border-gray-300 text-center">{scenario.multiplier}x</td>
+            {revenue.scenarios && revenue.scenarios.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Analisi per Scenari</h3>
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 border border-gray-300 text-left">Scenario</th>
+                      <th className="p-2 border border-gray-300 text-center">Moltiplicatore</th>
+                      {revenue.projectionYears.map((year) => (
+                        <th key={year} className="p-2 border border-gray-300 text-right">{year}</th>
+                      ))}
+                      <th className="p-2 border border-gray-300 text-right">Media Annua</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-blue-50 font-semibold">
+                      <td className="p-2 border border-gray-300">Scenario Base</td>
+                      <td className="p-2 border border-gray-300 text-center">1.0x</td>
                       {revenue.projectionYears.map((year) => (
                         <td key={year} className="p-2 border border-gray-300 text-right">
-                          {formatCurrency(totals[year] * scenario.multiplier)}
+                          {formatCurrency(totals[year])}
                         </td>
                       ))}
                       <td className="p-2 border border-gray-300 text-right">
-                        {formatCurrency((Object.values(totals).reduce((a, b) => a + b, 0) / revenue.projectionYears.length) * scenario.multiplier)}
+                        {formatCurrency(Object.values(totals).reduce((a, b) => a + b, 0) / revenue.projectionYears.length)}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    {revenue.scenarios.map((scenario) => (
+                      <tr key={scenario.id} className="border-b border-gray-300">
+                        <td className="p-2 border border-gray-300 font-medium">{scenario.name}</td>
+                        <td className="p-2 border border-gray-300 text-center">{scenario.multiplier}x</td>
+                        {revenue.projectionYears.map((year) => (
+                          <td key={year} className="p-2 border border-gray-300 text-right">
+                            {formatCurrency(totals[year] * scenario.multiplier)}
+                          </td>
+                        ))}
+                        <td className="p-2 border border-gray-300 text-right">
+                          {formatCurrency((Object.values(totals).reduce((a, b) => a + b, 0) / revenue.projectionYears.length) * scenario.multiplier)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-          {revenue.notes && (
-            <div className="text-sm text-gray-600 italic">
-              <strong>Note e Assunzioni:</strong> {revenue.notes}
-            </div>
-          )}
+            {revenue.notes && (
+              <div className="text-sm text-gray-600 italic">
+                <strong>Note e Assunzioni:</strong> {revenue.notes}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Part 2: Revenue by Stream Chart - New Page */}
+        {revenue.streams && revenue.streams.length > 1 && (
+          <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+              Ricavi per Flusso nel Tempo
+            </h3>
+
+            <div className="p-4 bg-gray-50 rounded">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={revenue.projectionYears.map((year) => {
+                    const yearData: any = { year }
+                    revenue.streams.forEach(stream => {
+                      yearData[stream.name] = (stream.projectedUnits[year] || 0) * stream.pricing
+                    })
+                    return yearData
+                  })}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                  {revenue.streams.map((stream, idx) => (
+                    <Bar
+                      key={stream.id}
+                      dataKey={stream.name}
+                      stackId="a"
+                      fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][idx % 6]}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 
@@ -1238,8 +1284,8 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
     const completionPercentage = totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0
 
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
+      <div className="mb-6" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-600" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
           {title}
         </h2>
 
@@ -1326,17 +1372,28 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-white" style={{ margin: 0, padding: 0 }}>
       {/* Preview Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
+      <div className="text-white p-8" style={{
+        background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
+        margin: 0,
+        padding: '32px'
+      }}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <FileText className="h-8 w-8" />
             <span className="text-sm font-medium uppercase tracking-wider">Business Plan</span>
           </div>
-          <div style={{ filter: 'brightness(0) invert(1)' }}>
-            <Logo className="h-12" />
-          </div>
+          <img
+            src={logoImg}
+            alt="TaxFlow Logo"
+            className="h-12"
+            style={{
+              filter: 'brightness(0) invert(1)',
+              WebkitFilter: 'brightness(0) invert(1)',
+              height: '48px'
+            }}
+          />
         </div>
 
         <h1 className="text-4xl font-bold mb-2">
@@ -1345,32 +1402,28 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
         <div className="space-y-1">
           {clientEmail && (
             <div className="flex items-center justify-start space-x-2 text-lg text-blue-100">
-              <Mail className="h-5 w-5" />
               <span>{clientEmail}</span>
             </div>
           )}
           {clientPhone && (
             <div className="flex items-center justify-start space-x-2 text-lg text-blue-100">
-              <Phone className="h-5 w-5" />
               <span>{clientPhone}</span>
             </div>
           )}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-blue-500 flex items-center space-x-6 text-sm text-blue-100">
+        <div className="mt-6 pt-6 flex items-center space-x-6 text-sm text-blue-100">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4" />
             <span>{currentDate}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <User className="h-4 w-4" />
             <span>TaxFlow Consulting</span>
           </div>
         </div>
       </div>
 
       {/* Preview Content */}
-      <div className="p-8">
+      <div className="p-6" style={{ paddingTop: '24px' }}>
         {renderExecutiveSummary()}
         {renderIdea()}
         {renderBusinessModel()}
