@@ -23,7 +23,7 @@ import Modal from '../../../common/Modal'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import api from '../../../../services/api'
-import logoImage from '../../../../assets/logo.png'
+// logoImage import removed - not needed anymore since we use BusinessPlanPreview component
 import {
   TeamSectionData,
   FinancialPlanData,
@@ -1026,59 +1026,6 @@ export default function BusinessPlanEditor({
       setPdfExportStatus('exporting')
       showToast('Generazione PDF in corso...', 'info')
 
-      // Converti SVG in PNG perché html2canvas ha problemi con SVG inline
-      const svgToPng = (svgString: string, width: number, height: number, color: string = 'white'): Promise<string> => {
-        return new Promise((resolve) => {
-          const svg = `<svg width="${width}" height="${height}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="${color}">${svgString}</svg>`
-          const img = new Image()
-          const blob = new Blob([svg], { type: 'image/svg+xml' })
-          const url = URL.createObjectURL(blob)
-
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            const ctx = canvas.getContext('2d')!
-            ctx.drawImage(img, 0, 0, width, height)
-            URL.revokeObjectURL(url)
-            resolve(canvas.toDataURL('image/png'))
-          }
-          img.src = url
-        })
-      }
-
-      // Converti logo in bianco
-      const convertLogoToWhite = async (imgSrc: string): Promise<string> => {
-        return new Promise((resolve) => {
-          const img = new Image()
-          img.crossOrigin = 'anonymous'
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext('2d')!
-            ctx.drawImage(img, 0, 0)
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-            const data = imageData.data
-            for (let i = 0; i < data.length; i += 4) {
-              if (data[i + 3] > 0) {
-                data[i] = 255
-                data[i + 1] = 255
-                data[i + 2] = 255
-              }
-            }
-            ctx.putImageData(imageData, 0, 0)
-            resolve(canvas.toDataURL('image/png'))
-          }
-          img.src = imgSrc
-        })
-      }
-
-      const whiteLogoSrc = await convertLogoToWhite(logoImage)
-
-      // Converti solo l'icona FileText per "Business Plan"
-      const fileIconPng = await svgToPng('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />', 32, 32)
-
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -1087,163 +1034,62 @@ export default function BusinessPlanEditor({
 
       const pageWidth = 210 // A4 width in mm
       const pageHeight = 297 // A4 height in mm
-      let isFirstPage = true
-
-      // Helper to capture and add element to PDF
-      const captureAndAddToPDF = async (element: HTMLElement) => {
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        })
-
-        const imgWidth = pageWidth
-        const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-        // If content is taller than a page, we might need multiple pages for this section
-        if (imgHeight > pageHeight) {
-          // For tall content, split across multiple pages
-          let heightLeft = imgHeight
-          let position = 0
-
-          while (heightLeft > 0) {
-            if (!isFirstPage) {
-              pdf.addPage()
-            }
-            isFirstPage = false
-
-            const imgData = canvas.toDataURL('image/png')
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-            heightLeft -= pageHeight
-            position = heightLeft - imgHeight
-          }
-        } else {
-          // Content fits in one page
-          if (!isFirstPage) {
-            pdf.addPage()
-          }
-          isFirstPage = false
-
-          const imgData = canvas.toDataURL('image/png')
-          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
-        }
-      }
 
       // Create temporary container
       const container = document.createElement('div')
       container.style.position = 'absolute'
       container.style.left = '-9999px'
+      container.style.top = '0'
       container.style.width = '210mm'
+      container.style.backgroundColor = 'white'
       document.body.appendChild(container)
 
       const { createRoot } = await import('react-dom/client')
-
-      // Sections to export
-      const sections = [
-        { title: 'Executive Summary', content: formData.executiveSummary },
-        { title: "L'Idea", content: formData.idea },
-        { title: 'Business Model', content: formData.businessModel },
-        { title: 'Analisi di Mercato e Concorrenza', content: formData.marketAnalysis },
-        { title: 'Il Team', content: formData.team },
-        { title: 'Roadmap e Go-to-Market', content: formData.roadmap },
-        { title: 'Piano Economico-Finanziario', content: formData.financialPlan },
-        { title: 'Proiezioni Ricavi', content: formData.revenueProjections },
-        ...formData.customSections.map(cs => ({ title: cs.title, content: cs.content }))
-      ].filter(s => s.content)
-
-      // Capture header + first section (Executive Summary) together on first page
       const root = createRoot(container)
+
+      // Render the complete BusinessPlanPreview component
       await new Promise<void>((resolve) => {
-        const firstSection = sections[0]
         root.render(
-          <div className="bg-white">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
-              <div style={{ marginBottom: '24px', overflow: 'hidden' }}>
-                <div style={{ float: 'left' }}>
-                  <img src={fileIconPng} alt="" style={{ width: '32px', height: '32px', display: 'inline-block', marginRight: '12px', verticalAlign: 'middle' }} />
-                  <span style={{ fontSize: '14px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'inline-block', verticalAlign: 'middle', lineHeight: '32px' }}>Business Plan</span>
-                </div>
-                <div style={{ float: 'right' }}>
-                  <img src={whiteLogoSrc} alt="Logo" style={{ height: '48px', display: 'block' }} />
-                </div>
-              </div>
-              <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '8px' }}>{service.userId.name}</h1>
-              <div>
-                {service.userId.email && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <span style={{ fontSize: '18px', color: 'rgba(191, 219, 254, 1)' }}>{service.userId.email}</span>
-                  </div>
-                )}
-                {service.userId.phone && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <span style={{ fontSize: '18px', color: 'rgba(191, 219, 254, 1)' }}>{service.userId.phone}</span>
-                  </div>
-                )}
-              </div>
-              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(59, 130, 246, 0.5)' }}>
-                <div style={{ display: 'inline-block', marginRight: '24px' }}>
-                  <span style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 1)' }}>{new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                </div>
-                <div style={{ display: 'inline-block' }}>
-                  <span style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 1)' }}>TaxFlow Consulting</span>
-                </div>
-              </div>
-            </div>
-            {/* First Section */}
-            {firstSection && (
-              <div className="px-8 py-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
-                  {firstSection.title}
-                </h2>
-                <div
-                  className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: firstSection.content }}
-                />
-              </div>
-            )}
-          </div>
+          <BusinessPlanPreview
+            data={formData}
+            clientName={service.userId.name}
+            clientEmail={service.userId.email}
+            clientPhone={service.userId.phone}
+          />
         )
-        setTimeout(resolve, 500)
+        // Wait for rendering and any charts to load
+        setTimeout(resolve, 2000)
       })
 
-      // Capture header + first section together
-      const firstPageElement = container.firstChild as HTMLElement
-      if (firstPageElement) {
-        await captureAndAddToPDF(firstPageElement)
-      }
-
-      root.unmount()
-
-      // Capture remaining sections on separate pages
-      for (let i = 1; i < sections.length; i++) {
-        const section = sections[i]
-        // Clear container
-        container.innerHTML = ''
-        const sectionRoot = createRoot(container)
-
-        await new Promise<void>((resolve) => {
-          sectionRoot.render(
-            <div className="bg-white px-8 py-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
-                {section.title}
-              </h2>
-              <div
-                className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: section.content }}
-              />
-            </div>
-          )
-          setTimeout(resolve, 300)
+      // Capture the rendered preview
+      const previewElement = container.firstChild as HTMLElement
+      if (previewElement) {
+        const canvas = await html2canvas(previewElement, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: previewElement.scrollWidth,
+          windowHeight: previewElement.scrollHeight
         })
 
-        const sectionElement = container.firstChild as HTMLElement
-        if (sectionElement) {
-          await captureAndAddToPDF(sectionElement)
-        }
+        const imgWidth = pageWidth
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
 
-        sectionRoot.unmount()
+        // Add image to PDF with pagination
+        let heightLeft = imgHeight
+        let position = 0
+
+        while (heightLeft > 0) {
+          if (position !== 0) {
+            pdf.addPage()
+          }
+
+          const imgData = canvas.toDataURL('image/png')
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+          heightLeft -= pageHeight
+          position = heightLeft - imgHeight
+        }
       }
 
       // Cleanup
