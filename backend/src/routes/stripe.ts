@@ -1282,13 +1282,17 @@ router.get('/subscription/current', authenticateToken, async (req: AuthRequest, 
     // Get subscription from Stripe
     const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId)
 
+    // Get period dates from subscription items (Stripe stores them there)
+    const currentPeriodStart = subscription.items.data[0]?.current_period_start
+    const currentPeriodEnd = subscription.items.data[0]?.current_period_end
+
     res.json({
       hasSubscription: true,
       subscription: {
         id: subscription.id,
         status: subscription.status,
-        current_period_start: (subscription as any).current_period_start,
-        current_period_end: (subscription as any).current_period_end,
+        current_period_start: currentPeriodStart,
+        current_period_end: currentPeriodEnd,
         cancel_at_period_end: subscription.cancel_at_period_end,
         canceled_at: subscription.canceled_at,
         plan: user.selectedPlan
