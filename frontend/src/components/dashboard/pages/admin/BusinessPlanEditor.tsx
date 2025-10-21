@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import {
   Sparkles, FileText, Edit3, Save, Eye, Download, Clock,
-  Plus, Loader2, RotateCcw
+  Plus, Loader2, RotateCcw, ChevronDown, ChevronUp, Trash2
 } from 'lucide-react'
 import { useToast } from '../../../../context/ToastContext'
 import BusinessPlanSection from './BusinessPlanSection'
 import BusinessPlanPreview from './BusinessPlanPreview'
 import AIQuestionnaireForm, { AIQuestionnaireData } from './AIQuestionnaireForm'
+import Modulo662Form, { Modulo662Data } from './Modulo662Form'
 import Modal from '../../../common/Modal'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -31,6 +32,8 @@ interface CustomSection {
   id: string
   title: string
   content: string
+  type?: 'modulo662' | 'regular'
+  data?: Modulo662Data
 }
 
 interface BusinessPlanData {
@@ -502,7 +505,7 @@ export default function BusinessPlanEditor({
     setExpandedSections(prev => [...prev, newSection.id])
   }
 
-  const updateCustomSection = (id: string, field: 'title' | 'content', value: string) => {
+  const updateCustomSection = (id: string, field: 'title' | 'content' | 'data', value: string | Modulo662Data) => {
     setFormData(prev => ({
       ...prev,
       customSections: prev.customSections.map(section =>
@@ -1089,22 +1092,84 @@ export default function BusinessPlanEditor({
             ))}
 
             {/* Custom Sections */}
-            {formData.customSections.map((section) => (
-              <BusinessPlanSection
-                key={section.id}
-                id={section.id}
-                title={section.title}
-                description="Sezione personalizzata"
-                placeholder="Contenuto della sezione personalizzata..."
-                value={section.content}
-                onChange={(value) => updateCustomSection(section.id, 'content', value)}
-                isExpanded={expandedSections.includes(section.id)}
-                onToggle={() => toggleSection(section.id)}
-                isCustom
-                onDelete={() => deleteCustomSection(section.id)}
-                onTitleChange={(value) => updateCustomSection(section.id, 'title', value)}
-              />
-            ))}
+            {formData.customSections.map((section) => {
+              // Special handling for Modulo 662 sections
+              if (section.type === 'modulo662' && section.data) {
+                const isExpanded = expandedSections.includes(section.id)
+                return (
+                  <div key={section.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <div
+                      className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => toggleSection(section.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <button
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleSection(section.id)
+                            }}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">Domanda di Agevolazione - Fondo di Garanzia PMI</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (window.confirm('Sei sicuro di voler eliminare questa sezione?')) {
+                                deleteCustomSection(section.id)
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Elimina sezione"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="p-6 border-t border-gray-100 bg-gray-50">
+                        <Modulo662Form
+                          initialData={section.data}
+                          onSave={(data) => updateCustomSection(section.id, 'data', data)}
+                          clientName={service.userId.name}
+                          clientEmail={service.userId.email}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              // Regular custom sections
+              return (
+                <BusinessPlanSection
+                  key={section.id}
+                  id={section.id}
+                  title={section.title}
+                  description="Sezione personalizzata"
+                  placeholder="Contenuto della sezione personalizzata..."
+                  value={section.content}
+                  onChange={(value) => updateCustomSection(section.id, 'content', value)}
+                  isExpanded={expandedSections.includes(section.id)}
+                  onToggle={() => toggleSection(section.id)}
+                  isCustom
+                  onDelete={() => deleteCustomSection(section.id)}
+                  onTitleChange={(value) => updateCustomSection(section.id, 'title', value)}
+                />
+              )
+            })}
 
             {/* Add Custom Section Button */}
             <button
@@ -1119,13 +1184,169 @@ export default function BusinessPlanEditor({
           {/* Action Buttons */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex justify-between items-center">
-              <button
-                onClick={onSuspend}
-                disabled={isUpdating}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all duration-200"
-              >
-                Sospendi Lavoro
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={onSuspend}
+                  disabled={isUpdating}
+                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all duration-200"
+                >
+                  Sospendi Lavoro
+                </button>
+
+                <button
+                  onClick={() => showToast('Funzionalità Scoring in sviluppo', 'info')}
+                  disabled={isUpdating}
+                  className="px-6 py-3 border border-blue-300 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-all duration-200"
+                >
+                  Scoring
+                </button>
+
+                <button
+                  onClick={() => {
+                    const modulo662Section: CustomSection = {
+                      id: `modulo_662_${Date.now()}`,
+                      title: 'Modulo 662/96 - Domanda di Agevolazione Fondo di Garanzia PMI',
+                      type: 'modulo662',
+                      content: '', // Will be generated from data in preview mode
+                      data: {
+                        // Initialize with user data
+                        cognomeNome: service.userId.name,
+                        natoA: '',
+                        natoIl: '',
+                        tipoSoggetto: 'impresa',
+                        denominazione: '',
+                        codiceFiscale: '',
+                        dataCostituzione: '',
+                        comuneSede: '',
+                        indirizzo: '',
+                        provincia: '',
+                        pec: service.userId.email,
+                        emailOrdinaria: '',
+                        telefono: service.userId.phone || '',
+                        importoOperazione: '',
+                        durataOperazione: '',
+                        codiceAteco: '',
+                        sedeAttivita: 'legale',
+                        sedeOperativaComune: '',
+                        sedeOperativaProvincia: '',
+                        finalitaOperazione: 'investimento',
+                        descrizioneLiquidita: '',
+                        importoProgramma: '',
+                        statoPrograma: 'da_iniziare',
+                        dataInizio: '',
+                        dataCompletamento: '',
+                        dataPrevistaCompletamento: '',
+                        finalitaInnovazioneTecnologica: false,
+                        finalitaEfficienzaEnergetica: false,
+                        finalitaRicercaSviluppo: false,
+                        finalitaCrescita: false,
+                        finalitaSostenibilita: false,
+                        finalitaRisorseUmane: false,
+                        descrizioneInvestimento: '',
+                        importoTerreni: '',
+                        importoFabbricati: '',
+                        importoMacchinari: '',
+                        importoInvestimentiImmateriali: '',
+                        importoAttiviFinanziari: '',
+                        importoAltro: '',
+                        descrizioneAltro: '',
+                        hasLiquiditaConnessa: false,
+                        importoLiquiditaConnessa: '',
+                        importoFinanziamento: '',
+                        importoRisorseProprie: '',
+                        importoAltreFonti: '',
+                        hasAltreAgevolazioni: false,
+                        altreAgevolazioni: [],
+                        regolamentazioneUE: 'de_minimis',
+                        periodoRiferimento: '',
+                        tipoImpresa: 'autonoma',
+                        fatturatoImpresa: '',
+                        attivoImpresa: '',
+                        occupatiImpresa: '',
+                        impreseAssociate: [],
+                        dimensioneImpresa: 'microimpresa',
+                        isStartupInnovativa: false,
+                        isIncubatoreCertificato: false,
+                        // DICHIARA - 12 dichiarazioni obbligatorie
+                        dichiaraParametriDimensionali: false,
+                        dichiaraNoAiutiSalvataggio: false,
+                        dichiaraAccettaNormativaComunitaria: false,
+                        dichiaraAccettaDisposizioniOperative: false,
+                        dichiaraAccettaSurrogazioneLegale: false,
+                        dichiaraComunicaVariazioni: false,
+                        dichiaraTrasmetteDocumentazione: false,
+                        dichiaraComunicaPortale: false,
+                        dichiaraConsenteControlli: false,
+                        dichiaraAccettaRevoca: false,
+                        dichiaraPrendeAttoPubblicazione: false,
+                        dichiaraConsapevoleComunicazioni: false,
+                        // De minimis (punto 18)
+                        deMinimisRispettaLimite: false,
+                        deMinimisAttuaSeparazione: false,
+                        // Aiuti incompatibili (pagina 7)
+                        aiutiIncompatibili: 'non_ricevuti',
+                        aiutiIncompatibiliImporto: '',
+                        aiutiIncompatibiliDataRimborso: '',
+                        aiutiIncompatibiliMezzoRimborso: '',
+                        aiutiIncompatibiliLetteraRiferimento: '',
+                        // CDP - Casse Professionali
+                        cassaProfessionaleENPAB: false,
+                        cassaProfessionaleENPACL: false,
+                        cassaProfessionaleEPAP: false,
+                        cassaProfessionaleENPAM: false,
+                        cassaProfessionaleDottoriCommercialisti: false,
+                        cassaProfessionaleCassaForense: false,
+                        cassaProfessionaleINARCASSA: false,
+                        cassaProfessionaleCIPAG: false,
+                        // InvestEU (pagine 9-13)
+                        investEUNonAttivitaEscluse: false,
+                        investEUImportoNonSuperiore: false,
+                        investEUNoFocusSostanziale: false,
+                        investEURiconosceAudit: false,
+                        investEUConsapevoleCommissione: false,
+                        investEUConservaDocumentazione: false,
+                        investEUConsapevoleTrattamentoDati: false,
+                        investEUNoAttivitaIllecite: false,
+                        investEUNoCostruzioniArtificio: false,
+                        investEURispettaStandards: false,
+                        investEUSedeUE: false,
+                        investEUMantieneFondi: false,
+                        investEUDocumentazioneValida: false,
+                        investEURispettaLeggi: false,
+                        investEUComunicaTitolareEffettivo: false,
+                        investEUNoGiurisdizioneNonConforme: false,
+                        investEUNoSanzioniUE: false,
+                        investEUComunicaEventi: false,
+                        investEUNoContributoCapitale: false,
+                        investEUNoPrefinanziamento: false,
+                        investEUCombinazioneSupporto: false,
+                        investEUUtilizzoScopo: false,
+                        investEUNonAltroPortafoglio: false,
+                        investEUInserisceLogo: false,
+                        investEUConcordaPubblicazione: false,
+                        investEUFornisceDocumentazione: false,
+                        investEUNoFallimento: false,
+                        investEUNoPagamentoImposte: false,
+                        investEUNoElusioneFiscale: false,
+                        investEUNoColgaGrave: false,
+                        investEUNoCondannePenali: false,
+                        investEUNoEDES: false
+                      } as Modulo662Data
+                    }
+
+                    setFormData(prev => ({
+                      ...prev,
+                      customSections: [...prev.customSections, modulo662Section]
+                    }))
+                    setExpandedSections(prev => [...prev, modulo662Section.id])
+                    showToast('Modulo 662 aggiunto - compila il form con i dati richiesti', 'success')
+                  }}
+                  disabled={isUpdating}
+                  className="px-6 py-3 border border-green-300 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 disabled:opacity-50 transition-all duration-200"
+                >
+                  Modulo 662
+                </button>
+              </div>
 
               <div className="flex items-center space-x-3">
                 <button

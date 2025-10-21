@@ -4,7 +4,9 @@ import mongoose, { Document, Schema } from 'mongoose'
 const CustomSectionSchema = new Schema({
   id: { type: String, required: true },
   title: { type: String, required: true },
-  content: { type: String, required: true }
+  content: { type: String, required: false }, // Not required for modulo662 type
+  type: { type: String, required: false }, // 'modulo662' | 'regular'
+  data: { type: Schema.Types.Mixed, required: false } // For structured data like Modulo662Data
 }, { _id: false })
 
 // Business Plan Content Schema
@@ -64,7 +66,9 @@ export interface IPurchasedService extends Document {
     customSections?: Array<{
       id: string
       title: string
-      content: string
+      content?: string // Optional for modulo662
+      type?: string // 'modulo662' | 'regular'
+      data?: any // For structured data like Modulo662Data
     }>
     // Legacy fields (for backward compatibility)
     objective?: string

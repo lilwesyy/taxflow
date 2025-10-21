@@ -1,10 +1,14 @@
 import { FileText, Calendar, User, Mail, Phone } from 'lucide-react'
 import Logo from '../../../common/Logo'
+import Modulo662Preview from './Modulo662Preview'
+import { Modulo662Data } from './Modulo662Form'
 
 interface CustomSection {
   id: string
   title: string
   content: string
+  type?: 'modulo662' | 'regular'
+  data?: Modulo662Data
 }
 
 interface BusinessPlanData {
@@ -105,11 +109,23 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
         {renderSection('Proiezioni Ricavi', data.revenueProjections)}
 
         {/* Custom Sections */}
-        {data.customSections.map((section) => (
-          <div key={section.id}>
-            {renderSection(section.title, section.content)}
-          </div>
-        ))}
+        {data.customSections.map((section) => {
+          // Special handling for Modulo 662 sections
+          if (section.type === 'modulo662' && section.data) {
+            return (
+              <div key={section.id} className="mb-8">
+                <Modulo662Preview data={section.data} />
+              </div>
+            )
+          }
+
+          // Regular custom sections
+          return (
+            <div key={section.id}>
+              {renderSection(section.title, section.content)}
+            </div>
+          )
+        })}
 
         {/* Footer */}
         <div className="mt-12 pt-6 border-t border-gray-300 text-center text-sm text-gray-500 px-8">
