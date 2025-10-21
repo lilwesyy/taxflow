@@ -1140,8 +1140,8 @@ export default function BusinessPlanEditor({
         // Find content container
         const contentElement = previewElement.querySelector('.p-8') as HTMLElement
         if (contentElement) {
-          // Get all section elements (each has mb-8 class)
-          const sections = contentElement.querySelectorAll('.mb-8, > div')
+          // Get all direct child divs (sections)
+          const sections = contentElement.querySelectorAll(':scope > div')
 
           for (const section of Array.from(sections)) {
             if (section instanceof HTMLElement && section.offsetHeight > 0) {

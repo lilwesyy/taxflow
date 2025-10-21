@@ -1,3 +1,4 @@
+import React from 'react'
 import { FileText, Calendar, User, Mail, Phone } from 'lucide-react'
 import {
   LineChart,
@@ -1046,10 +1047,10 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
                     <th className="p-1 border border-gray-300"></th>
                     <th className="p-1 border border-gray-300"></th>
                     {revenue.projectionYears.map((year) => (
-                      <>
-                        <th key={`${year}-units`} className="p-1 border border-gray-300 text-right">Unità</th>
-                        <th key={`${year}-revenue`} className="p-1 border border-gray-300 text-right">Ricavo</th>
-                      </>
+                      <React.Fragment key={`${year}-headers`}>
+                        <th className="p-1 border border-gray-300 text-right">Unità</th>
+                        <th className="p-1 border border-gray-300 text-right">Ricavo</th>
+                      </React.Fragment>
                     ))}
                   </tr>
                 </thead>
@@ -1060,14 +1061,14 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
                       <td className="p-2 border border-gray-300 text-sm">{stream.description}</td>
                       <td className="p-2 border border-gray-300 text-right font-semibold">{formatCurrency(stream.pricing)}</td>
                       {revenue.projectionYears.map((year) => (
-                        <>
-                          <td key={`${year}-units`} className="p-2 border border-gray-300 text-right">
+                        <React.Fragment key={`${stream.id}-${year}`}>
+                          <td className="p-2 border border-gray-300 text-right">
                             {stream.projectedUnits[year] || 0}
                           </td>
-                          <td key={`${year}-revenue`} className="p-2 border border-gray-300 text-right font-semibold">
+                          <td className="p-2 border border-gray-300 text-right font-semibold">
                             {formatCurrency((stream.projectedUnits[year] || 0) * stream.pricing)}
                           </td>
-                        </>
+                        </React.Fragment>
                       ))}
                     </tr>
                   ))}
