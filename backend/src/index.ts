@@ -11,7 +11,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 // Check required environment variables
 const checkEnvVariables = () => {
   const required = ['MONGODB_URI', 'JWT_SECRET']
-  const optional = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FRONTEND_URL', 'FATTURA_ELETTRONICA_API_KEY']
+  const optional = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FRONTEND_URL', 'FATTURA_ELETTRONICA_USERNAME', 'FATTURA_ELETTRONICA_PASSWORD']
 
   const missing: string[] = []
   const warnings: string[] = []
@@ -37,13 +37,15 @@ const checkEnvVariables = () => {
   }
 
   // Check Fattura Elettronica API configuration
-  if (!process.env.FATTURA_ELETTRONICA_API_KEY || process.env.FATTURA_ELETTRONICA_API_KEY === 'your_api_key_here') {
-    warnings.push('⚠️  FATTURA_ELETTRONICA_API_KEY not configured properly.')
+  if (!process.env.FATTURA_ELETTRONICA_USERNAME || !process.env.FATTURA_ELETTRONICA_PASSWORD) {
+    warnings.push('⚠️  Fattura Elettronica API credentials not configured.')
+    warnings.push('   Missing FATTURA_ELETTRONICA_USERNAME or FATTURA_ELETTRONICA_PASSWORD.')
     warnings.push('   Electronic invoicing features will not work.')
-    warnings.push('   Get your API key from: https://www.fattura-elettronica-api.it')
+    warnings.push('   Get your credentials from: https://www.fattura-elettronica-api.it')
   } else {
     const mode = process.env.FATTURA_ELETTRONICA_API_MODE || 'test'
     console.log(`✅ Fattura Elettronica API configured (${mode} mode)`)
+    console.log(`   Username: ${process.env.FATTURA_ELETTRONICA_USERNAME}`)
   }
 
   // Exit if required variables are missing

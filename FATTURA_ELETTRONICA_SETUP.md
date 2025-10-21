@@ -4,7 +4,7 @@
 
 ### Prerequisiti
 1. Account su Fattura Elettronica API
-2. API key (ottieni su https://www.fattura-elettronica-api.it)
+2. Credenziali di accesso (username e password - ottieni su https://www.fattura-elettronica-api.it)
 
 ---
 
@@ -12,15 +12,16 @@
 
 1. Vai su **https://www.fattura-elettronica-api.it**
 2. Registra il tuo account
-3. Attiva il servizio e ottieni la tua API key
+3. Attiva il servizio e ottieni le tue credenziali di accesso
 
 ---
 
-## 🔑 Passo 2: Ottenere l'API Key
+## 🔑 Passo 2: Ottenere le Credenziali
 
-Dopo la registrazione, troverai la tua API key nella dashboard:
+Dopo la registrazione, troverai le tue credenziali nella dashboard:
 
-- **API Key**: Usata per autenticare tutte le chiamate API
+- **Username**: Email di accesso all'account
+- **Password**: Password dell'account
 - Supporta autenticazione Basic e Bearer token (con caching automatico)
 
 ---
@@ -31,13 +32,15 @@ Dopo la registrazione, troverai la tua API key nella dashboard:
 
 ```bash
 # Fattura Elettronica API Configuration
-FATTURA_ELETTRONICA_API_KEY=your_api_key_here
+FATTURA_ELETTRONICA_USERNAME=your_username_here
+FATTURA_ELETTRONICA_PASSWORD=your_password_here
 FATTURA_ELETTRONICA_API_MODE=test  # test o prod
 ```
 
 ### Per ambiente di test (consigliato per sviluppo):
 ```bash
-FATTURA_ELETTRONICA_API_KEY=your_api_key
+FATTURA_ELETTRONICA_USERNAME=your_username
+FATTURA_ELETTRONICA_PASSWORD=your_password
 FATTURA_ELETTRONICA_API_MODE=test
 ```
 
@@ -45,7 +48,8 @@ URL endpoint test: `https://fattura-elettronica-api.it/ws2.0/test`
 
 ### Per ambiente di produzione:
 ```bash
-FATTURA_ELETTRONICA_API_KEY=your_api_key
+FATTURA_ELETTRONICA_USERNAME=your_username
+FATTURA_ELETTRONICA_PASSWORD=your_password
 FATTURA_ELETTRONICA_API_MODE=prod
 ```
 
