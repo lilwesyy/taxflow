@@ -31,7 +31,8 @@ import {
   ChevronDown,
   ChevronUp,
   GraduationCap,
-  MapPin
+  MapPin,
+  Lock
 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Logo from './common/Logo'
@@ -754,63 +755,85 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
       </section>
 
-      {/* Trust & Credibility Section */}
-      <section className="py-8 sm:py-12 bg-gray-50 border-y border-gray-100">
+      {/* Trust & Credibility Section - Modern 2025 Design */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6 sm:mb-8">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Trusted by professionals, certified by institutions</h3>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-12 lg:mb-16">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-blue-50 mb-4">
+                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">500+</div>
+              <div className="text-sm sm:text-base text-gray-600">Aziende attive</div>
+            </div>
+
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-50 mb-4">
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">+18%</div>
+              <div className="text-sm sm:text-base text-gray-600">Rating medio</div>
+            </div>
+
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-50 mb-4">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">100%</div>
+              <div className="text-sm sm:text-base text-gray-600">Sicuro e conforme</div>
+            </div>
+
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-orange-50 mb-4">
+                <Award className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">4.9/5</div>
+              <div className="text-sm sm:text-base text-gray-600">Soddisfazione clienti</div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-center opacity-60">
-            {/* Loghi partner simulati */}
-            <div className="flex items-center justify-center h-14 sm:h-16 bg-white rounded-lg shadow-sm border border-gray-100 px-2">
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Building className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-                <span className="font-semibold text-gray-700 text-xs sm:text-base">Banca d'Italia</span>
-              </div>
+          {/* Trust Badges */}
+          <div className="flex flex-wrap justify-center items-center gap-6 lg:gap-12 mb-12 lg:mb-16 pb-12 lg:pb-16 border-b border-gray-100">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Shield className="w-5 h-5 text-blue-600" />
+              <span className="font-medium">Metodologia Banca d'Italia</span>
             </div>
-
-            <div className="flex items-center justify-center h-14 sm:h-16 bg-white rounded-lg shadow-sm border border-gray-100 px-2">
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-                <span className="font-semibold text-gray-700 text-xs sm:text-base">Basel IV</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FileCheck className="w-5 h-5 text-green-600" />
+              <span className="font-medium">GDPR Compliant</span>
             </div>
-
-            <div className="flex items-center justify-center h-14 sm:h-16 bg-white rounded-lg shadow-sm border border-gray-100 px-2">
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <FileCheck className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
-                <span className="font-semibold text-gray-700 text-xs sm:text-base">GDPR</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Award className="w-5 h-5 text-purple-600" />
+              <span className="font-medium">ISO 27001</span>
             </div>
-
-            <div className="flex items-center justify-center h-14 sm:h-16 bg-white rounded-lg shadow-sm border border-gray-100 px-2">
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Award className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
-                <span className="font-semibold text-gray-700 text-xs sm:text-base">ISO 27001</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Lock className="w-5 h-5 text-orange-600" />
+              <span className="font-medium">SSL Encrypted</span>
             </div>
           </div>
 
-          {/* Testimonial veloce */}
-          <div className="mt-8 sm:mt-12 text-center">
-            <div className="max-w-3xl mx-auto">
-              <blockquote className="text-base sm:text-lg text-gray-600 italic mb-4">
-                "Grazie a TaxFlow il mio rating creditizio è migliorato del 18% in soli 6 mesi.
-                Ora ottengo finanziamenti a condizioni molto più vantaggiose."
-              </blockquote>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                </div>
-                <div className="text-center sm:text-left">
-                  <p className="font-semibold text-gray-900 text-sm sm:text-base">Marco Bianchi</p>
-                  <p className="text-xs sm:text-sm text-gray-600">CEO, Innovazione SRL</p>
-                </div>
-                <div className="flex text-yellow-400">
+          {/* Testimonial - Redesigned */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 lg:p-12 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full -mr-32 -mt-32 opacity-50"></div>
+              <div className="relative">
+                <div className="flex text-yellow-400 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
+                    <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 fill-current" />
                   ))}
+                </div>
+                <blockquote className="text-lg sm:text-xl lg:text-2xl text-gray-900 font-medium mb-6 leading-relaxed">
+                  "Rating creditizio migliorato del 18% in 6 mesi. Finanziamenti a condizioni incredibili."
+                </blockquote>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <User className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-base sm:text-lg">Marco Bianchi</p>
+                    <p className="text-sm sm:text-base text-gray-600">CEO, Innovazione SRL</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1154,45 +1177,97 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
         </div>
       </section>
 
-      {/* Process Section */}
+      {/* Process Section - Modern Interactive Timeline */}
       <section
         id="come-funziona"
         ref={setSectionRef('come-funziona')}
-        className="py-12 sm:py-16 lg:py-20 bg-white"
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-gray-50 to-white"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <div className="text-center mb-12 lg:mb-16">
+            <div className={`inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-4 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}>
+              <Clock className="w-4 h-4" />
+              3 Step Semplici
+            </div>
+            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.1s'} : {}}>
               Come funziona
             </h2>
-            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.2s'} : {}}>
-              Semplice, veloce, professionale
+            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.2s'} : {}}>
+              Inizia in pochi minuti e trasforma la gestione della tua attività
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 relative">
-            {/* Connection lines */}
-            <div className="hidden md:block absolute top-20 left-1/4 right-1/4 h-0.5 bg-gray-200"></div>
+          {/* Timeline Container */}
+          <div className="relative max-w-5xl mx-auto">
+            {/* Vertical Line - Desktop */}
+            <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-blue-400 to-blue-600"></div>
 
-            {process.map((step, index) => {
-              const Icon = step.icon
-              return (
-                <div
-                  key={index}
-                  className={`text-center relative ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={visibleSections.has('come-funziona') ? {animationDelay: `${0.4 + index * 0.2}s`} : {}}
-                >
-                  <div className="bg-blue-600 text-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg relative">
-                    <Icon className="h-6 w-6 sm:h-8 sm:w-8" />
-                    <div className="absolute -top-2 -right-2 bg-white text-blue-600 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow">
-                      {step.step}
+            {/* Steps */}
+            <div className="space-y-8 lg:space-y-16">
+              {process.map((step, index) => {
+                const Icon = step.icon
+                const isEven = index % 2 === 0
+                return (
+                  <div
+                    key={index}
+                    className={`relative ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}
+                    style={visibleSections.has('come-funziona') ? {animationDelay: `${0.3 + index * 0.2}s`} : {}}
+                  >
+                    <div className={`lg:grid lg:grid-cols-2 lg:gap-8 items-center ${isEven ? '' : 'lg:flex-row-reverse'}`}>
+                      {/* Content */}
+                      <div className={`${isEven ? 'lg:text-right lg:pr-12' : 'lg:pl-12 lg:col-start-2'}`}>
+                        <div className={`inline-block lg:inline ${isEven ? 'lg:ml-auto' : ''}`}>
+                          <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border-2 border-gray-100 hover:border-blue-300 hover:shadow-xl transition-all duration-300 group">
+                            <div className="flex items-start gap-4 lg:block">
+                              <div className={`flex-shrink-0 w-12 h-12 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br ${
+                                index === 0 ? 'from-blue-500 to-blue-600' :
+                                index === 1 ? 'from-indigo-500 to-indigo-600' :
+                                'from-purple-500 to-purple-600'
+                              } flex items-center justify-center mb-0 lg:mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                                <Icon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className={`text-sm font-bold ${
+                                  index === 0 ? 'text-blue-600' :
+                                  index === 1 ? 'text-indigo-600' :
+                                  'text-purple-600'
+                                } mb-2`}>
+                                  Step {step.step}
+                                </div>
+                                <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 lg:mb-3">{step.title}</h3>
+                                <p className="text-sm lg:text-base text-gray-600 leading-relaxed">{step.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Center Circle - Desktop Only */}
+                      <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 top-1/2">
+                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${
+                          index === 0 ? 'from-blue-500 to-blue-600' :
+                          index === 1 ? 'from-indigo-500 to-indigo-600' :
+                          'from-purple-500 to-purple-600'
+                        } flex items-center justify-center shadow-lg border-4 border-white group-hover:scale-125 transition-transform duration-300`}>
+                          <span className="text-white font-bold text-lg">{step.step}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{step.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{step.description}</p>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+
+            {/* CTA at the end */}
+            <div className={`text-center mt-12 lg:mt-16 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.9s'} : {}}>
+              <button
+                onClick={onShowRegister}
+                className="group bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-2xl hover:scale-105 flex items-center justify-center gap-3 mx-auto"
+              >
+                <span>Inizia Ora Gratis</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
