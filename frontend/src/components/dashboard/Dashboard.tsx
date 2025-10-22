@@ -1,6 +1,7 @@
-import BusinessDashboard from './BusinessDashboard'
-import AdminDashboard from './AdminDashboard'
-import SynetichDashboard from './SynetichDashboard'
+import BaseDashboard from './layouts/BaseDashboard'
+import { adminDashboardConfig } from './config/adminDashboardConfig'
+import { businessDashboardConfig } from './config/businessDashboardConfig'
+import { synetichDashboardConfig } from './config/synetichDashboardConfig'
 import PendingApproval from '../auth/PendingApproval'
 import RegistrationSuccess from '../auth/RegistrationSuccess'
 import PivaRequestForm from '../forms/PivaRequestForm'
@@ -90,30 +91,17 @@ export default function Dashboard({ onLogout, userRole, userName, userEmail }: D
     }
   }
 
-  if (userRole === 'admin') {
-    return (
-      <AdminDashboard
-        onLogout={onLogout}
-        userRole={userRole}
-        userName={userName}
-        userEmail={userEmail}
-      />
-    )
-  }
+  // Select config based on user role
+  const config = userRole === 'admin'
+    ? adminDashboardConfig
+    : userRole === 'synetich_admin'
+    ? synetichDashboardConfig
+    : businessDashboardConfig
 
-  if (userRole === 'synetich_admin') {
-    return (
-      <SynetichDashboard
-        onLogout={onLogout}
-        userRole={userRole}
-        userName={userName}
-        userEmail={userEmail}
-      />
-    )
-  }
-
+  // Show appropriate dashboard based on user role
   return (
-    <BusinessDashboard
+    <BaseDashboard
+      {...config}
       onLogout={onLogout}
       userRole={userRole}
       userName={userName}
