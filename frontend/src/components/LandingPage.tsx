@@ -318,8 +318,8 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden sm:overflow-x-auto">
-      {/* Header - Premium 2025 Design */}
-      <header className={`bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50 shadow-[0_1px_3px_0_rgb(0,0,0,0.05)] transition-transform duration-300 ${
+      {/* Header - Minimalist Design */}
+      <header className={`bg-white border-b border-gray-100 sticky top-0 z-50 transition-transform duration-300 ${
         showNavbar ? 'translate-y-0' : '-translate-y-full'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -334,34 +334,34 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
             </button>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center space-x-8">
               <button
                 onClick={() => scrollToSection('servizi')}
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
               >
                 Servizi
               </button>
               <button
                 onClick={() => scrollToSection('benefici')}
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
               >
                 Vantaggi
               </button>
               <button
                 onClick={() => scrollToSection('come-funziona')}
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
               >
                 Come Funziona
               </button>
               <button
                 onClick={() => scrollToSection('synetich')}
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
               >
                 Formazione
               </button>
               <button
                 onClick={() => scrollToSection('footer')}
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
               >
                 Contatti
               </button>
@@ -370,22 +370,22 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200"
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-6 w-6" />
             </button>
 
             {/* Desktop CTA Buttons */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-4">
               <button
                 onClick={onShowLogin}
-                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 font-semibold transition-all duration-200 text-sm px-5 py-2 rounded-lg"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 text-sm px-4 py-2"
               >
                 Accedi
               </button>
               <button
                 onClick={onShowRegister}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold text-sm shadow-[0_2px_8px_0_rgb(37,99,235,0.2)] hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)] hover:scale-[1.02]"
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 font-semibold text-sm"
               >
                 Inizia ora
               </button>
@@ -395,48 +395,48 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100">
+          <div className="md:hidden bg-white border-t border-gray-100">
             <div className="px-4 py-4 space-y-1">
               <button
                 onClick={() => { scrollToSection('servizi'); setShowMobileMenu(false); }}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
               >
                 Servizi
               </button>
               <button
                 onClick={() => { scrollToSection('benefici'); setShowMobileMenu(false); }}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
               >
                 Vantaggi
               </button>
               <button
                 onClick={() => { scrollToSection('come-funziona'); setShowMobileMenu(false); }}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
               >
                 Come Funziona
               </button>
               <button
                 onClick={() => { scrollToSection('synetich'); setShowMobileMenu(false); }}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
               >
                 Formazione
               </button>
               <button
                 onClick={() => { scrollToSection('footer'); setShowMobileMenu(false); }}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
               >
                 Contatti
               </button>
               <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
                 <button
                   onClick={onShowLogin}
-                  className="block w-full text-center px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-semibold"
+                  className="block w-full text-center px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
                 >
                   Accedi
                 </button>
                 <button
                   onClick={onShowRegister}
-                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all duration-200 font-semibold shadow-[0_2px_8px_0_rgb(37,99,235,0.2)] hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)]"
+                  className="block w-full text-center px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 font-semibold"
                 >
                   Inizia ora
                 </button>

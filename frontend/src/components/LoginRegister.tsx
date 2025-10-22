@@ -183,17 +183,11 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center relative py-12 px-4">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center relative py-12 px-4">
       {/* Back button */}
       <button
         onClick={onBack}
-        className="absolute top-6 left-6 flex items-center text-gray-600 hover:text-blue-600 transition-all duration-200 group z-10 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg hover:shadow-md"
+        className="absolute top-6 left-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 group z-10"
       >
         <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
         <span className="font-medium">Torna alla home</span>
@@ -226,7 +220,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
           </p>
         </div>
 
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 p-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+        <div className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-shadow duration-300 border-2 border-gray-200 p-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
           {requires2FA ? (
             // 2FA Form
             <form onSubmit={handleVerify2FA} className="space-y-4">
@@ -249,7 +243,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
               <button
                 type="submit"
                 disabled={twoFACode.length !== 6}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)] transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                className="w-full bg-blue-600 text-white py-3 rounded-2xl hover:bg-blue-700 hover:shadow-2xl hover:scale-105 transition-all duration-200 font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:scale-100"
               >
                 Verifica e Accedi
               </button>
@@ -287,7 +281,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
                       setForgotPasswordEmail('')
                       setForgotPasswordSent(false)
                     }}
-                    className="w-full px-4 py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all duration-200 hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)]"
+                    className="w-full px-4 py-3 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-2xl hover:scale-105"
                   >
                     Torna al Login
                   </button>
@@ -312,7 +306,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)] transition-all duration-200 transform animate-fade-in-up"
+                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-2xl font-bold hover:bg-blue-700 hover:shadow-2xl hover:scale-105 transition-all duration-200 shadow-lg transform animate-fade-in-up"
                     style={{animationDelay: '0.1s'}}
                   >
                     Invia Link di Reset
@@ -335,12 +329,12 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
           ) : (
             <>
               {/* Toggle buttons */}
-              <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+              <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
                 <button
                   onClick={() => setIsLogin(true)}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-bold transition-all duration-200 ${
                     isLogin
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -348,9 +342,9 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
                 </button>
                 <button
                   onClick={() => setIsLogin(false)}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-bold transition-all duration-200 ${
                     !isLogin
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -501,7 +495,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
             {/* Submit button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)] transition-all duration-200 transform animate-fade-in-up"
+              className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl font-bold hover:bg-blue-700 hover:shadow-2xl hover:scale-105 transition-all duration-200 shadow-lg transform animate-fade-in-up"
               style={{animationDelay: isLogin ? '0.3s' : '0.5s'}}
             >
               {isLogin ? 'Accedi' : 'Crea Account'}
