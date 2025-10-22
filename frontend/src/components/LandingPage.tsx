@@ -1142,37 +1142,80 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
             </div>
           </div>
 
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">Metodologie Applicate ai Nostri Servizi</h3>
-          </div>
+          {/* Metodologie Section - Redesigned */}
+          <div className="relative mt-16 lg:mt-20">
+            {/* Background Decoration */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl -mx-4 sm:-mx-6 lg:-mx-8 -my-8"></div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon
-              return (
-                <div
-                  key={index}
-                  className={`text-center group ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={visibleSections.has('benefici') ? {animationDelay: `${0.4 + index * 0.15}s`} : {}}
-                >
-                  <div className="bg-white w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:shadow-xl transition-shadow border border-gray-100">
-                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{benefit.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 leading-relaxed">{benefit.description}</p>
-                  <a
-                    href={benefit.learnMoreUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm hover:underline"
-                    title={benefit.learnMoreText}
-                  >
-                    Scopri di più
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
+            <div className="relative px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+              <div className="text-center mb-10 lg:mb-14">
+                <div className={`inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-4 shadow-sm ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.4s'} : {}}>
+                  <Shield className="w-4 h-4" />
+                  Standard Bancari Professionali
                 </div>
-              )
-            })}
+                <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.5s'} : {}}>
+                  Metodologie Applicate ai Nostri Servizi
+                </h3>
+                <p className={`text-base sm:text-lg text-gray-600 max-w-2xl mx-auto ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.6s'} : {}}>
+                  Framework certificati utilizzati dalle principali istituzioni finanziarie internazionali
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {benefits.map((benefit, index) => {
+                  const Icon = benefit.icon
+                  return (
+                    <div
+                      key={index}
+                      className={`bg-white rounded-2xl p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-white hover:border-blue-200 group hover:-translate-y-2 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}
+                      style={visibleSections.has('benefici') ? {animationDelay: `${0.7 + index * 0.1}s`} : {}}
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`p-4 rounded-xl bg-gradient-to-br ${
+                            index === 0 ? 'from-blue-500 to-blue-600' :
+                            index === 1 ? 'from-indigo-500 to-indigo-600' :
+                            index === 2 ? 'from-purple-500 to-purple-600' :
+                            index === 3 ? 'from-green-500 to-green-600' :
+                            index === 4 ? 'from-orange-500 to-orange-600' :
+                            'from-pink-500 to-pink-600'
+                          } group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                            <Icon className="h-7 w-7 lg:h-8 lg:w-8 text-white" />
+                          </div>
+                          <div className="flex items-center gap-1 text-yellow-400">
+                            <Star className="h-4 w-4 fill-current" />
+                            <Star className="h-4 w-4 fill-current" />
+                            <Star className="h-4 w-4 fill-current" />
+                          </div>
+                        </div>
+
+                        <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
+                        <p className="text-sm lg:text-base text-gray-600 leading-relaxed mb-4 flex-grow">{benefit.description}</p>
+
+                        <a
+                          href={benefit.learnMoreUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm group-hover:gap-3 transition-all duration-300"
+                          title={benefit.learnMoreText}
+                        >
+                          <span>Approfondisci</span>
+                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Trust Badge Bottom */}
+              <div className={`mt-10 lg:mt-14 text-center ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '1.3s'} : {}}>
+                <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-gray-100">
+                  <Award className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-semibold text-gray-700">Certificato da istituzioni bancarie europee</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
