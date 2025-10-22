@@ -28,23 +28,15 @@ UserSchema.pre('save', async function(next) {
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema)
 
-async function addUser() {
+async function addSynetichAdmin() {
   // Prendi i parametri da linea di comando
   const email = process.argv[2]
   const password = process.argv[3]
-  const name = process.argv[4] || 'Admin User'
-  const role = (process.argv[5] as 'admin' | 'business' | 'synetich_admin') || 'admin'
+  const name = process.argv[4] || 'Synetich Admin'
 
   if (!email || !password) {
-    console.error('❌ Usage: npm run add-user <email> <password> [name] [role]')
-    console.error('Example: npm run add-user admin@taxflow.com Password123 "Admin User" admin')
-    console.error('Example: npm run add-user cliente@test.com Password123 "Cliente Test" business')
-    console.error('Example: npm run add-user synetich@example.com Password123 "Synetich Admin" synetich_admin')
-    process.exit(1)
-  }
-
-  if (role !== 'admin' && role !== 'business' && role !== 'synetich_admin') {
-    console.error('❌ Role must be either "admin", "business", or "synetich_admin"')
+    console.error('❌ Usage: npm run add-synetich-admin <email> <password> [name]')
+    console.error('Example: npm run add-synetich-admin chiara.alberti@synetich.com Password123 "Chiara Alberti"')
     process.exit(1)
   }
 
@@ -65,40 +57,43 @@ async function addUser() {
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       console.error(`❌ User with email ${email} already exists`)
+      console.log('Existing user details:')
+      console.log('📧 Email:', existingUser.email)
+      console.log('👤 Name:', existingUser.name)
+      console.log('🔑 Role:', existingUser.role)
+      console.log('🏢 Company:', existingUser.company || 'N/A')
       process.exit(1)
     }
 
-    // Crea nuovo utente
-    const userData: any = {
+    // Crea nuovo utente Synetich Admin
+    const user = new User({
       email,
       password,
       name,
-      role
-    }
-
-    // Aggiungi company per synetich_admin
-    if (role === 'synetich_admin') {
-      userData.company = 'Synetich'
-    }
-
-    const user = new User(userData)
+      role: 'synetich_admin',
+      company: 'Synetich'
+    })
 
     await user.save()
 
-    console.log(`✅ ${role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')} user created successfully!`)
+    console.log('✅ Synetich Admin created successfully!')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📧 Email:', user.email)
     console.log('👤 Name:', user.name)
     console.log('🔑 Role:', user.role)
-    if (user.company) {
-      console.log('🏢 Company:', user.company)
-    }
+    console.log('🏢 Company:', user.company)
     console.log('🆔 ID:', user._id)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('')
+    console.log('🎓 This user can now access the Synetich Course Management Dashboard')
+    console.log('🔐 Login at: http://localhost:5173 (or your production URL)')
+    console.log('')
 
     process.exit(0)
   } catch (error) {
-    console.error('❌ Error creating user:', error)
+    console.error('❌ Error creating Synetich admin:', error)
     process.exit(1)
   }
 }
 
-addUser()
+addSynetichAdmin()

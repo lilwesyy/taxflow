@@ -64,7 +64,7 @@ export interface User {
   id: string
   email: string
   name: string
-  role: 'business' | 'admin'
+  role: 'business' | 'admin' | 'synetich_admin'
   company?: string
   phone?: string
   professionalRole?: string
@@ -418,4 +418,80 @@ export interface ExpenseStats {
     da_pagare: number
     ricorrente: number
   }
+}
+
+// ============================================
+// Synetich Course Types
+// ============================================
+
+export type CourseCategory = 'equipment' | 'safety' | 'management' | 'specialized'
+export type CourseStatus = 'active' | 'draft' | 'archived' | 'completed'
+export type EnrollmentStatus = 'pending' | 'confirmed' | 'completed' | 'canceled' | 'absent'
+
+export interface Course {
+  id: string
+  title: string
+  category: CourseCategory
+  type: string
+  description: string
+  duration: string // e.g., "1 giorno", "2 giorni", "8 ore"
+  startDate: string // ISO date
+  endDate?: string // ISO date
+  maxParticipants: number
+  currentParticipants: number
+  location: string
+  instructor?: string
+  price: number
+  icon?: string
+  certification: boolean
+  certificationName?: string
+  requirements?: string[]
+  topics?: string[]
+  status: CourseStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Enrollment {
+  id: string
+  courseId: string
+  userId: string
+  status: EnrollmentStatus
+  enrollmentDate: Date
+  completionDate?: Date
+  certificateIssued: boolean
+  certificateUrl?: string
+  paymentStatus: 'pending' | 'paid' | 'refunded'
+  paymentAmount: number
+  paymentDate?: Date
+  notes?: string
+  attendance?: {
+    present: boolean
+    hours: number
+  }
+  createdAt: Date
+  updatedAt: Date
+
+  // Populated fields
+  course?: Course
+  user?: {
+    id: string
+    name: string
+    email: string
+    company?: string
+    phone?: string
+  }
+}
+
+export interface CourseStats {
+  totalCourses: number
+  activeCourses: number
+  completedCourses: number
+  totalEnrollments: number
+  totalRevenue: number
+  averageParticipants: number
+  byCategory: Record<CourseCategory, number>
+  byStatus: Record<EnrollmentStatus, number>
+  upcomingCourses: Course[]
+  recentEnrollments: Enrollment[]
 }

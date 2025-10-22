@@ -17,7 +17,7 @@ import Impostazioni from './pages/admin/Impostazioni'
 import Supporto from './pages/admin/Supporto'
 import PlaceholderPage from './pages/shared/PlaceholderPage'
 
-type UserRole = 'business' | 'admin'
+type UserRole = 'business' | 'admin' | 'synetich_admin'
 
 interface AdminDashboardProps {
   onLogout: () => void

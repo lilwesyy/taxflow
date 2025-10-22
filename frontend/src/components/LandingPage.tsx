@@ -29,7 +29,9 @@ import {
   User,
   ArrowRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  GraduationCap,
+  MapPin
 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Logo from './common/Logo'
@@ -103,6 +105,18 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       floatingCards: {
         top: { icon: Target, title: "Strategia", subtitle: "Obiettivi chiari", color: "purple" },
         bottom: { icon: Shield, title: "Risk Control", subtitle: "Minimizzato", color: "green" }
+      }
+    },
+    {
+      badge: { text: "Formazione Continua Certificata", icon: GraduationCap },
+      title: "Corsi Synetich",
+      subtitle: "sicurezza sul lavoro | certificazioni",
+      description: "19 corsi professionali sulla sicurezza sul lavoro e utilizzo di attrezzature. Formazione continua certificata con docenti qualificati, conforme alle normative vigenti.",
+      features: ["19 corsi disponibili", "Certificazioni riconosciute", "Docenti esperti qualificati"],
+      image: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800",
+      floatingCards: {
+        top: { icon: GraduationCap, title: "19 Corsi", subtitle: "Disponibili", color: "blue" },
+        bottom: { icon: Award, title: "100%", subtitle: "Certificati", color: "green" }
       }
     }
   ]
@@ -417,6 +431,13 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
+                onClick={() => scrollToSection('synetich')}
+                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+              >
+                Formazione
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+              </button>
+              <button
                 onClick={() => scrollToSection('footer')}
                 className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
               >
@@ -470,6 +491,12 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
               >
                 Come Funziona
+              </button>
+              <button
+                onClick={() => scrollToSection('synetich')}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              >
+                Formazione
               </button>
               <button
                 onClick={() => scrollToSection('footer')}
@@ -1166,6 +1193,177 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 </div>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Synetich Training Section */}
+      <section
+        id="synetich"
+        ref={setSectionRef('synetich')}
+        className="py-12 sm:py-16 lg:py-20 bg-gray-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <div className={`inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-4 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}>
+              <GraduationCap className="w-4 h-4" />
+              Formazione Continua Certificata
+            </div>
+            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '0.1s'} : {}}>
+              Corsi di Sicurezza <span className="text-blue-600">Synetich</span>
+            </h2>
+            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '0.2s'} : {}}>
+              Formazione professionale sulla sicurezza sul lavoro e utilizzo di attrezzature. Certificazioni riconosciute e conformi alle normative vigenti.
+            </p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
+            {[
+              { number: '19', label: 'Corsi Disponibili', icon: GraduationCap, color: 'blue' },
+              { number: '100%', label: 'Certificati', icon: Award, color: 'green' },
+              { number: '1000+', label: 'Studenti Formati', icon: Users, color: 'blue' },
+              { number: '15+', label: 'Anni Esperienza', icon: TrendingUp, color: 'blue' }
+            ].map((stat, index) => {
+              const Icon = stat.icon
+              const colorClasses = {
+                blue: 'bg-blue-600',
+                green: 'bg-green-600'
+              }
+              return (
+                <div
+                  key={index}
+                  className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}
+                  style={visibleSections.has('synetich') ? {animationDelay: `${0.3 + index * 0.1}s`} : {}}
+                >
+                  <div className={`inline-flex p-2 sm:p-3 rounded-lg ${colorClasses[stat.color as keyof typeof colorClasses]} mb-3`}>
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stat.number}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Course Categories */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {[
+              {
+                title: 'Attrezzature',
+                icon: Building,
+                count: 10,
+                description: 'Gru, piattaforme, movimento terra',
+                color: 'blue'
+              },
+              {
+                title: 'Sicurezza',
+                icon: Shield,
+                count: 5,
+                description: 'DPI, primo soccorso, antincendio',
+                color: 'blue'
+              },
+              {
+                title: 'Management',
+                icon: Users,
+                count: 4,
+                description: 'RSPP, RLS, dirigenti, preposti',
+                color: 'blue'
+              },
+              {
+                title: 'Specializzato',
+                icon: Target,
+                count: 3,
+                description: 'Segnaletica, perforazioni',
+                color: 'blue'
+              }
+            ].map((category, index) => {
+              const Icon = category.icon
+              return (
+                <div
+                  key={index}
+                  className={`bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}
+                  style={visibleSections.has('synetich') ? {animationDelay: `${0.7 + index * 0.1}s`} : {}}
+                >
+                  <div className="bg-blue-100 p-3 rounded-lg inline-flex mb-4 group-hover:bg-blue-200 transition-colors duration-300">
+                    <Icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xl font-bold text-gray-900">{category.title}</h3>
+                    <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-sm font-medium">
+                      {category.count} corsi
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed">{category.description}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Key Benefits */}
+          <div className={`bg-blue-600 rounded-2xl shadow-2xl p-8 sm:p-10 text-white ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '1.1s'} : {}}>
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6">Perché scegliere Synetich?</h3>
+                <ul className="space-y-4">
+                  {[
+                    'Formazione continua certificata',
+                    'Docenti esperti e qualificati',
+                    'Corsi conformi alle normative vigenti',
+                    'Certificazioni riconosciute a livello nazionale',
+                    'Sedi a Torino e Aosta',
+                    'Supporto post-corso completo'
+                  ].map((benefit, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-300 flex-shrink-0 mt-0.5" />
+                      <span className="text-blue-50">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Informazioni di Contatto
+                </h4>
+                <div className="space-y-3 text-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">Sede Torino</div>
+                      <div className="text-sm">Via Vincenzo Lancia 26</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">Telefono</div>
+                      <div className="text-sm">+39 011 0263780</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">Email</div>
+                      <div className="text-sm">contatti@synetich.com</div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={onShowLogin}
+                  className="w-full mt-6 bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 group shadow-lg"
+                >
+                  Accedi per vedere tutti i corsi
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

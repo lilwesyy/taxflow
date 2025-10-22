@@ -2,7 +2,7 @@ import { Bell, Settings, LogOut, User, Check, Clock, AlertTriangle, X, Menu } fr
 import { type ReactNode, useState, useRef, useEffect } from 'react'
 import Logo from '../common/Logo'
 
-type UserRole = 'business' | 'admin'
+type UserRole = 'business' | 'admin' | 'synetich_admin'
 
 interface DashboardLayoutProps {
   onLogout: () => void

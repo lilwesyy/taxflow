@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen, TrendingUp } from 'lucide-react'
+import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen, TrendingUp, GraduationCap } from 'lucide-react'
 import DashboardLayout from './DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -13,9 +13,10 @@ import Documenti from './pages/business/Documenti'
 import Impostazioni from './pages/business/Impostazioni'
 import FeedbackConsulente from './pages/business/FeedbackConsulente'
 import CashFlow from './pages/business/CashFlow'
+import Synetich from './pages/business/Synetich'
 import PlaceholderPage from './pages/shared/PlaceholderPage'
 
-type UserRole = 'business' | 'admin'
+type UserRole = 'business' | 'admin' | 'synetich_admin'
 
 interface BusinessDashboardProps {
   onLogout: () => void
@@ -56,6 +57,9 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
     { id: 'analisi-ai', name: 'Analisi SWOT', icon: Brain },
     { id: 'business-plan', name: 'Business Plan', icon: Target },
 
+    // Formazione e sicurezza
+    { id: 'synetich', name: 'Synetich', icon: GraduationCap },
+
     // Consulenza e feedback
     { id: 'consulenza', name: 'Chat Consulente', icon: MessageSquare },
     { id: 'feedback-consulente', name: 'Feedback Consulente', icon: Star },
@@ -74,6 +78,7 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
       'simulazione-imposte': 'Calcola le imposte con codice ATECO',
       'analisi-ai': 'Analisi aziendale powered by AI',
       'business-plan': 'Crea il tuo business plan con AI',
+      'synetich': 'Corsi di formazione sulla sicurezza sul lavoro',
       'consulenza': 'Chat con il tuo consulente CFO',
       'feedback-consulente': 'Valuta e lascia feedback sui consulenti',
       'documenti': 'Documenti fiscali organizzati come Agenzia delle Entrate',
@@ -105,6 +110,9 @@ export default function BusinessDashboard({ onLogout, userRole, userName, userEm
 
       case 'business-plan':
         return <BusinessPlan />
+
+      case 'synetich':
+        return <Synetich />
 
       case 'consulenza':
         return <Consulenza />

@@ -1,5 +1,6 @@
 import BusinessDashboard from './dashboard/BusinessDashboard'
 import AdminDashboard from './dashboard/AdminDashboard'
+import SynetichDashboard from './dashboard/SynetichDashboard'
 import PendingApproval from './PendingApproval'
 import RegistrationSuccess from './RegistrationSuccess'
 import PivaRequestForm from './PivaRequestForm'
@@ -7,7 +8,7 @@ import PaymentPending from './PaymentPending'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
 
-type UserRole = 'business' | 'admin'
+type UserRole = 'business' | 'admin' | 'synetich_admin'
 
 interface DashboardProps {
   onLogout: () => void
@@ -92,6 +93,17 @@ export default function Dashboard({ onLogout, userRole, userName, userEmail }: D
   if (userRole === 'admin') {
     return (
       <AdminDashboard
+        onLogout={onLogout}
+        userRole={userRole}
+        userName={userName}
+        userEmail={userEmail}
+      />
+    )
+  }
+
+  if (userRole === 'synetich_admin') {
+    return (
+      <SynetichDashboard
         onLogout={onLogout}
         userRole={userRole}
         userName={userName}

@@ -10,6 +10,7 @@
     "stripe": "stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "add-user": "tsx scripts/add-user.ts",
+    "add-synetich-admin": "tsx scripts/add-synetich-admin.ts",
     "check-user": "tsx scripts/check-user.ts",
     "reset-piva-approval": "tsx scripts/reset-piva-approval.ts",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
