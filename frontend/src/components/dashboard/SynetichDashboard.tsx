@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Home, GraduationCap, Users, Calendar, FileText, Settings, TrendingUp, Award, Building, BarChart3 } from 'lucide-react'
-import DashboardLayout from './DashboardLayout'
+import DashboardLayout from './layouts/DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import SynetichOverview from './pages/synetich/SynetichOverview'

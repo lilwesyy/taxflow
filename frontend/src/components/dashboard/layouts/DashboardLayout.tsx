@@ -1,6 +1,6 @@
 import { Bell, Settings, LogOut, User, Check, Clock, AlertTriangle, X, Menu } from 'lucide-react'
 import { type ReactNode, useState, useRef, useEffect } from 'react'
-import Logo from '../common/Logo'
+import Logo from '../../common/Logo'
 
 type UserRole = 'business' | 'admin' | 'synetich_admin'
 

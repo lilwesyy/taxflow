@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import Logo from './common/Logo'
-import Modal from './common/Modal'
-import { useAuth } from '../context/AuthContext'
-import { useToast } from '../context/ToastContext'
-import PivaRequestForm, { type PivaRequestData } from './PivaRequestForm'
+import Logo from '../common/Logo'
+import Modal from '../common/Modal'
+import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
+import PivaRequestForm, { type PivaRequestData } from '../forms/PivaRequestForm'
 
 interface RegistrationFlowProps {
   onBack: () => void
@@ -91,7 +91,7 @@ export default function RegistrationFlow({ onBack, onComplete }: RegistrationFlo
       }
 
       // Invia i dati del questionario al backend usando apiService
-      const apiService = (await import('../services/api')).default
+      const apiService = (await import('../../services/api')).default
       await apiService.updateUserProfile({
         pivaRequestData: {
           ...pivaData,

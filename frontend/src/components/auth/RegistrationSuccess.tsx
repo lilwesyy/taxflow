@@ -1,5 +1,5 @@
 import { CheckCircle, Mail, Phone, Clock, ArrowLeft } from 'lucide-react'
-import Logo from './common/Logo'
+import Logo from '../common/Logo'
 
 interface RegistrationSuccessProps {
   userEmail: string

@@ -26,9 +26,9 @@ import {
   Lock
 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import Logo from './common/Logo'
-import { useCookieConsent } from '../hooks/useCookieConsent'
-import logoSvg from '../assets/logo.svg'
+import Logo from '../common/Logo'
+import { useCookieConsent } from '../../hooks/useCookieConsent'
+import logoSvg from '../../assets/logo.svg'
 
 interface LandingPageProps {
   onShowLogin: () => void

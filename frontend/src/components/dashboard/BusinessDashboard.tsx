@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Home, FileText, Settings, Brain, Calculator, MessageSquare, Receipt, Target, Star, FolderOpen, TrendingUp, GraduationCap } from 'lucide-react'
-import DashboardLayout from './DashboardLayout'
+import DashboardLayout from './layouts/DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import DashboardOverview from './pages/business/DashboardOverview'

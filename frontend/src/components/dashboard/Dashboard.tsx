@@ -1,11 +1,11 @@
-import BusinessDashboard from './dashboard/BusinessDashboard'
-import AdminDashboard from './dashboard/AdminDashboard'
-import SynetichDashboard from './dashboard/SynetichDashboard'
-import PendingApproval from './PendingApproval'
-import RegistrationSuccess from './RegistrationSuccess'
-import PivaRequestForm from './PivaRequestForm'
-import PaymentPending from './PaymentPending'
-import { useAuth } from '../context/AuthContext'
+import BusinessDashboard from './BusinessDashboard'
+import AdminDashboard from './AdminDashboard'
+import SynetichDashboard from './SynetichDashboard'
+import PendingApproval from '../auth/PendingApproval'
+import RegistrationSuccess from '../auth/RegistrationSuccess'
+import PivaRequestForm from '../forms/PivaRequestForm'
+import PaymentPending from '../payment/PaymentPending'
+import { useAuth } from '../../context/AuthContext'
 import { useState } from 'react'
 
 type UserRole = 'business' | 'admin' | 'synetich_admin'
@@ -41,7 +41,7 @@ export default function Dashboard({ onLogout, userRole, userName, userEmail }: D
       return (
         <PivaRequestForm
           onSubmit={async (data) => {
-            const apiService = (await import('../services/api')).default
+            const apiService = (await import('../../services/api')).default
             const response = await apiService.updateUserProfile({
               pivaRequestData: { ...data, submittedAt: new Date() },
               pivaFormSubmitted: true,

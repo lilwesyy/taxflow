@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import Logo from './common/Logo'
-import { useToast } from '../context/ToastContext'
+import Logo from '../common/Logo'
+import { useToast } from '../../context/ToastContext'
 
 interface ResetPasswordProps {
   onBack: () => void

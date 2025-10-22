@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import Modal from './common/Modal'
-import { useAuth } from '../context/AuthContext'
-import { useToast } from '../context/ToastContext'
-import logoSvg from '../assets/logo.svg'
+import Modal from '../common/Modal'
+import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
+import logoSvg from '../../assets/logo.svg'
 
 interface LoginRegisterProps {
   onBack: () => void

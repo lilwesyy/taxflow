@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { FileText, AlertCircle } from 'lucide-react'
-import AddressAutocomplete from './common/AddressAutocomplete'
-import ATECOAutocomplete from './common/ATECOAutocomplete'
+import AddressAutocomplete from '../common/AddressAutocomplete'
+import ATECOAutocomplete from '../common/ATECOAutocomplete'
 
 interface PivaRequestFormProps {
   onSubmit: (data: PivaRequestData) => Promise<void>

@@ -1,8 +1,8 @@
 import { CreditCard, CheckCircle, Clock, AlertCircle, ExternalLink, Shield, LogOut } from 'lucide-react'
 import { useState } from 'react'
-import { SUBSCRIPTION_PLANS } from '../config/subscriptionPlans'
-import { useAuth } from '../context/AuthContext'
-import Logo from './common/Logo'
+import { SUBSCRIPTION_PLANS } from '../../config/subscriptionPlans'
+import { useAuth } from '../../context/AuthContext'
+import Logo from '../common/Logo'
 
 interface PaymentPendingProps {
   onLogout: () => void
