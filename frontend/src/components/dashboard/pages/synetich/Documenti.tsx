@@ -81,11 +81,7 @@ const Documenti: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header with Upload */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestione Documenti</h2>
-          <p className="text-gray-600 mt-1">Materiali didattici e documenti amministrativi</p>
-        </div>
+      <div className="flex justify-end items-center">
         <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
           <Upload className="w-5 h-5" />
           Carica Documento
