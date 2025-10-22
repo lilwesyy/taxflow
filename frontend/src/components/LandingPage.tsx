@@ -804,10 +804,6 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
               <span className="font-medium">GDPR Compliant</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Award className="w-5 h-5 text-purple-600" />
-              <span className="font-medium">ISO 27001</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
               <Lock className="w-5 h-5 text-orange-600" />
               <span className="font-medium">SSL Encrypted</span>
             </div>
