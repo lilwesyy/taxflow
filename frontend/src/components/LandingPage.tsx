@@ -557,7 +557,7 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                       }`}
                     >
                       <div className="flex-1 flex flex-col justify-center">
-                        <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 w-fit mx-auto lg:mx-0">
+                        <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 w-fit mx-auto lg:mx-0">
                           <BadgeIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
                           <span className="whitespace-nowrap">{banner.badge.text}</span>
                         </div>
@@ -1701,7 +1701,7 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 <Logo className="h-10 sm:h-12" inverted={true} />
               </div>
               <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6 leading-relaxed">
-                La partita IVA forfettaria con metodologia Banca d'Italia per ottimizzare il tuo rating creditizio.
+                La piattaforma semplice ed intuitiva per il giovane imprenditore di successo.
               </p>
 
               <div className="space-y-1.5 sm:space-y-2">
