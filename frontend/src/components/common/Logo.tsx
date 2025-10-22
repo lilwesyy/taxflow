@@ -1,5 +1,5 @@
 import React from 'react'
-import logoImg from '../../assets/logo.png'
+import logoSvg from '../../assets/logo.svg'
 
 interface LogoProps {
   className?: string
@@ -12,7 +12,7 @@ const Logo: React.FC<LogoProps> = ({
 }) => {
   return (
     <img
-      src={logoImg}
+      src={logoSvg}
       alt="TaxFlow Logo"
       className={`${className} ${inverted ? 'brightness-0 invert' : ''}`}
     />

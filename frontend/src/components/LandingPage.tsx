@@ -11,20 +11,11 @@ import {
   Building,
   TrendingUp,
   BarChart3,
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
   Users,
   Zap,
   Target,
   CheckCircle,
   Award,
-  Globe,
-  PieChart,
-  LineChart,
-  DollarSign,
-  Laptop,
-  BookOpen,
   Star,
   User,
   ArrowRight,
@@ -37,6 +28,7 @@ import {
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Logo from './common/Logo'
 import { useCookieConsent } from '../hooks/useCookieConsent'
+import logoSvg from '../assets/logo.svg'
 
 interface LandingPageProps {
   onShowLogin: () => void
@@ -46,8 +38,7 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onShowLogin, onShowRegister, showCookieModal = false, setShowCookieModal }: LandingPageProps) {
-  const { showBanner } = useCookieConsent()
-  const [visibleSections, setVisibleSections] = useState(new Set<string>())
+  useCookieConsent() // Keep hook call for side effects
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -56,10 +47,6 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
   const [isClosingPrivacy, setIsClosingPrivacy] = useState(false)
   const [isClosingTerms, setIsClosingTerms] = useState(false)
   const [isClosingCookie, setIsClosingCookie] = useState(false)
-
-  // Carousel states
-  const [currentBanner, setCurrentBanner] = useState(0)
-  const [currentService, setCurrentService] = useState(0)
 
   // Scroll to top button state
   const [showScrollTop, setShowScrollTop] = useState(false)
@@ -70,91 +57,8 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
   const sectionRefs = useRef<Record<string, Element | null>>({})
 
-  // Banner data for carousel
-  const banners = [
-    {
-      badge: { text: "Valutazione Inquadramento Fiscale", icon: FileCheck },
-      title: "Partita IVA Forfettaria",
-      subtitle: "il tuo | fisco con un click",
-      description: "Gestione fiscale avanzata della tua partita IVA forfettaria. Attraverso la tua dashboard controlli la tua fiscalità, monitori ed ottimizzi le tue relazioni bancarie.",
-      features: ["Valutazione inquadramento fiscale", "Gestione e controllo fiscalità", "Ottimizzazione relazioni bancarie"],
-      image: "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
-      floatingCards: {
-        top: { icon: FileCheck, title: "Fiscalità", subtitle: "Sotto controllo", color: "green" },
-        bottom: { icon: BarChart3, title: "Relazioni", subtitle: "Bancarie ottimizzate", color: "blue" }
-      }
-    },
-    {
-      badge: { text: "Metodologia Banca D'Italia", icon: Shield },
-      title: "Business Plan Predittivo",
-      subtitle: "strategie aziendali proattive",
-      description: "Sistema di allerta precoce conforme al D.Lgs. 14/2019 per identificare tempestivamente i segnali di crisi e garantire la continuità aziendale.",
-      features: ["Strategico", "Innovativo", "Dinamico"],
-      image: "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
-      floatingCards: {
-        top: { icon: Clock, title: "Alert 24/7", subtitle: "Monitoraggio", color: "orange" },
-        bottom: { icon: FileCheck, title: "D.Lgs. 14/2019", subtitle: "Compliant", color: "purple" }
-      }
-    },
-    {
-      badge: { text: "Pianificazione Strategica", icon: Target },
-      title: "Analisi SWOT",
-      subtitle: "per decisioni vincenti",
-      description: "Matrice strategica per valutare punti di forza, debolezze, opportunità e minacce del tuo business. Minimizza i rischi e definisci la tua strategia di crescita sul lungo periodo.",
-      features: ["Analisi interna/esterna", "Riduzione rischi", "Obiettivi chiari"],
-      image: "https://images.pexels.com/photos/3760069/pexels-photo-3760069.jpeg?auto=compress&cs=tinysrgb&w=800",
-      floatingCards: {
-        top: { icon: Target, title: "Strategia", subtitle: "Obiettivi chiari", color: "purple" },
-        bottom: { icon: Shield, title: "Risk Control", subtitle: "Minimizzato", color: "green" }
-      }
-    },
-    {
-      badge: { text: "Formazione Continua Certificata", icon: GraduationCap },
-      title: "Corsi Synetich",
-      subtitle: "sicurezza sul lavoro | certificazioni",
-      description: "19 corsi professionali sulla sicurezza sul lavoro e utilizzo di attrezzature. Formazione continua certificata con docenti qualificati, conforme alle normative vigenti.",
-      features: ["19 corsi disponibili", "Certificazioni riconosciute", "Docenti esperti qualificati"],
-      image: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800",
-      floatingCards: {
-        top: { icon: GraduationCap, title: "19 Corsi", subtitle: "Disponibili", color: "blue" },
-        bottom: { icon: Award, title: "100%", subtitle: "Certificati", color: "green" }
-      }
-    }
-  ]
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => new Set([...prev, entry.target.id]))
-          }
-        })
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '-50px 0px'
-      }
-    )
-
-    Object.values(sectionRefs.current).forEach(ref => {
-      if (ref) observer.observe(ref)
-    })
-
-    return () => observer.disconnect()
-  }, [])
-
-  // Carousel auto-rotation - only when cookies are accepted and modals are closed
-  useEffect(() => {
-    // Don't auto-rotate if cookie banner is visible or any modal is open
-    if (showBanner || showCookieModal || showPrivacyModal || showTermsModal) return
-
-    const interval = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length)
-    }, 10000) // Change every 10 seconds
-
-    return () => clearInterval(interval)
-  }, [showBanner, showCookieModal, showPrivacyModal, showTermsModal])
+  // Removed intersection observer for section visibility animations
+  // Keeping simplified design without scroll-based animations
 
   // Show/hide scroll to top button and navbar based on scroll position
   useEffect(() => {
@@ -274,6 +178,16 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
   const services = [
     {
+      icon: TrendingUp,
+      title: "Business Plan Predittivo VisionFlow",
+      description: "Sistema di pianificazione strategica con analisi predittiva conforme al D.Lgs. 14/2019 per anticipare le dinamiche di mercato e garantire la crescita sostenibile.",
+      price: "da €998",
+      features: ["Executive Summary + Obiettivo", "Analisi di mercato", "Time Series Forecasting", "Simulazione budget + Alert"],
+      learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
+      learnMoreText: "Leggi il D.Lgs. 14/2019 - Codice della Crisi",
+      isPrimary: true
+    },
+    {
       icon: Building,
       title: "P.IVA Forfettari",
       description: "Apertura e gestione partita IVA forfettaria. Dashboard integrata con il tuo cassetto fiscale e previdenziale (INPS-INAIL) gratis.",
@@ -291,16 +205,8 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
         "Oppure €35/mese (pagamento mensile automatico)"
       ],
       learnMoreUrl: "https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/dichiarazione-di-inizio-attivita-iva/infogen-dichiarazione-inizio-attivita",
-      learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria"
-    },
-    {
-      icon: TrendingUp,
-      title: "Business Plan Predittivo VisionFlow",
-      description: "Sistema di pianificazione strategica con analisi predittiva conforme al D.Lgs. 14/2019 per anticipare le dinamiche di mercato e garantire la crescita sostenibile.",
-      price: "da €998",
-      features: ["Executive Summary + Obiettivo", "Analisi di mercato", "Time Series Forecasting", "Simulazione budget + Alert"],
-      learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
-      learnMoreText: "Leggi il D.Lgs. 14/2019 - Codice della Crisi"
+      learnMoreText: "Guida Agenzia Entrate P.IVA forfettaria",
+      isPrimary: true
     },
     {
       icon: Target,
@@ -309,7 +215,8 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       price: "da €998",
       features: ["Matrice 4 quadranti dinamica", "Analisi Strengths/Weaknesses", "Opportunità e Minacce", "Sintesi strategica + Azioni"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/qualita-crediti/index.html",
-      learnMoreText: "Sistema ICAS Banca d'Italia"
+      learnMoreText: "Sistema ICAS Banca d'Italia",
+      isPrimary: true
     },
     {
       icon: Brain,
@@ -318,7 +225,8 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       price: "€170/ora",
       features: ["Monitoraggio continuo", "Ottimizzazione fiscale", "Supporto strategico", "Consulenza dedicata"],
       learnMoreUrl: "https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/",
-      learnMoreText: "Sistema gestione garanzie Banca d'Italia"
+      learnMoreText: "Sistema gestione garanzie Banca d'Italia",
+      isPrimary: false
     },
     {
       icon: Banknote,
@@ -327,7 +235,18 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       price: "da €998",
       features: ["Consulenza finanziamento ottimale", "Business plan con scoring", "Garanzia MCC L.662/96", "Conformità Banca d'Italia"],
       learnMoreUrl: "https://www.fondidigaranzia.it/",
-      learnMoreText: "Info Fondo di Garanzia PMI"
+      learnMoreText: "Info Fondo di Garanzia PMI",
+      isPrimary: false
+    },
+    {
+      icon: GraduationCap,
+      title: "Corsi Sicurezza Synetich",
+      description: "Formazione professionale certificata sulla sicurezza sul lavoro. 19 corsi disponibili per attrezzature, sicurezza, management e specializzazioni.",
+      price: "da €150",
+      features: ["19 corsi certificati", "Docenti qualificati", "Sedi Torino e Aosta", "Conformi alle normative"],
+      learnMoreUrl: "#synetich",
+      learnMoreText: "Scopri tutti i corsi",
+      isPrimary: false
     }
   ]
 
@@ -399,124 +318,127 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden sm:overflow-x-auto">
-      {/* Header */}
-      <header className={`bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-md bg-white/90 transition-transform duration-300 ${
+      {/* Header - Premium 2025 Design */}
+      <header className={`bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50 shadow-[0_1px_3px_0_rgb(0,0,0,0.05)] transition-transform duration-300 ${
         showNavbar ? 'translate-y-0' : '-translate-y-full'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <Logo className="h-10 sm:h-12" />
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <button
+              onClick={scrollToTop}
+              className="flex items-center hover:opacity-80 transition-opacity duration-200"
+              aria-label="Torna alla home"
+            >
+              <img src={logoSvg} alt="TaxFlow" className="h-10 sm:h-12 w-auto" />
+            </button>
 
-            <nav className="hidden md:flex space-x-4 lg:space-x-8">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-1">
               <button
                 onClick={() => scrollToSection('servizi')}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
               >
                 Servizi
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('benefici')}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
               >
                 Vantaggi
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('come-funziona')}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
               >
                 Come Funziona
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('synetich')}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
               >
                 Formazione
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('footer')}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium relative group"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium text-sm px-4 py-2 rounded-lg"
               >
                 Contatti
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
             </nav>
 
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              className="md:hidden p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200"
             >
-              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Menu className="h-5 w-5" />
             </button>
 
-            <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+            {/* Desktop CTA Buttons */}
+            <div className="hidden md:flex items-center space-x-3">
               <button
                 onClick={onShowLogin}
-                className="text-sm lg:text-base text-gray-600 hover:text-blue-600 font-medium transition-colors px-2 lg:px-0"
+                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 font-semibold transition-all duration-200 text-sm px-5 py-2 rounded-lg"
               >
                 Accedi
               </button>
               <button
                 onClick={onShowRegister}
-                className="text-sm lg:text-base bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium hover:shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold text-sm shadow-[0_2px_8px_0_rgb(37,99,235,0.2)] hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)] hover:scale-[1.02]"
               >
-                Registrati
+                Inizia ora
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden bg-white border-t border-gray-100">
-            <div className="px-4 py-2 space-y-1">
+          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100">
+            <div className="px-4 py-4 space-y-1">
               <button
-                onClick={() => scrollToSection('servizi')}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                onClick={() => { scrollToSection('servizi'); setShowMobileMenu(false); }}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
               >
                 Servizi
               </button>
               <button
-                onClick={() => scrollToSection('benefici')}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                onClick={() => { scrollToSection('benefici'); setShowMobileMenu(false); }}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
               >
                 Vantaggi
               </button>
               <button
-                onClick={() => scrollToSection('come-funziona')}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                onClick={() => { scrollToSection('come-funziona'); setShowMobileMenu(false); }}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
               >
                 Come Funziona
               </button>
               <button
-                onClick={() => scrollToSection('synetich')}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                onClick={() => { scrollToSection('synetich'); setShowMobileMenu(false); }}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
               >
                 Formazione
               </button>
               <button
-                onClick={() => scrollToSection('footer')}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                onClick={() => { scrollToSection('footer'); setShowMobileMenu(false); }}
+                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-medium"
               >
                 Contatti
               </button>
-              <div className="border-t border-gray-100 pt-2 mt-2">
+              <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
                 <button
                   onClick={onShowLogin}
-                  className="block w-full text-left px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                  className="block w-full text-center px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-lg transition-all duration-200 font-semibold"
                 >
                   Accedi
                 </button>
                 <button
                   onClick={onShowRegister}
-                  className="block w-full text-left px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 mt-1"
+                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all duration-200 font-semibold shadow-[0_2px_8px_0_rgb(37,99,235,0.2)] hover:shadow-[0_4px_12px_0_rgb(37,99,235,0.3)]"
                 >
-                  Registrati
+                  Inizia ora
                 </button>
               </div>
             </div>
@@ -524,227 +446,402 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
         )}
       </header>
 
-      {/* Hero Section */}
-      <section className="relative bg-white overflow-hidden">
-        <div className="absolute inset-0 bg-gray-50"></div>
+      {/* Hero Section - Fiscozen/FidoCommercialista Inspired Design */}
+      <section className="relative bg-white overflow-hidden min-h-[90vh] flex items-center">
+        {/* Modern Gradient Background - Subtle and Clean */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/20"></div>
 
-        {/* Geometric Background Elements */}
-        <div className="absolute inset-0">
-          <svg className="absolute top-0 right-0 w-96 h-96 text-blue-50" viewBox="0 0 100 100" fill="currentColor">
-            <circle cx="75" cy="25" r="25" opacity="0.6"/>
-          </svg>
-          <svg className="absolute bottom-0 left-0 w-80 h-80 text-indigo-50" viewBox="0 0 100 100" fill="currentColor">
-            <polygon points="0,100 50,0 100,100" opacity="0.4"/>
-          </svg>
-          <div className="absolute top-20 left-20 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-40 right-32 w-3 h-3 bg-indigo-400 rounded-full animate-pulse delay-300"></div>
-          <div className="absolute bottom-40 left-1/3 w-1 h-1 bg-purple-400 rounded-full animate-pulse delay-700"></div>
+        {/* Minimal Geometric Accents */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-20 right-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 xl:py-32">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Dynamic Content Carousel */}
-            <div className="text-center lg:text-left relative">
-              <div className="relative min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col">
-                {banners.map((banner, index) => {
-                  const BadgeIcon = banner.badge.icon
-                  return (
-                    <div
-                      key={index}
-                      className={`absolute inset-0 flex flex-col justify-between transition-all duration-1000 ${
-                        index === currentBanner
-                          ? 'opacity-100 transform translate-x-0 z-10'
-                          : 'opacity-0 transform translate-x-4 z-0 pointer-events-none'
-                      }`}
-                    >
-                      <div className="flex-1 flex flex-col justify-center">
-                        <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 w-fit mx-auto lg:mx-0">
-                          <BadgeIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                          <span className="whitespace-nowrap">{banner.badge.text}</span>
-                        </div>
-
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-                          {banner.title}
-                          <br />
-                          {banner.subtitle.includes('|') ? (
-                            <>
-                              <span className="text-blue-600">{banner.subtitle.split('|')[0].trim()}</span>
-                              <br />
-                              <span className="text-gray-600 text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
-                                {banner.subtitle.split('|')[1].trim()}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-blue-600">{banner.subtitle.split(' ')[0]}</span>
-                              <br />
-                              <span className="text-gray-600 text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
-                                {banner.subtitle.split(' ').slice(1).join(' ')}
-                              </span>
-                            </>
-                          )}
-                        </h1>
-
-                        <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                          {banner.description}
-                        </p>
-
-                        {/* Key Points */}
-                        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start mb-8 sm:mb-10">
-                          {banner.features.map((feature, featureIndex) => (
-                            <div key={featureIndex} className="flex items-center bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-100">
-                              <CheckCircle className="h-3 w-3 text-green-500 mr-1 sm:mr-2" />
-                              <span className="text-xs sm:text-sm font-medium text-gray-700">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content - Bold Typography, Clean Layout */}
+            <div className="text-center lg:text-left space-y-8 max-w-2xl mx-auto lg:mx-0">
+              {/* Badge - Modern Glass Effect */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-blue-100 shadow-sm">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-sm font-medium text-gray-700">Piattaforma Innovativa per PMI</span>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mt-2">
-                <button
-                  onClick={onShowRegister}
-                  className="group bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center"
-                >
-                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>Inizia Valutazione Gratuita</span>
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-                <button
-                  onClick={() => scrollToSection('servizi')}
-                  className="group border-2 border-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-all duration-300 hover:shadow-md hover:scale-105 flex items-center justify-center"
-                >
-                  <span className="group-hover:-translate-x-1 transition-transform duration-300">Vedi tutti i servizi</span>
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-              </div>
+              {/* Headline - Extra Bold, Modern Typography */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
+                Gestisci la tua{' '}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Partita IVA</span>
+                  <span className="absolute bottom-2 left-0 w-full h-4 bg-blue-200/50 -rotate-1"></span>
+                </span>
+                {' '}senza stress
+              </h1>
 
-              {/* Carousel Navigation - Below CTA */}
-              <div className="flex justify-center lg:justify-start items-center mt-6 sm:mt-8 space-x-3 sm:space-x-4">
-                <button
-                  onClick={() => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length)}
-                  className="p-2 sm:p-2.5 rounded-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg"
-                  type="button"
-                  aria-label="Banner precedente"
-                >
-                  <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-                </button>
+              {/* Subtitle - Large, Readable */}
+              <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed font-light">
+                La piattaforma <span className="font-semibold text-gray-900">semplice e intuitiva</span> per giovani imprenditori che vogliono crescere
+              </p>
 
-                <div className="flex space-x-2 sm:space-x-3">
-                  {banners.map((_, dotIndex) => (
-                    <button
-                      key={dotIndex}
-                      onClick={() => setCurrentBanner(dotIndex)}
-                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                        dotIndex === currentBanner
-                          ? 'bg-blue-600 scale-110 shadow-md'
-                          : 'bg-gray-300 hover:bg-gray-400 hover:scale-105'
-                      }`}
-                      type="button"
-                      aria-label={`Vai al banner ${dotIndex + 1}`}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
-                  className="p-2 sm:p-2.5 rounded-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg"
-                  type="button"
-                  aria-label="Banner successivo"
-                >
-                  <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-                </button>
-              </div>
-
-              {/* Social Proof */}
-              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6 lg:gap-8 text-xs sm:text-sm text-gray-600">
-                  <div className="flex items-center group cursor-default">
-                    <div className="flex -space-x-2 mr-2 sm:mr-3">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animation-delay-100">
-                        <User className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
-                      </div>
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animation-delay-200">
-                        <User className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-                      </div>
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animation-delay-300">
-                        <User className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
-                      </div>
-                    </div>
-                    <span className="group-hover:text-gray-900 transition-colors duration-300"><strong>+250</strong> imprenditori</span>
-                  </div>
-                  <div className="flex items-center group cursor-default">
-                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-1.5 sm:mr-2 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300" />
-                    <span className="group-hover:text-gray-900 transition-colors duration-300"><strong>+15%</strong> rating medio</span>
-                  </div>
-                  <div className="flex items-center group cursor-default">
-                    <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-1.5 sm:mr-2 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300" />
-                    <span className="group-hover:text-gray-900 transition-colors duration-300"><strong>100%</strong> conformità normativa</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Dynamic Professional Images */}
-            <div className="relative">
-              <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
-                {/* Dynamic images from Pexels based on current banner */}
-                {banners.map((banner, index) => (
-                  <div
-                    key={index}
-                    className={`aspect-[4/3] transition-all duration-1000 ${
-                      index === currentBanner
-                        ? 'opacity-100'
-                        : 'opacity-0 absolute inset-0'
-                    }`}
-                  >
-                    <img
-                      src={banner.image}
-                      alt={`${banner.title} - Professional business environment`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+              {/* Key Features - Pills Style */}
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                {['Consulente dedicato', 'Dashboard intelligente', 'AI integrata'].map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full border border-gray-200">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-sm font-medium text-gray-700">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Dynamic Floating Stats Cards - Outside the image container */}
-              {banners.map((banner, index) => {
-                const TopIcon = banner.floatingCards.top.icon
-                const BottomIcon = banner.floatingCards.bottom.icon
-                const topColorClass = banner.floatingCards.top.color === 'green' ? 'text-green-500' :
-                                    banner.floatingCards.top.color === 'blue' ? 'text-blue-500' :
-                                    banner.floatingCards.top.color === 'orange' ? 'text-orange-500' : 'text-purple-500'
-                const bottomColorClass = banner.floatingCards.bottom.color === 'green' ? 'text-green-500' :
-                                       banner.floatingCards.bottom.color === 'blue' ? 'text-blue-500' :
-                                       banner.floatingCards.bottom.color === 'orange' ? 'text-orange-500' : 'text-purple-500'
+              {/* CTA Buttons - Modern, Bold Style */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <button
+                  onClick={onShowRegister}
+                  className="group relative px-8 py-4 bg-blue-600 text-white text-lg font-bold rounded-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-2xl shadow-lg flex items-center justify-center gap-3"
+                >
+                  <span>Inizia ora</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                </button>
+                <button
+                  onClick={() => scrollToSection('servizi')}
+                  className="group px-8 py-4 bg-white text-gray-900 text-lg font-semibold rounded-2xl border-2 border-gray-200 hover:border-gray-900 transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3"
+                >
+                  <span>Scopri di più</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                </button>
+              </div>
 
-                return (
-                  <div key={index} className={`transition-all duration-1000 ${
-                    index === currentBanner ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                  }`}>
-                    <div className="absolute top-2 right-2 sm:-top-6 sm:-right-12 bg-white rounded-lg shadow-lg p-2 sm:p-4 border border-gray-100 z-10">
-                      <div className="flex items-center">
-                        <TopIcon className={`h-4 w-4 sm:h-6 sm:w-6 ${topColorClass} mr-1 sm:mr-2`} />
-                        <div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">{banner.floatingCards.top.title}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500">{banner.floatingCards.top.subtitle}</div>
-                        </div>
+              {/* Social Proof - Minimalist, Below CTAs */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 border-2 border-white"></div>
+                    ))}
+                  </div>
+                  <span className="font-medium text-gray-900">+250 imprenditori</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <span className="font-medium">4.9/5</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Dashboard Mockup Preview */}
+            <div className="relative lg:block hidden">
+              {/* Main Dashboard Card - Glassomorphism Effect */}
+              <div className="relative">
+                {/* Background Card with Glass Effect */}
+                <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 p-6 space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">La tua Dashboard</div>
+                        <div className="text-xs text-gray-500">Panoramica completa</div>
                       </div>
                     </div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
 
-                    <div className="absolute bottom-2 left-2 sm:-bottom-6 sm:-left-12 bg-white rounded-lg shadow-lg p-2 sm:p-4 border border-gray-100 z-10">
-                      <div className="flex items-center">
-                        <BottomIcon className={`h-4 w-4 sm:h-6 sm:w-6 ${bottomColorClass} mr-1 sm:mr-2`} />
-                        <div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">{banner.floatingCards.bottom.title}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500">{banner.floatingCards.bottom.subtitle}</div>
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Fatturato', value: '€45.2K', trend: '+12%', icon: TrendingUp, color: 'green' },
+                      { label: 'Tasse', value: '€8.1K', trend: '-5%', icon: Banknote, color: 'blue' },
+                      { label: 'Rating', value: '8.5/10', trend: '+0.8', icon: Target, color: 'purple' },
+                      { label: 'Clienti', value: '127', trend: '+23', icon: Users, color: 'indigo' }
+                    ].map((stat, idx) => {
+                      const Icon = stat.icon
+                      return (
+                        <div key={idx} className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <Icon className={`w-5 h-5 text-${stat.color}-500`} />
+                            <span className={`text-xs font-semibold ${stat.trend.startsWith('+') ? 'text-green-600' : 'text-blue-600'}`}>
+                              {stat.trend}
+                            </span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                          <div className="text-xs text-gray-500">{stat.label}</div>
                         </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Chart Placeholder */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 h-32 flex items-end justify-between gap-2">
+                    {[40, 65, 45, 80, 55, 90, 70].map((height, idx) => (
+                      <div key={idx} className="flex-1 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t-lg opacity-80" style={{height: `${height}%`}}></div>
+                    ))}
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { icon: FileCheck, label: 'Fattura' },
+                      { icon: Brain, label: 'AI' },
+                      { icon: Shield, label: 'Report' }
+                    ].map((action, idx) => {
+                      const Icon = action.icon
+                      return (
+                        <button key={idx} className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200">
+                          <Icon className="w-5 h-5 text-gray-700" />
+                          <span className="text-xs font-medium text-gray-600">{action.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Floating notification badge */}
+                <div className="absolute -top-4 -right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold flex items-center gap-2 animate-bounce">
+                  <CheckCircle className="w-4 h-4" />
+                  Tutto ok!
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* Social Proof Section - Minimalist Design */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Stats - Clean Number Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-16">
+            {[
+              { number: '250+', label: 'Imprenditori attivi', icon: Users },
+              { number: '+18%', label: 'Rating medio', icon: TrendingUp },
+              { number: '4.9/5', label: 'Soddisfazione', icon: Star },
+              { number: '24/7', label: 'Supporto dedicato', icon: Shield }
+            ].map((stat, idx) => {
+              const Icon = stat.icon
+              return (
+                <div key={idx} className="text-center space-y-2">
+                  <Icon className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+                  <div className="text-4xl lg:text-5xl font-extrabold text-gray-900">{stat.number}</div>
+                  <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Trust Badges - Subtle Bottom Row */}
+          <div className="flex flex-wrap justify-center items-center gap-8 pt-12 border-t border-gray-200">
+            {[
+              { icon: Shield, text: 'Banca d\'Italia' },
+              { icon: FileCheck, text: 'GDPR Compliant' },
+              { icon: Lock, text: 'SSL Encrypted' }
+            ].map((badge, idx) => {
+              const Icon = badge.icon
+              return (
+                <div key={idx} className="flex items-center gap-3 text-gray-600">
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{badge.text}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section - Clean Modern Design */}
+      <section
+        id="servizi"
+        ref={setSectionRef('servizi')}
+        className="py-16 sm:py-20 lg:py-24 bg-white"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
+              Servizi su misura per te
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Tutto quello che serve per gestire la tua attività in un'unica piattaforma
+            </p>
+          </div>
+
+          {/* Primary Services - Featured */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {services.filter(s => s.isPrimary).map((service, index) => {
+              const Icon = service.icon
+              const isPopular = index === 1
+              return (
+                <div
+                  key={index}
+                  className={`group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 flex flex-col ${
+                    isPopular ? 'border-blue-600' : 'border-gray-200'
+                  }`}
+                >
+                  {/* Popular Badge */}
+                  {isPopular && (
+                    <div className="absolute -top-3 right-6">
+                      <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                        PIÙ SCELTO
                       </div>
+                    </div>
+                  )}
+
+                  {/* Icon */}
+                  <div className="mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center">
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
+
+                  {/* Price */}
+                  <div className="mb-6">
+                    <div className="text-4xl font-extrabold text-gray-900">{service.price}</div>
+                    {service.discount && (
+                      <div className="text-sm text-blue-600 font-medium mt-1">{service.discount}</div>
+                    )}
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-2 mb-8">
+                    {service.features.slice(0, 3).map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-center gap-2 text-sm text-gray-700">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA - Fixed at bottom */}
+                  <a
+                    href={service.learnMoreUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full text-center py-4 rounded-2xl font-bold transition-all duration-200 mt-auto ${
+                      isPopular
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    Scopri di più →
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Secondary Services - Compact */}
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Altri servizi disponibili</h3>
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {services.filter(s => !s.isPrimary).map((service, index) => {
+                const Icon = service.icon
+                return (
+                  <div
+                    key={index}
+                    className="group bg-gray-50 rounded-2xl p-6 hover:bg-white hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-gray-200 flex flex-col"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h4>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{service.description}</p>
+                    <div className="text-2xl font-extrabold text-blue-600 mb-4">{service.price}</div>
+                    <a
+                      href={service.learnMoreUrl}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-semibold inline-flex items-center gap-1 mt-auto"
+                    >
+                      Scopri →
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Chi Siamo Section - Clean Modern */}
+      <section
+        id="chi-siamo"
+        ref={setSectionRef('chi-siamo')}
+        className="py-16 sm:py-20 lg:py-24 bg-gray-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
+              La persona dietro TaxFlow
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Esperienza, passione e innovazione al servizio dei giovani imprenditori
+            </p>
+          </div>
+
+          {/* Founder Card - Simple & Clean */}
+          <div className="max-w-4xl mx-auto mb-20">
+            <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl border border-gray-100">
+              <div className="flex flex-col gap-8 items-start">
+                {/* Content */}
+                <div className="flex-1 w-full">
+                  <h3 className="text-3xl font-bold text-gray-900 mb-2">Teresa Marrari</h3>
+                  <p className="text-lg text-blue-600 font-semibold mb-6">Founder & CEO</p>
+
+                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                    <strong className="font-bold text-gray-900">Commercialista con studio a Torino da oltre 25 anni</strong>. Dal 1998 si distingue nella consulenza fiscale, tributaria e societaria, con un focus particolare sulla formazione dell'imprenditore.
+                  </p>
+
+                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                    Con TaxFlow, Teresa ha creato uno strumento innovativo per supportare i giovani imprenditori, rendendo semplice la gestione fiscale e fornendo le basi per costruire attività solide.
+                  </p>
+
+                  {/* Stats */}
+                  <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-200">
+                    <div>
+                      <div className="text-4xl font-extrabold text-gray-900">25+</div>
+                      <div className="text-sm text-gray-600">Anni esperienza</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-extrabold text-gray-900">250+</div>
+                      <div className="text-sm text-gray-600">Imprenditori</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-extrabold text-gray-900">100%</div>
+                      <div className="text-sm text-gray-600">Conforme</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Values Grid - Single Row */}
+          <div className="max-w-7xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">I nostri valori</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { icon: Shield, title: 'Conformità', desc: 'D.Lgs. 14/2019 e standard Banca d\'Italia' },
+                { icon: Users, title: 'Orientamento cliente', desc: 'Supporto personalizzato dedicato' },
+                { icon: Brain, title: 'Innovazione', desc: 'AI e analytics avanzati' },
+                { icon: Award, title: 'Eccellenza', desc: 'Team qualificato ed esperto' }
+              ].map((value, idx) => {
+                const Icon = value.icon
+                return (
+                  <div key={idx} className="flex flex-col items-center text-center bg-white rounded-2xl p-6 border border-gray-100">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-2">{value.title}</h4>
+                      <p className="text-sm text-gray-600">{value.desc}</p>
                     </div>
                   </div>
                 )
@@ -752,729 +849,223 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
             </div>
           </div>
         </div>
-
       </section>
 
-      {/* Trust & Credibility Section - Modern 2025 Design */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-12 lg:mb-16">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-blue-50 mb-4">
-                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">500+</div>
-              <div className="text-sm sm:text-base text-gray-600">Aziende attive</div>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-50 mb-4">
-                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">+18%</div>
-              <div className="text-sm sm:text-base text-gray-600">Rating medio</div>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-50 mb-4">
-                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">100%</div>
-              <div className="text-sm sm:text-base text-gray-600">Sicuro e conforme</div>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-orange-50 mb-4">
-                <Award className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">4.9/5</div>
-              <div className="text-sm sm:text-base text-gray-600">Soddisfazione clienti</div>
-            </div>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center items-center gap-6 lg:gap-12 mb-12 lg:mb-16 pb-12 lg:pb-16 border-b border-gray-100">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Shield className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">Metodologia Banca d'Italia</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FileCheck className="w-5 h-5 text-green-600" />
-              <span className="font-medium">GDPR Compliant</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Lock className="w-5 h-5 text-orange-600" />
-              <span className="font-medium">SSL Encrypted</span>
-            </div>
-          </div>
-
-          {/* Testimonial - Redesigned */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 lg:p-12 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full -mr-32 -mt-32 opacity-50"></div>
-              <div className="relative">
-                <div className="flex text-yellow-400 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 fill-current" />
-                  ))}
-                </div>
-                <blockquote className="text-lg sm:text-xl lg:text-2xl text-gray-900 font-medium mb-6 leading-relaxed">
-                  "Rating creditizio migliorato del 18% in 6 mesi. Finanziamenti a condizioni incredibili."
-                </blockquote>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                    <User className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-base sm:text-lg">Marco Bianchi</p>
-                    <p className="text-sm sm:text-base text-gray-600">CEO, Innovazione SRL</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section
-        id="servizi"
-        ref={setSectionRef('servizi')}
-        className="py-12 sm:py-16 lg:py-20 bg-white overflow-hidden"
-      >
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('servizi') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-              I nostri servizi
-            </h2>
-            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4 ${visibleSections.has('servizi') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('servizi') ? {animationDelay: '0.2s'} : {}}>
-              Tutto quello che ti serve per gestire la tua partita IVA con standard bancari professionali
-            </p>
-          </div>
-
-          {/* Infinite Carousel Container */}
-          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
-            {/* Navigation Buttons */}
-            <button
-              onClick={() => setCurrentService((prev) => prev - 1)}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
-              aria-label="Scorri a sinistra"
-            >
-              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
-            </button>
-
-            <button
-              onClick={() => setCurrentService((prev) => prev + 1)}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 border border-gray-200"
-              aria-label="Scorri a destra"
-            >
-              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
-            </button>
-
-            {/* Infinite Scrolling Services */}
-            <div className="overflow-visible px-4 sm:px-6 lg:px-8 py-4">
-              <div
-                className="flex transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(calc(-${(currentService % services.length) * (100 / 3)}% - ${currentService * 1.5}rem))` }}
-              >
-                {/* Render services 3 times for infinite effect */}
-                {[...services, ...services, ...services].map((service, index) => {
-                  const Icon = service.icon
-                  const actualIndex = index % services.length
-                  const isPopular = actualIndex === 1 // Second service is most popular
-                  return (
-                    <div
-                      key={index}
-                      className="w-full md:w-1/3 flex-shrink-0 px-2 md:px-3"
-                    >
-                      <div
-                        className={`group bg-white border-2 ${isPopular ? 'border-primary-300 ring-2 ring-primary-100' : 'border-gray-100'} rounded-2xl p-4 sm:p-6 hover:border-primary-200 hover:shadow-xl transition-all duration-300 relative h-full flex flex-col`}
-                      >
-                        {/* Popular Badge */}
-                        {isPopular && (
-                          <div className="absolute -top-2 sm:-top-3 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-gradient-to-r from-primary-600 to-green-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-lg">
-                              <Star className="h-2 w-2 sm:h-3 sm:w-3 inline mr-0.5 sm:mr-1" />
-                              Più Popolare
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex-grow">
-                          <div className="flex items-center justify-between mb-3 sm:mb-4">
-                            <div className={`${isPopular ? 'bg-primary-100' : 'bg-primary-50'} w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors`}>
-                              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600" />
-                            </div>
-                            <div className="text-right">
-                              {service.originalPrice && (
-                                <div className="text-xs sm:text-sm text-gray-400 line-through">{service.originalPrice}</div>
-                              )}
-                              <div className={`text-lg sm:text-xl font-bold ${isPopular ? 'text-primary-700' : 'text-primary-600'}`}>{service.price}</div>
-                              {service.discount && (
-                                <div className="text-[10px] sm:text-xs text-red-600 font-medium">{service.discount}</div>
-                              )}
-                              {isPopular && !service.discount && (
-                                <div className="text-[10px] sm:text-xs text-green-600 font-medium">Best Value</div>
-                              )}
-                            </div>
-                          </div>
-
-                          <h3 className={`text-base sm:text-lg font-bold ${isPopular ? 'text-primary-900' : 'text-gray-900'} mb-2 sm:mb-3`}>{service.title}</h3>
-                          <p className="text-gray-600 mb-3 sm:mb-4 leading-relaxed text-xs sm:text-sm">{service.description}</p>
-
-                          {service.title === "P.IVA Forfettari" && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <p className="text-blue-800 font-medium text-xs">
-                                Se ti abboni oggi pagherai il secondo anno al 31/12/2026
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
-                            {service.features.map((feature, featureIndex) => (
-                              <div key={featureIndex} className="flex items-center text-gray-700">
-                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1.5 sm:mr-2 flex-shrink-0" />
-                                <span className="text-xs sm:text-sm">{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Payment Options */}
-                          {service.paymentOptions && (
-                            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                              <div className="space-y-1">
-                                {service.paymentOptions.map((option, idx) => (
-                                  <p key={idx} className="text-amber-900 text-xs font-medium">
-                                    {option}
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Guarantee Badge */}
-                        {service.title === "P.IVA Forfettari" && (
-                          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="flex items-center">
-                              <Shield className="h-4 w-4 text-green-600 mr-2" />
-                              <span className="text-green-800 font-medium text-xs">
-                                14gg soddisfatto o rimborsato (solo se apertura avviene dopo 14gg)
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        <a
-                          href={service.learnMoreUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm group-hover:underline"
-                          title={service.learnMoreText}
-                        >
-                          Scopri di più
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Progress Indicator */}
-            <div className="flex justify-center mt-6 space-x-2">
-              {services.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentService(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    (currentService % services.length) === index
-                      ? 'w-8 bg-primary-600'
-                      : 'w-2 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  aria-label={`Vai al servizio ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Chi Siamo Section */}
-      <section
-        id="chi-siamo"
-        ref={setSectionRef('chi-siamo')}
-        className="py-12 sm:py-16 lg:py-20 bg-gray-50"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
-            <div className={`${visibleSections.has('chi-siamo') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-                Chi Siamo
-              </h2>
-
-              <div className="bg-blue-50 border-l-4 border-blue-600 p-4 sm:p-6 mb-4 sm:mb-6 rounded-r-lg">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Una Visionaria Dietro TaxFlow</h3>
-                <p className="text-sm sm:text-base text-gray-700 mb-2 sm:mb-3">
-                  <strong>Teresa Marrari</strong>, commercialista con studio a Torino da oltre 25 anni, è la
-                  fondatrice della piattaforma innovativa. Dal 1998 gestisce il proprio studio professionale, distinguendosi
-                  come figura poliedrica nella consulenza fiscale, tributaria e societaria e del lavoro oltre alla formazione
-                  individuale dell'imprenditore.
-                </p>
-                <p className="text-sm sm:text-base text-gray-700">
-                  Con TaxFlow, Teresa ha voluto creare uno strumento innovativo per supportare i giovani imprenditori,
-                  rendendo più semplice la gestione fiscale e fornendo loro le basi per costruire attività solide e di successo.
-                  La sua passione e competenza hanno trasformato TaxFlow in una realtà al servizio di chi desidera avviare e
-                  gestire la propria impresa con sicurezza ed efficienza.
-                </p>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8">
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-primary-600 mb-1 sm:mb-2">25+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Anni Esperienza</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-primary-600 mb-1 sm:mb-2">250+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Imprenditori</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-primary-600 mb-1 sm:mb-2">100%</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Conformità</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Image/Features */}
-            <div className={`${visibleSections.has('chi-siamo') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('chi-siamo') ? {animationDelay: '0.2s'} : {}}>
-              <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">I Nostri Valori</h3>
-
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-start space-x-3 sm:space-x-4">
-                    <div className="bg-primary-100 rounded-lg p-2 sm:p-3 flex-shrink-0">
-                      <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Conformità Normativa</h4>
-                      <p className="text-gray-600 text-xs sm:text-sm">Piena aderenza a D.Lgs. 14/2019 e standard Banca d'Italia</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3 sm:space-x-4">
-                    <div className="bg-green-100 rounded-lg p-2 sm:p-3 flex-shrink-0">
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Orientamento al Cliente</h4>
-                      <p className="text-gray-600 text-xs sm:text-sm">Supporto personalizzato e consulenza dedicata</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3 sm:space-x-4">
-                    <div className="bg-blue-100 rounded-lg p-2 sm:p-3 flex-shrink-0">
-                      <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Innovazione Tecnologica</h4>
-                      <p className="text-gray-600 text-xs sm:text-sm">AI e analytics avanzati per previsioni accurate</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3 sm:space-x-4">
-                    <div className="bg-purple-100 rounded-lg p-2 sm:p-3 flex-shrink-0">
-                      <Award className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Eccellenza Professionale</h4>
-                      <p className="text-gray-600 text-xs sm:text-sm">Metodologie bancarie certificate e team qualificato</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
+      {/* Benefits Section - Simplified */}
       <section
         id="benefici"
         ref={setSectionRef('benefici')}
-        className="py-12 sm:py-16 lg:py-20 bg-white"
+        className="py-16 sm:py-20 lg:py-24 bg-white"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-              Perché scegliere TaxFlow
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
+              Perché TaxFlow
             </h2>
-            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-4 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.2s'} : {}}>
-              Dashboard intuitiva per il controllo completo della tua fiscalità in tempo reale
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Metodologie bancarie certificate per la tua crescita
             </p>
-
-            {/* Key highlights */}
-            <div className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mb-8 sm:mb-12 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.3s'} : {}}>
-              <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-100">
-                <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mx-auto mb-2 sm:mb-3" />
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2">Dashboard Avanzata</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Cassetto fiscale e previdenziale con visione quotidiana del tuo andamento</p>
-              </div>
-
-              <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-100">
-                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mx-auto mb-2 sm:mb-3" />
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2">Formazione Continua</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Tutorial, video e guide pratiche per la tua crescita professionale</p>
-              </div>
-
-              <div className="bg-purple-50 rounded-xl p-4 sm:p-6 border border-purple-100 sm:col-span-2 lg:col-span-1">
-                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mx-auto mb-2 sm:mb-3" />
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2">Esperienza Bancaria</h3>
-                <p className="text-xs sm:text-sm text-gray-600">25 anni di esperienza creditizia per ottimizzare il tuo rating</p>
-              </div>
-            </div>
           </div>
 
-          {/* Metodologie Section - Redesigned */}
-          <div className="relative mt-16 lg:mt-20">
-            {/* Background Decoration */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl -mx-4 sm:-mx-6 lg:-mx-8 -my-8"></div>
-
-            <div className="relative px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-              <div className="text-center mb-10 lg:mb-14">
-                <div className={`inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-4 shadow-sm ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.4s'} : {}}>
-                  <Shield className="w-4 h-4" />
-                  Standard Bancari Professionali
+          {/* Benefits Grid - Simplified */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {benefits.map((benefit, index) => {
+              const Icon = benefit.icon
+              return (
+                <div
+                  key={index}
+                  className="bg-gray-50 rounded-3xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-200"
+                >
+                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
+                  <p className="text-gray-600 leading-relaxed mb-4">{benefit.description}</p>
+                  <a
+                    href={benefit.learnMoreUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 font-semibold text-sm inline-flex items-center gap-2"
+                  >
+                    <span>Scopri di più</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
                 </div>
-                <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.5s'} : {}}>
-                  Metodologie Applicate ai Nostri Servizi
-                </h3>
-                <p className={`text-base sm:text-lg text-gray-600 max-w-2xl mx-auto ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '0.6s'} : {}}>
-                  Framework certificati utilizzati dalle principali istituzioni finanziarie internazionali
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {benefits.map((benefit, index) => {
-                  const Icon = benefit.icon
-                  return (
-                    <div
-                      key={index}
-                      className={`bg-white rounded-2xl p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-white hover:border-blue-200 group hover:-translate-y-2 ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                      style={visibleSections.has('benefici') ? {animationDelay: `${0.7 + index * 0.1}s`} : {}}
-                    >
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className={`p-4 rounded-xl bg-gradient-to-br ${
-                            index === 0 ? 'from-blue-500 to-blue-600' :
-                            index === 1 ? 'from-indigo-500 to-indigo-600' :
-                            index === 2 ? 'from-purple-500 to-purple-600' :
-                            index === 3 ? 'from-green-500 to-green-600' :
-                            index === 4 ? 'from-orange-500 to-orange-600' :
-                            'from-pink-500 to-pink-600'
-                          } group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                            <Icon className="h-7 w-7 lg:h-8 lg:w-8 text-white" />
-                          </div>
-                          <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="h-4 w-4 fill-current" />
-                            <Star className="h-4 w-4 fill-current" />
-                            <Star className="h-4 w-4 fill-current" />
-                          </div>
-                        </div>
-
-                        <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
-                        <p className="text-sm lg:text-base text-gray-600 leading-relaxed mb-4 flex-grow">{benefit.description}</p>
-
-                        <a
-                          href={benefit.learnMoreUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm group-hover:gap-3 transition-all duration-300"
-                          title={benefit.learnMoreText}
-                        >
-                          <span>Approfondisci</span>
-                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </a>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Trust Badge Bottom */}
-              <div className={`mt-10 lg:mt-14 text-center ${visibleSections.has('benefici') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('benefici') ? {animationDelay: '1.3s'} : {}}>
-                <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-gray-100">
-                  <Award className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-semibold text-gray-700">Certificato da istituzioni bancarie europee</span>
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* Process Section - Modern Interactive Timeline */}
+      {/* Process Section - Clean Grid */}
       <section
         id="come-funziona"
         ref={setSectionRef('come-funziona')}
-        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-gray-50 to-white"
+        className="py-16 sm:py-20 lg:py-24 bg-gray-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <div className={`inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-4 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-              <Clock className="w-4 h-4" />
-              3 Step Semplici
-            </div>
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.1s'} : {}}>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Come funziona
             </h2>
-            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.2s'} : {}}>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Inizia in pochi minuti e trasforma la gestione della tua attività
             </p>
           </div>
 
-          {/* Timeline Container */}
-          <div className="relative max-w-5xl mx-auto">
-            {/* Vertical Line - Desktop */}
-            <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-blue-400 to-blue-600"></div>
-
-            {/* Steps */}
-            <div className="space-y-8 lg:space-y-16">
-              {process.map((step, index) => {
-                const Icon = step.icon
-                const isEven = index % 2 === 0
-                return (
-                  <div
-                    key={index}
-                    className={`relative ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                    style={visibleSections.has('come-funziona') ? {animationDelay: `${0.3 + index * 0.2}s`} : {}}
-                  >
-                    <div className={`lg:grid lg:grid-cols-2 lg:gap-8 items-center ${isEven ? '' : 'lg:flex-row-reverse'}`}>
-                      {/* Content */}
-                      <div className={`${isEven ? 'lg:text-right lg:pr-12' : 'lg:pl-12 lg:col-start-2'}`}>
-                        <div className={`inline-block lg:inline ${isEven ? 'lg:ml-auto' : ''}`}>
-                          <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border-2 border-gray-100 hover:border-blue-300 hover:shadow-xl transition-all duration-300 group">
-                            <div className="flex items-start gap-4 lg:block">
-                              <div className={`flex-shrink-0 w-12 h-12 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br ${
-                                index === 0 ? 'from-blue-500 to-blue-600' :
-                                index === 1 ? 'from-indigo-500 to-indigo-600' :
-                                'from-purple-500 to-purple-600'
-                              } flex items-center justify-center mb-0 lg:mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                <Icon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-                              </div>
-                              <div className="flex-1">
-                                <div className={`text-sm font-bold ${
-                                  index === 0 ? 'text-blue-600' :
-                                  index === 1 ? 'text-indigo-600' :
-                                  'text-purple-600'
-                                } mb-2`}>
-                                  Step {step.step}
-                                </div>
-                                <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 lg:mb-3">{step.title}</h3>
-                                <p className="text-sm lg:text-base text-gray-600 leading-relaxed">{step.description}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Center Circle - Desktop Only */}
-                      <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 top-1/2">
-                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${
-                          index === 0 ? 'from-blue-500 to-blue-600' :
-                          index === 1 ? 'from-indigo-500 to-indigo-600' :
-                          'from-purple-500 to-purple-600'
-                        } flex items-center justify-center shadow-lg border-4 border-white group-hover:scale-125 transition-transform duration-300`}>
-                          <span className="text-white font-bold text-lg">{step.step}</span>
-                        </div>
-                      </div>
-                    </div>
+          {/* Steps Grid - Simplified */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+            {process.map((step, index) => {
+              const Icon = step.icon
+              return (
+                <div
+                  key={index}
+                  className="bg-white rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-600"
+                >
+                  {/* Step Number - Large & Bold */}
+                  <div className="text-6xl font-extrabold text-blue-600 mb-6">
+                    {step.step}
                   </div>
-                )
-              })}
-            </div>
 
-            {/* CTA at the end */}
-            <div className={`text-center mt-12 lg:mt-16 ${visibleSections.has('come-funziona') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('come-funziona') ? {animationDelay: '0.9s'} : {}}>
-              <button
-                onClick={onShowRegister}
-                className="group bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-2xl hover:scale-105 flex items-center justify-center gap-3 mx-auto"
-              >
-                <span>Inizia Ora Gratis</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-              </button>
-            </div>
+                  {/* Icon */}
+                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Icon className="w-7 h-7 text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <button
+              onClick={onShowRegister}
+              className="group bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3 mx-auto shadow-xl"
+            >
+              <span>Inizia ora</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Synetich Training Section */}
+      {/* Synetich Training Section - Simplified */}
       <section
         id="synetich"
         ref={setSectionRef('synetich')}
-        className="py-12 sm:py-16 lg:py-20 bg-gray-50"
+        className="py-16 sm:py-20 lg:py-24 bg-white"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <div className={`inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-4 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-              <GraduationCap className="w-4 h-4" />
-              Formazione Continua Certificata
-            </div>
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '0.1s'} : {}}>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Corsi di Sicurezza <span className="text-blue-600">Synetich</span>
             </h2>
-            <p className={`text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '0.2s'} : {}}>
-              Formazione professionale sulla sicurezza sul lavoro e utilizzo di attrezzature. Certificazioni riconosciute e conformi alle normative vigenti.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Formazione professionale certificata sulla sicurezza sul lavoro
             </p>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 max-w-5xl mx-auto">
             {[
-              { number: '19', label: 'Corsi Disponibili', icon: GraduationCap, color: 'blue' },
-              { number: '100%', label: 'Certificati', icon: Award, color: 'green' },
-              { number: '1000+', label: 'Studenti Formati', icon: Users, color: 'blue' },
-              { number: '15+', label: 'Anni Esperienza', icon: TrendingUp, color: 'blue' }
+              { number: '19', label: 'Corsi', icon: GraduationCap },
+              { number: '100%', label: 'Certificati', icon: Award },
+              { number: '1000+', label: 'Studenti', icon: Users },
+              { number: '15+', label: 'Anni', icon: TrendingUp }
             ].map((stat, index) => {
               const Icon = stat.icon
-              const colorClasses = {
-                blue: 'bg-blue-600',
-                green: 'bg-green-600'
-              }
               return (
-                <div
-                  key={index}
-                  className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={visibleSections.has('synetich') ? {animationDelay: `${0.3 + index * 0.1}s`} : {}}
-                >
-                  <div className={`inline-flex p-2 sm:p-3 rounded-lg ${colorClasses[stat.color as keyof typeof colorClasses]} mb-3`}>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div key={index} className="text-center">
+                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-7 h-7 text-white" />
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stat.number}</div>
-                  <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-4xl font-extrabold text-gray-900 mb-1">{stat.number}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
                 </div>
               )
             })}
           </div>
 
-          {/* Course Categories */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {/* Categories Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {[
-              {
-                title: 'Attrezzature',
-                icon: Building,
-                count: 10,
-                description: 'Gru, piattaforme, movimento terra',
-                color: 'blue'
-              },
-              {
-                title: 'Sicurezza',
-                icon: Shield,
-                count: 5,
-                description: 'DPI, primo soccorso, antincendio',
-                color: 'blue'
-              },
-              {
-                title: 'Management',
-                icon: Users,
-                count: 4,
-                description: 'RSPP, RLS, dirigenti, preposti',
-                color: 'blue'
-              },
-              {
-                title: 'Specializzato',
-                icon: Target,
-                count: 3,
-                description: 'Segnaletica, perforazioni',
-                color: 'blue'
-              }
+              { title: 'Attrezzature', icon: Building, count: 10, description: 'Gru, piattaforme, movimento terra' },
+              { title: 'Sicurezza', icon: Shield, count: 5, description: 'DPI, primo soccorso, antincendio' },
+              { title: 'Management', icon: Users, count: 4, description: 'RSPP, RLS, dirigenti, preposti' },
+              { title: 'Specializzato', icon: Target, count: 3, description: 'Segnaletica, perforazioni' }
             ].map((category, index) => {
               const Icon = category.icon
               return (
-                <div
-                  key={index}
-                  className={`bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={visibleSections.has('synetich') ? {animationDelay: `${0.7 + index * 0.1}s`} : {}}
-                >
-                  <div className="bg-blue-100 p-3 rounded-lg inline-flex mb-4 group-hover:bg-blue-200 transition-colors duration-300">
-                    <Icon className="w-6 h-6 text-blue-600" />
+                <div key={index} className="bg-gray-50 rounded-3xl p-6 hover:bg-white hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-600">
+                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                    <Icon className="w-7 h-7 text-white" />
                   </div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-900">{category.title}</h3>
-                    <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-sm font-medium">
-                      {category.count} corsi
+                    <h3 className="text-lg font-bold text-gray-900">{category.title}</h3>
+                    <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                      {category.count}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed">{category.description}</p>
+                  <p className="text-gray-600 text-sm">{category.description}</p>
                 </div>
               )
             })}
           </div>
 
-          {/* Key Benefits */}
-          <div className={`bg-blue-600 rounded-2xl shadow-2xl p-8 sm:p-10 text-white ${visibleSections.has('synetich') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('synetich') ? {animationDelay: '1.1s'} : {}}>
+          {/* CTA Card */}
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-6">Perché scegliere Synetich?</h3>
-                <ul className="space-y-4">
+                <h3 className="text-3xl font-extrabold mb-6">Perché Synetich?</h3>
+                <ul className="space-y-3">
                   {[
-                    'Formazione continua certificata',
-                    'Docenti esperti e qualificati',
-                    'Corsi conformi alle normative vigenti',
-                    'Certificazioni riconosciute a livello nazionale',
+                    'Formazione certificata',
+                    'Docenti qualificati',
+                    'Conformi alle normative',
+                    'Riconosciute a livello nazionale',
                     'Sedi a Torino e Aosta',
-                    'Supporto post-corso completo'
+                    'Supporto completo'
                   ].map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <CheckCircle className="w-6 h-6 text-green-300 flex-shrink-0 mt-0.5" />
-                      <span className="text-blue-50">{benefit}</span>
+                    <li key={index} className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-300 flex-shrink-0" />
+                      <span>{benefit}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Informazioni di Contatto
-                </h4>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <h4 className="text-xl font-bold mb-4">Contatti</h4>
                 <div className="space-y-3 text-blue-50">
                   <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <MapPin className="w-5 h-5" />
-                    </div>
+                    <MapPin className="w-5 h-5 text-white" />
                     <div>
-                      <div className="font-semibold text-white">Sede Torino</div>
+                      <div className="font-semibold text-white">Torino</div>
                       <div className="text-sm">Via Vincenzo Lancia 26</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <Phone className="w-5 h-5" />
-                    </div>
+                    <Phone className="w-5 h-5 text-white" />
                     <div>
-                      <div className="font-semibold text-white">Telefono</div>
                       <div className="text-sm">+39 011 0263780</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <Mail className="w-5 h-5" />
-                    </div>
+                    <Mail className="w-5 h-5 text-white" />
                     <div>
-                      <div className="font-semibold text-white">Email</div>
                       <div className="text-sm">contatti@synetich.com</div>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={onShowLogin}
-                  className="w-full mt-6 bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 group shadow-lg"
+                  className="w-full mt-6 bg-white text-blue-700 py-3 rounded-2xl font-bold hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 group"
                 >
-                  Accedi per vedere tutti i corsi
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  Accedi ai corsi
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                 </button>
               </div>
             </div>
@@ -1482,195 +1073,109 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
         </div>
       </section>
 
-      {/* Regulatory Info Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      {/* Regulatory Info Section - Simplified */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Normative di Riferimento
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-              I nostri servizi si basano sulle più recenti normative bancarie e fiscali italiane ed europee
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Servizi conformi alle normative bancarie e fiscali
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2">D.Lgs. 14/2019</h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Codice della Crisi d'Impresa e dell'Insolvenza</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div className="bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-2">D.Lgs. 14/2019</h3>
+              <p className="text-sm text-gray-600 mb-4">Codice Crisi d'Impresa</p>
               <a
                 href="https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm flex items-center font-medium hover:underline"
+                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-semibold"
               >
-                Leggi la normativa
-                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 ml-1" />
+                Leggi →
               </a>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-200">
               <h3 className="font-bold text-gray-900 mb-2">Basel IV</h3>
-              <p className="text-sm text-gray-600 mb-4">Accordi internazionali sulla regolamentazione bancaria</p>
+              <p className="text-sm text-gray-600 mb-4">Regolamentazione bancaria</p>
               <a
                 href="https://www.bis.org/basel_framework/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-medium hover:underline"
+                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-semibold"
               >
-                Framework BIS
-                <ExternalLink className="h-3 w-3 ml-1" />
+                Framework →
               </a>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-200">
               <h3 className="font-bold text-gray-900 mb-2">Sistema ICAS</h3>
-              <p className="text-sm text-gray-600 mb-4">In-house Credit Assessment System di Banca d'Italia</p>
+              <p className="text-sm text-gray-600 mb-4">Banca d'Italia</p>
               <a
                 href="https://www.bancaditalia.it/compiti/polmon-garanzie/gestione-garanzie/qualita-crediti/index.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-medium hover:underline"
+                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-semibold"
               >
-                Scopri ICAS
-                <ExternalLink className="h-3 w-3 ml-1" />
+                Scopri →
               </a>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-200">
               <h3 className="font-bold text-gray-900 mb-2">Centrale Rischi</h3>
-              <p className="text-sm text-gray-600 mb-4">Sistema informativo sui rapporti di credito</p>
+              <p className="text-sm text-gray-600 mb-4">Rapporti di credito</p>
               <a
                 href="https://www.bancaditalia.it/statistiche/raccolta-dati/segnalazioni/centrale-rischi/index.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-medium hover:underline"
+                className="text-blue-600 hover:text-blue-700 text-sm flex items-center font-semibold"
               >
-                Info Centrale Rischi
-                <ExternalLink className="h-3 w-3 ml-1" />
+                Info →
               </a>
             </div>
           </div>
-
-          <div className="mt-12 text-center bg-blue-50 rounded-2xl p-8 border border-blue-100">
-            <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-blue-900 mb-2">Trasparenza e Conformità</h3>
-            <p className="text-blue-800">
-              Tutti i nostri servizi sono progettati per essere pienamente conformi alle normative vigenti.
-              I link sopra riportati conducono alle fonti ufficiali delle normative che applichiamo.
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* Professional Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Tecnologia al servizio <br />
-                <span className="text-blue-600">del tuo business</span>
-              </h2>
-              <p className="text-xl text-gray-600 mb-8">
-                Dashboard avanzata, AI predittiva e reporting automatico per tenere sempre sotto controllo la tua situazione fiscale e creditizia.
-              </p>
-
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="bg-blue-50 p-3 rounded-lg mr-4">
-                    <Laptop className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Dashboard Web</h3>
-                    <p className="text-gray-600">Interfaccia completa per analisi approfondite e reportistica</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-blue-50 p-3 rounded-lg mr-4">
-                    <BookOpen className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Formazione Continua</h3>
-                    <p className="text-gray-600">Corsi e webinar per rimanere sempre aggiornato</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              {/* Tech/Dashboard Image Placeholder */}
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
-                <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-white rounded-lg p-4 shadow-sm">
-                        <PieChart className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                        <div className="h-2 w-16 bg-blue-200 rounded mx-auto"></div>
-                      </div>
-                      <div className="bg-white rounded-lg p-4 shadow-sm">
-                        <LineChart className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                        <div className="h-2 w-16 bg-green-200 rounded mx-auto"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-3 w-40 bg-gray-200 rounded mx-auto"></div>
-                      <div className="h-3 w-32 bg-gray-200 rounded mx-auto"></div>
-                      <div className="h-3 w-36 bg-gray-200 rounded mx-auto"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating elements */}
-              <div className="absolute -top-6 -left-6 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <DollarSign className="h-6 w-6 text-green-500" />
-              </div>
-              <div className="absolute -bottom-6 -right-6 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <Globe className="h-6 w-6 text-blue-500" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
+      {/* CTA Section - Simplified */}
       <section
         id="cta"
         ref={setSectionRef('cta')}
-        className="py-12 sm:py-16 lg:py-20 bg-blue-600"
+        className="py-16 sm:py-20 lg:py-24 bg-blue-600"
       >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6 ${visibleSections.has('cta') ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            Migliora il tuo rating creditizio oggi
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6">
+            Inizia oggi stesso
           </h2>
-          <p className={`text-base sm:text-lg lg:text-xl text-blue-100 mb-6 sm:mb-8 ${visibleSections.has('cta') ? 'animate-fade-in-up' : 'opacity-0'}`} style={visibleSections.has('cta') ? {animationDelay: '0.2s'} : {}}>
-            Ottimizza le tue relazioni bancarie con la metodologia Banca d'Italia
+          <p className="text-xl text-blue-100 mb-8">
+            Ottimizza le tue relazioni bancarie con metodologie certificate
           </p>
           <button
             onClick={onShowRegister}
-            className={`bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 hover:shadow-lg w-full sm:w-auto ${visibleSections.has('cta') ? 'animate-fade-in-up' : 'opacity-0'}`}
-            style={visibleSections.has('cta') ? {animationDelay: '0.4s'} : {}}
+            className="bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-xl"
           >
             Inizia ora
           </button>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      {/* FAQ Section - Clean & Simple */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Domande Frequenti
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
-              Risposte alle domande più comuni sulla gestione fiscale e il rating creditizio
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Risposte chiare alle domande più comuni
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {[
               {
                 question: "Quali adempimenti sono compresi nell'abbonamento?",
@@ -1697,40 +1202,40 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 answer: "Taxflow gestisce fino a 3 codici ATECO per ciascun cliente, che è il massimo consentito per una Partita IVA. Siamo in grado di assisterti anche se i codici appartengono a settori con casse previdenziali differenti, offrendo una gestione completa e personalizzata per ogni esigenza fiscale."
               }
             ].map((faq, index) => (
-              <div key={index} className="group bg-gray-50 rounded-xl p-4 sm:p-6 hover:bg-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border border-transparent hover:border-blue-200">
+              <div key={index} className="bg-gray-50 rounded-2xl p-6 hover:bg-white hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-gray-200">
                 <details className="group/details">
                   <summary className="flex justify-between items-center cursor-pointer list-none select-none">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 pr-3 sm:pr-4 group-hover:text-blue-700 transition-colors duration-300">{faq.question}</h3>
-                    <div className="text-blue-600 group-open/details:rotate-180 transition-all duration-300 group-hover:scale-110 group-hover:text-blue-700 flex-shrink-0">
-                      <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <h3 className="text-lg font-bold text-gray-900 pr-4">{faq.question}</h3>
+                    <div className="text-blue-600 group-open/details:rotate-180 transition-transform duration-200 flex-shrink-0">
+                      <ChevronDown className="h-5 w-5" />
                     </div>
                   </summary>
-                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 animate-fade-in-up">
-                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{faq.answer}</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                   </div>
                 </details>
               </div>
             ))}
           </div>
 
-          {/* CTA finale */}
-          <div className="text-center mt-8 sm:mt-12 p-6 sm:p-8 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors duration-300">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Altre domande?</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Il nostro team di esperti è pronto ad aiutarti</p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          {/* CTA */}
+          <div className="text-center mt-12 p-8 bg-gray-50 rounded-3xl">
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Altre domande?</h3>
+            <p className="text-gray-600 mb-6">Il nostro team di esperti è pronto ad aiutarti</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => scrollToSection('footer')}
-                className="group bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center hover:scale-105 hover:shadow-lg"
+                className="group bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2"
               >
-                <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                <Phone className="h-4 w-4" />
                 <span>Contattaci</span>
-                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
               <button
                 onClick={onShowRegister}
-                className="group border-2 border-blue-600 text-blue-600 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center"
+                className="group bg-gray-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all duration-200 flex items-center justify-center gap-2"
               >
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                <CheckCircle className="h-4 w-4" />
                 <span>Inizia ora</span>
               </button>
             </div>
@@ -1738,116 +1243,86 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
         </div>
       </section>
 
-      {/* Servizi Extra Section */}
-      <section className="py-20 bg-gray-50">
+      {/* Servizi Extra Section - Simplified */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Servizi Extra
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Servizi aggiuntivi disponibili per completare la gestione della tua attività
+              Servizi aggiuntivi per la tua attività
             </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="divide-y divide-gray-200">
+            <div className="bg-gray-50 rounded-3xl p-8 border-2 border-gray-200">
+              <div className="space-y-4">
                 {[
-                  {
-                    service: "Variazione da comunicare agli enti, compresa la SCIAA (artigiani e commercianti)",
-                    note: "Non sono comprese le spese vive",
-                    price: "150 €"
-                  },
-                  {
-                    service: "Domanda riduzione contributi INPS",
-                    price: "35 €"
-                  },
-                  {
-                    service: "Variazione da comunicare agli enti",
-                    note: "Non sono comprese le spese vive",
-                    price: "100 €"
-                  },
-                  {
-                    service: "Risoluzione comunicazione dinanzi alla Agenzia delle Entrate",
-                    price: "75 €"
-                  },
-                  {
-                    service: "Dichiarazione dei redditi anno precedente",
-                    price: "200 €"
-                  },
-                  {
-                    service: "Ravvedimento e DURC",
-                    price: "20 €"
-                  }
+                  { service: "Variazione SCIAA", note: "Spese vive escluse", price: "150 €" },
+                  { service: "Riduzione contributi INPS", price: "35 €" },
+                  { service: "Variazione agli enti", note: "Spese vive escluse", price: "100 €" },
+                  { service: "Risoluzione Agenzia Entrate", price: "75 €" },
+                  { service: "Dichiarazione redditi pregressa", price: "200 €" },
+                  { service: "Ravvedimento e DURC", price: "20 €" }
                 ].map((item, index) => (
-                  <div key={index} className="flex justify-between items-start p-6 hover:bg-gray-50 transition-colors">
+                  <div key={index} className="flex justify-between items-start bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300">
                     <div className="flex-1 pr-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.service}</h3>
+                      <h3 className="font-bold text-gray-900 mb-1">{item.service}</h3>
                       {item.note && (
-                        <p className="text-sm text-gray-600 italic">{item.note}</p>
+                        <p className="text-sm text-gray-600">{item.note}</p>
                       )}
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-2xl font-bold text-blue-600">{item.price}</div>
-                    </div>
+                    <div className="text-2xl font-extrabold text-blue-600">{item.price}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 italic">
-                * Prezzi IVA esclusa
-              </p>
+              <p className="text-sm text-gray-600">* Prezzi IVA esclusa</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - Simplified */}
       <footer id="footer" className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
-            <div className="sm:col-span-2 lg:col-span-1">
-              <div className="mb-4 sm:mb-6">
-                <Logo className="h-10 sm:h-12" inverted={true} />
+            <div className="lg:col-span-1">
+              <div className="mb-6">
+                <Logo className="h-12" inverted={true} />
               </div>
-              <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6 leading-relaxed">
-                La piattaforma semplice ed intuitiva per il giovane imprenditore di successo.
+              <p className="text-gray-400 mb-6 leading-relaxed">
+                Piattaforma semplice per giovani imprenditori
               </p>
-
-              <div className="space-y-1.5 sm:space-y-2">
-                <div className="flex items-center text-xs sm:text-sm text-gray-400">
-                  <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 mr-1.5 sm:mr-2" />
-                  <span>D.Lgs. 14/2019 Compliant</span>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-gray-400">
+                  <Shield className="h-4 w-4 text-blue-400 mr-2" />
+                  <span>Conforme D.Lgs. 14/2019</span>
                 </div>
-                <div className="flex items-center text-xs sm:text-sm text-gray-400">
-                  <FileCheck className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 mr-1.5 sm:mr-2" />
+                <div className="flex items-center text-sm text-gray-400">
+                  <FileCheck className="h-4 w-4 text-blue-400 mr-2" />
                   <span>Basel IV Framework</span>
-                </div>
-                <div className="flex items-center text-xs sm:text-sm text-gray-400">
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 mr-1.5 sm:mr-2" />
-                  <span>Sistema ICAS</span>
                 </div>
               </div>
             </div>
 
             {/* Services */}
             <div>
-              <h3 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-6">Servizi</h3>
-              <ul className="space-y-2 sm:space-y-3">
+              <h3 className="text-white font-bold text-lg mb-6">Servizi</h3>
+              <ul className="space-y-3">
                 {[
-                  "Credit Readiness Assessment",
-                  "Forward-Looking Analysis",
-                  "Banking Relationship Manager",
-                  "Regulatory Compliance Hub",
-                  "AI Risk Management",
-                  "Rating Optimization"
+                  "Gestione Partita IVA",
+                  "Consulenza Fiscale",
+                  "Business Plan",
+                  "Analisi AI",
+                  "Fatturazione"
                 ].map((service, index) => (
                   <li key={index}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
+                    <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
                       {service}
                     </a>
                   </li>
@@ -1857,16 +1332,16 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
             {/* Support */}
             <div>
-              <h3 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-6">Supporto</h3>
-              <ul className="space-y-2 sm:space-y-3">
+              <h3 className="text-white font-bold text-lg mb-6">Supporto</h3>
+              <ul className="space-y-3">
                 {[
-                  "Consulenza Creditizia",
-                  "Early Warning System",
-                  "Compliance Monitoring",
-                  "Banking Relations Support"
+                  "Consulenza dedicata",
+                  "Documenti",
+                  "Compliance",
+                  "FAQ"
                 ].map((support, index) => (
                   <li key={index}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
+                    <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
                       {support}
                     </a>
                   </li>
@@ -1876,62 +1351,55 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
 
             {/* Contact */}
             <div>
-              <h3 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-6">Contatti</h3>
-              <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-white font-bold text-lg mb-6">Contatti</h3>
+              <div className="space-y-4">
                 <div className="flex items-center">
-                  <div className="bg-blue-600 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                  </div>
-                  <span className="text-xs sm:text-sm text-gray-300">800 123 456</span>
+                  <Phone className="h-4 w-4 text-blue-400 mr-3" />
+                  <span className="text-sm text-gray-300">800 123 456</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="bg-blue-600 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                  </div>
-                  <span className="text-xs sm:text-sm text-gray-300">info@taxflow.it</span>
+                  <Mail className="h-4 w-4 text-blue-400 mr-3" />
+                  <span className="text-sm text-gray-300">info@taxflow.it</span>
                 </div>
               </div>
 
-              <div className="mt-6 sm:mt-8">
+              <div className="mt-8">
                 <button
                   onClick={onShowRegister}
-                  className="group bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center w-full sm:w-auto justify-center"
+                  className="group bg-white text-gray-900 px-6 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center w-full"
                 >
                   <span>Inizia ora</span>
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Bottom */}
-          <div className="border-t border-gray-800 pt-6 sm:pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
+          <div className="border-t border-gray-800 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="text-gray-400 text-center md:text-left">
-                <span className="text-xs sm:text-sm">&copy; 2025 TaxFlow. Tutti i diritti riservati.</span>
-                <span className="block text-xs sm:text-sm mt-1">
-                  Servizi conformi alle normative bancarie italiane ed europee
-                </span>
+                <span className="text-sm">&copy; 2025 TaxFlow. Tutti i diritti riservati.</span>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              <div className="flex flex-wrap justify-center gap-6">
                 <button
                   onClick={() => setShowPrivacyModal(true)}
-                  className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                  className="text-gray-400 hover:text-white transition-colors text-sm"
                 >
-                  Privacy Policy
+                  Privacy
                 </button>
                 <button
                   onClick={() => setShowTermsModal(true)}
-                  className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                  className="text-gray-400 hover:text-white transition-colors text-sm"
                 >
-                  Termini di Servizio
+                  Termini
                 </button>
                 <button
                   onClick={() => setShowCookieModal?.(true)}
-                  className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                  className="text-gray-400 hover:text-white transition-colors text-sm"
                 >
-                  Cookie Policy
+                  Cookie
                 </button>
               </div>
             </div>
