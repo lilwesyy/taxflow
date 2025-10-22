@@ -589,7 +589,7 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                         </p>
 
                         {/* Key Points */}
-                        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start mb-6 sm:mb-8">
+                        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start mb-8 sm:mb-10">
                           {banner.features.map((feature, featureIndex) => (
                             <div key={featureIndex} className="flex items-center bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-100">
                               <CheckCircle className="h-3 w-3 text-green-500 mr-1 sm:mr-2" />
