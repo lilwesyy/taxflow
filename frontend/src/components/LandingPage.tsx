@@ -601,7 +601,7 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
                 </div>
 
                 {/* Floating notification badge */}
-                <div className="absolute -top-4 -right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold flex items-center gap-2 animate-bounce">
+                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold flex items-center gap-2 animate-bounce">
                   <CheckCircle className="w-4 h-4" />
                   Tutto ok!
                 </div>
@@ -913,31 +913,89 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
             </p>
           </div>
 
-          {/* Steps Grid - Simplified */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-            {process.map((step, index) => {
-              const Icon = step.icon
-              return (
-                <div
-                  key={index}
-                  className="bg-white rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-600"
-                >
-                  {/* Step Number - Large & Bold */}
-                  <div className="text-6xl font-extrabold text-blue-600 mb-6">
-                    {step.step}
-                  </div>
+          {/* Timeline - Modern Design */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <div className="relative">
+              {/* Vertical Line - Hidden on mobile, shown on md+ */}
+              <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-600 via-blue-500 to-green-500 transform -translate-x-1/2"></div>
 
-                  {/* Icon */}
-                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
+              {process.map((step, index) => {
+                const Icon = step.icon
+                const isLeft = index % 2 === 0
+                const isLast = index === process.length - 1
 
-                  {/* Content */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
-                </div>
-              )
-            })}
+                return (
+                  <div key={index} className="relative mb-12 last:mb-0">
+                    {/* Mobile & Tablet Layout */}
+                    <div className="md:hidden">
+                      <div className="flex items-start gap-4">
+                        {/* Number Circle */}
+                        <div className={`flex-shrink-0 w-12 h-12 ${isLast ? 'bg-green-500' : 'bg-blue-600'} rounded-full flex items-center justify-center shadow-lg`}>
+                          <span className="text-xl font-extrabold text-white">{step.step}</span>
+                        </div>
+
+                        {/* Content Card */}
+                        <div className={`flex-1 bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border-2 ${isLast ? 'border-green-500' : 'border-gray-200'}`}>
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`w-10 h-10 ${isLast ? 'bg-green-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center`}>
+                              <Icon className={`w-5 h-5 ${isLast ? 'text-green-600' : 'text-blue-600'}`} />
+                            </div>
+                            <h3 className="text-lg font-extrabold text-gray-900">{step.title}</h3>
+                          </div>
+                          <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Desktop Layout - Alternating */}
+                    <div className="hidden md:block">
+                      <div className="flex items-center">
+                        {/* Left Content */}
+                        {isLeft ? (
+                          <div className="w-1/2 pr-12">
+                            <div className={`bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 border-2 ${isLast ? 'border-green-500 hover:border-green-600' : 'border-gray-200 hover:border-blue-600'}`}>
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className={`w-12 h-12 ${isLast ? 'bg-green-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center`}>
+                                  <Icon className={`w-6 h-6 ${isLast ? 'text-green-600' : 'text-blue-600'}`} />
+                                </div>
+                                <h3 className="text-xl font-extrabold text-gray-900">{step.title}</h3>
+                              </div>
+                              <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-1/2"></div>
+                        )}
+
+                        {/* Center Circle */}
+                        <div className="relative z-10 flex-shrink-0">
+                          <div className={`w-16 h-16 ${isLast ? 'bg-green-500' : 'bg-blue-600'} rounded-full flex items-center justify-center shadow-xl border-4 border-gray-50`}>
+                            <span className="text-2xl font-extrabold text-white">{step.step}</span>
+                          </div>
+                        </div>
+
+                        {/* Right Content */}
+                        {!isLeft ? (
+                          <div className="w-1/2 pl-12">
+                            <div className={`bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 border-2 ${isLast ? 'border-green-500 hover:border-green-600' : 'border-gray-200 hover:border-blue-600'}`}>
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className={`w-12 h-12 ${isLast ? 'bg-green-100' : 'bg-blue-100'} rounded-xl flex items-center justify-center`}>
+                                  <Icon className={`w-6 h-6 ${isLast ? 'text-green-600' : 'text-blue-600'}`} />
+                                </div>
+                                <h3 className="text-xl font-extrabold text-gray-900">{step.title}</h3>
+                              </div>
+                              <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-1/2"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
           {/* CTA */}

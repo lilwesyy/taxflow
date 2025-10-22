@@ -130,16 +130,16 @@ export default function DashboardLayout({
 
       {/* Sidebar - Responsive */}
       <div className={`
-        w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed h-full z-50 transition-transform duration-300 ease-in-out
+        w-64 bg-white border-r border-gray-100 flex-shrink-0 fixed h-full z-50 transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           {/* Logo with close button on mobile */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
             <Logo className="h-10" />
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
             >
               <X className="h-5 w-5" />
             </button>
@@ -151,10 +151,10 @@ export default function DashboardLayout({
               <button
                 key={item.id}
                 onClick={() => handleSectionChange(item.id)}
-                className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                className={`w-full flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
                   activeSection === item.id
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
                 }`}
               >
                 <item.icon className={`h-5 w-5 mr-3 ${
@@ -166,24 +166,24 @@ export default function DashboardLayout({
           </nav>
 
           {/* User Profile & Logout */}
-          <div className="border-t border-gray-200 p-4 flex-shrink-0">
+          <div className="border-t border-gray-100 p-4 flex-shrink-0">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary-600" />
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <User className="h-5 w-5 text-blue-600" />
               </div>
               <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
-                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
-                <p className="text-xs text-primary-600 capitalize truncate">
+                <p className="text-sm font-bold text-gray-900 truncate">{userName}</p>
+                <p className="text-xs text-gray-600 truncate">{userEmail}</p>
+                <p className="text-xs text-blue-600 font-semibold capitalize truncate">
                   {userRole === 'admin' ? (userProfessionalRole || 'Consulente') : (userCompany || 'Cliente')}
                 </p>
               </div>
             </div>
             <button
               onClick={onLogout}
-              className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+              className="w-full flex items-center px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200"
             >
-              <LogOut className="h-4 w-4 mr-3 text-gray-400" />
+              <LogOut className="h-4 w-4 mr-3" />
               Esci
             </button>
           </div>
@@ -193,19 +193,19 @@ export default function DashboardLayout({
       {/* Main Content Area - Responsive margin */}
       <div className="flex-1 flex flex-col lg:ml-64 h-full overflow-hidden">
         {/* Header - Responsive */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex-shrink-0 fixed top-0 left-0 lg:left-64 right-0 z-30">
+        <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 fixed top-0 left-0 lg:left-64 right-0 z-30">
           <div className="flex justify-between items-center">
             <div className="flex items-center min-w-0 flex-1">
               {/* Hamburger Menu - Mobile only */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex-shrink-0"
+                className="lg:hidden p-2 mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg flex-shrink-0 transition-colors duration-200"
               >
                 <Menu className="h-6 w-6" />
               </button>
 
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{headerTitle}</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold text-gray-900 truncate">{headerTitle}</h1>
                 <p className="hidden sm:block text-gray-600 text-xs sm:text-sm mt-1 truncate">{headerDescription}</p>
               </div>
             </div>
@@ -214,11 +214,11 @@ export default function DashboardLayout({
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 relative"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {unreadCount}
                     </span>
                   )}
@@ -226,12 +226,12 @@ export default function DashboardLayout({
 
                 {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <div className="fixed right-2 sm:right-6 top-16 w-[calc(100vw-1rem)] sm:w-80 max-w-md bg-white rounded-lg shadow-lg border border-gray-200 z-[99999]">
-                    <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-gray-900">Notifiche</h3>
+                  <div className="fixed right-2 sm:right-6 top-16 w-[calc(100vw-1rem)] sm:w-80 max-w-md bg-white rounded-2xl shadow-sm border-2 border-gray-200 z-[99999]">
+                    <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-gray-900">Notifiche</h3>
                       <button
                         onClick={() => setShowNotifications(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -239,14 +239,14 @@ export default function DashboardLayout({
 
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <div className="p-4 text-center text-gray-500">
+                        <div className="p-8 text-center text-gray-500">
                           Nessuna notifica
                         </div>
                       ) : (
                         notifications.map((notification) => (
                           <div
                             key={notification.id}
-                            className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                            className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 ${
                               !notification.read ? 'bg-blue-50' : ''
                             }`}
                           >
@@ -256,7 +256,7 @@ export default function DashboardLayout({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start">
-                                  <p className="text-sm font-medium text-gray-900">
+                                  <p className="text-sm font-bold text-gray-900">
                                     {notification.title}
                                   </p>
                                   {!notification.read && (
@@ -266,7 +266,7 @@ export default function DashboardLayout({
                                 <p className="text-sm text-gray-600 mt-1">
                                   {notification.message}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-2">
+                                <p className="text-xs text-gray-500 mt-2 font-medium">
                                   {notification.time}
                                 </p>
                               </div>
@@ -277,8 +277,8 @@ export default function DashboardLayout({
                     </div>
 
                     {notifications.length > 0 && (
-                      <div className="p-3 border-t border-gray-200">
-                        <button className="w-full text-sm text-primary-600 hover:text-primary-700 font-medium">
+                      <div className="p-3 border-t border-gray-100">
+                        <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-bold transition-colors duration-200">
                           Visualizza tutte le notifiche
                         </button>
                       </div>
@@ -290,7 +290,7 @@ export default function DashboardLayout({
               {/* Settings Button */}
               <button
                 onClick={() => onSectionChange('impostazioni')}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
               >
                 <Settings className="h-5 w-5" />
               </button>
@@ -299,7 +299,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Main Content - Scrollable & Responsive */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pt-20 sm:pt-24">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pt-20 sm:pt-24 bg-gray-50">
           {children}
         </main>
       </div>
