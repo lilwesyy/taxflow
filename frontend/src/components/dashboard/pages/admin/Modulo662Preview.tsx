@@ -61,14 +61,14 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
   }
 
   return (
-    <div className="bg-white overflow-hidden">
+    <div className="bg-white" style={{ pageBreakBefore: 'always', breakBefore: 'always', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block', position: 'relative', paddingTop: '3rem' }}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-8">
-        <div className="flex items-center space-x-3 mb-4">
-          <FileText className="h-10 w-10" />
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4" style={{ pageBreakAfter: 'avoid', breakAfter: 'avoid', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block', marginTop: 0 }}>
+        <div className="flex items-center space-x-3">
+          <FileText className="h-8 w-8" />
           <div>
-            <h2 className="text-3xl font-bold">MODULO 662/96</h2>
-            <p className="text-blue-100 text-base mt-1">Domanda di Agevolazione - Fondo di Garanzia PMI</p>
+            <h2 className="text-2xl font-bold">MODULO 662/96</h2>
+            <p className="text-blue-100 text-sm">Domanda di Agevolazione - Fondo di Garanzia PMI</p>
           </div>
         </div>
         </div>
@@ -100,7 +100,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
         </div>
 
         {/* Dati Soggetto Beneficiario */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
           <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
             Dati del Soggetto Beneficiario Finale
           </h3>
@@ -139,7 +139,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
         </div>
 
         {/* Operazione Finanziaria */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
           <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
             Operazione Finanziaria
           </h3>
@@ -178,7 +178,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
         {/* Programma di Investimento */}
       {data.finalitaOperazione === 'investimento' && (
         <>
-            <div className="px-8 py-8">
+            <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
             <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
               Programma di Investimento
             </h3>
@@ -405,7 +405,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
       )}
 
       {/* Regolamentazione UE */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
         <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
           Regolamentazione Europea Applicabile
         </h3>
@@ -415,7 +415,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
         </div>
 
         {/* Dimensione Aziendale */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
         <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
           Prospetto Determinazione Dimensione Aziendale
         </h3>
@@ -577,7 +577,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
       )}
 
       {/* DICHIARA - 12 Dichiarazioni */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
         <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
           DICHIARA
         </h3>
@@ -696,7 +696,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
         )}
 
         {/* Aiuti Incompatibili */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
         <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
           Aiuti Incompatibili con Decisioni CE
         </h3>
@@ -784,7 +784,7 @@ export default function Modulo662Preview({ data }: Modulo662PreviewProps) {
 
         {/* InvestEU - Solo se almeno una dichiarazione è true */}
         {(data.investEUNonAttivitaEscluse || data.investEURiconosceAudit || data.investEUSedeUE) && (
-          <div className="px-8 py-8">
+          <div className="px-8 py-8" style={{ pageBreakBefore: 'always', breakBefore: 'always' }}>
           <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-600">
             Scheda InvestEU
           </h3>

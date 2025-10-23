@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Sparkles, FileText, Edit3, Save, Eye, Download, Clock,
-  Plus, Loader2, RotateCcw, ChevronDown, ChevronUp, Trash2
+  Plus, Loader2, RotateCcw, ChevronDown, ChevronUp, Trash2, AlertTriangle
 } from 'lucide-react'
 import { useToast } from '../../../../context/ToastContext'
 import BusinessPlanSection from './BusinessPlanSection'
@@ -356,6 +356,10 @@ export default function BusinessPlanEditor({
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [showAIQuestionnaire, setShowAIQuestionnaire] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
+  const [showDeleteQuestionnaireModal, setShowDeleteQuestionnaireModal] = useState(false)
+  const [questionnaireToDelete, setQuestionnaireToDelete] = useState<string | null>(null)
+  const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false)
+  const [sectionToDelete, setSectionToDelete] = useState<{ id: string; title: string } | null>(null)
 
   // AI Suggestions state
   const [showSuggestionModal, setShowSuggestionModal] = useState(false)
@@ -1005,6 +1009,52 @@ export default function BusinessPlanEditor({
     }))
   }
 
+  const handleOpenDeleteQuestionnaireModal = (id: string) => {
+    setQuestionnaireToDelete(id)
+    setShowDeleteQuestionnaireModal(true)
+  }
+
+  const handleConfirmDeleteQuestionnaire = () => {
+    if (!questionnaireToDelete) return
+
+    setFormData(prev => ({
+      ...prev,
+      customSections: prev.customSections.filter(section => section.id !== questionnaireToDelete)
+    }))
+    setExpandedSections(prev => prev.filter(sectionId => sectionId !== questionnaireToDelete))
+    setShowDeleteQuestionnaireModal(false)
+    setQuestionnaireToDelete(null)
+    showToast('Questionario Strategico eliminato', 'success')
+  }
+
+  const handleCancelDeleteQuestionnaire = () => {
+    setShowDeleteQuestionnaireModal(false)
+    setQuestionnaireToDelete(null)
+  }
+
+  const handleOpenDeleteSectionModal = (id: string, title: string) => {
+    setSectionToDelete({ id, title })
+    setShowDeleteSectionModal(true)
+  }
+
+  const handleConfirmDeleteSection = () => {
+    if (!sectionToDelete) return
+
+    setFormData(prev => ({
+      ...prev,
+      customSections: prev.customSections.filter(section => section.id !== sectionToDelete.id)
+    }))
+    setExpandedSections(prev => prev.filter(sectionId => sectionId !== sectionToDelete.id))
+    setShowDeleteSectionModal(false)
+    setSectionToDelete(null)
+    showToast('Sezione eliminata con successo', 'success')
+  }
+
+  const handleCancelDeleteSection = () => {
+    setShowDeleteSectionModal(false)
+    setSectionToDelete(null)
+  }
+
   const deleteCustomSection = (id: string) => {
     setFormData(prev => ({
       ...prev,
@@ -1611,14 +1661,70 @@ export default function BusinessPlanEditor({
 
               // Questionnaire section with structured data
               if (section.type === 'questionnaire' && section.data) {
+                const isExpanded = expandedSections.includes(section.id)
+                const questionnaireData = section.data as QuestionnaireData
+                const totalQuestions = questionnaireData.items?.length || 0
+                const answeredQuestions = questionnaireData.items?.filter((item: any) => item.answer?.trim() !== '').length || 0
+                const completionPercentage = totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0
+
                 return (
-                  <QuestionnaireEditor
-                    key={section.id}
-                    data={section.data as QuestionnaireData}
-                    onChange={(data) => updateCustomSection(section.id, 'data', data)}
-                    isExpanded={expandedSections.includes(section.id)}
-                    onToggle={() => toggleSection(section.id)}
-                  />
+                  <div key={section.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <div
+                      className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => toggleSection(section.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <button
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleSection(section.id)
+                            }}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">Domande di validazione strategica per il business plan</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right mr-2">
+                            <div className="text-sm font-medium text-gray-900">
+                              {answeredQuestions}/{totalQuestions} completate
+                            </div>
+                            <div className="text-xs text-gray-500">{completionPercentage}% completato</div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleOpenDeleteQuestionnaireModal(section.id)
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Elimina questionario"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="border-t border-gray-100">
+                        <QuestionnaireEditor
+                          data={section.data as QuestionnaireData}
+                          onChange={(data) => updateCustomSection(section.id, 'data', data)}
+                          isExpanded={true}
+                          onToggle={() => {}}
+                          hideHeader={true}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )
               }
 
@@ -1655,9 +1761,7 @@ export default function BusinessPlanEditor({
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              if (window.confirm('Sei sicuro di voler eliminare questa sezione?')) {
-                                deleteCustomSection(section.id)
-                              }
+                              handleOpenDeleteSectionModal(section.id, section.title)
                             }}
                             className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Elimina sezione"
@@ -1705,16 +1809,32 @@ export default function BusinessPlanEditor({
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Aggiungi Sezione Aggiuntiva</h3>
 
               {/* Questionnaire Button */}
-              <button
-                onClick={() => addCustomSection('questionnaire')}
-                className="w-full p-4 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-400 hover:bg-blue-100 transition-all duration-200 flex flex-col items-center space-y-2 text-blue-700 hover:text-blue-800"
-              >
-                <div className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span className="font-medium text-sm">Aggiungi Questionario Strategico</span>
+              {!formData.customSections.some(section => section.type === 'questionnaire') ? (
+                <button
+                  onClick={() => addCustomSection('questionnaire')}
+                  className="w-full p-4 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-400 hover:bg-blue-100 transition-all duration-200 flex flex-col items-center space-y-2 text-blue-700 hover:text-blue-800"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span className="font-medium text-sm">Aggiungi Questionario Strategico</span>
+                  </div>
+                  <span className="text-xs text-blue-600">Domande di validazione per il business plan</span>
+                </button>
+              ) : (
+                <div className="w-full p-4 border-2 border-green-200 bg-green-50 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="font-medium text-sm text-green-700">Questionario Strategico già aggiunto</span>
+                      <p className="text-xs text-green-600">Puoi modificarlo o eliminarlo dalla sezione sopra</p>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs text-blue-600">Domande di validazione per il business plan</span>
-              </button>
+              )}
 
               {/* Generic Custom Section Button */}
               <button
@@ -2034,6 +2154,100 @@ export default function BusinessPlanEditor({
           </div>
         )}
       </Modal>
+
+      {/* Delete Questionnaire Confirmation Modal */}
+      {showDeleteQuestionnaireModal && (
+        <Modal
+          isOpen={showDeleteQuestionnaireModal}
+          onClose={handleCancelDeleteQuestionnaire}
+          title="Conferma eliminazione"
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Eliminare il Questionario Strategico?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Stai per eliminare il <span className="font-semibold">Questionario Strategico</span> con tutte le domande e risposte associate.
+                  Questa azione è <span className="font-semibold text-red-600">irreversibile</span> e tutti i dati verranno persi.
+                </p>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-sm text-amber-800">
+                    <strong>Nota:</strong> Potrai comunque aggiungere un nuovo questionario in seguito, ma le risposte attuali non saranno recuperabili.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCancelDeleteQuestionnaire}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-xs sm:text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleConfirmDeleteQuestionnaire}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-xs sm:text-sm"
+              >
+                Elimina definitivamente
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Section Confirmation Modal */}
+      {showDeleteSectionModal && sectionToDelete && (
+        <Modal
+          isOpen={showDeleteSectionModal}
+          onClose={handleCancelDeleteSection}
+          title="Conferma eliminazione"
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Eliminare questa sezione?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Stai per eliminare la sezione <span className="font-semibold">"{sectionToDelete.title}"</span>.
+                  Questa azione è <span className="font-semibold text-red-600">irreversibile</span> e tutti i contenuti della sezione verranno persi definitivamente.
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">
+                    <strong>Attenzione:</strong> Tutti i dati, compilazioni e allegati relativi a questa sezione saranno eliminati in modo permanente.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCancelDeleteSection}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-xs sm:text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleConfirmDeleteSection}
+                className="w-full sm:flex-1 px-4 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-xs sm:text-sm"
+              >
+                Elimina definitivamente
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

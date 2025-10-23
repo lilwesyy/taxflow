@@ -7,6 +7,7 @@ interface QuestionnaireEditorProps {
   onChange: (data: QuestionnaireData) => void
   isExpanded: boolean
   onToggle: () => void
+  hideHeader?: boolean
 }
 
 // Predefined strategic questions for business plan validation
@@ -76,7 +77,8 @@ export default function QuestionnaireEditor({
   data,
   onChange,
   isExpanded,
-  onToggle
+  onToggle,
+  hideHeader = false
 }: QuestionnaireEditorProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [showOnlyUnanswered, setShowOnlyUnanswered] = useState(false)
@@ -154,67 +156,11 @@ export default function QuestionnaireEditor({
 
   const categories = Object.keys(CATEGORY_LABELS)
 
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-      <div
-        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={onToggle}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 flex-1">
-            <button
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggle()
-              }}
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </button>
-            <ClipboardList className="h-5 w-5 text-blue-600" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">Questionario Strategico</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Domande di validazione per il business plan
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
-                {completionStats.answeredQuestions}/{completionStats.totalQuestions} completate
-              </div>
-              <div className="text-xs text-gray-500">{completionStats.percentage}% completato</div>
-            </div>
-            <div className="w-16 h-16">
-              <svg className="transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="#e5e7eb"
-                  strokeWidth="3"
-                />
-                <path
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3"
-                  strokeDasharray={`${completionStats.percentage}, 100`}
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-6">
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
+  // Render content function (shared between header and no-header versions)
+  const renderContent = () => (
+    <>
+      {/* Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => addQuestion()}
@@ -430,6 +376,79 @@ export default function QuestionnaireEditor({
               </div>
             </div>
           )}
+        </>
+  )
+
+  // If header is hidden, render content directly
+  if (hideHeader) {
+    return (
+      <div className="p-6 bg-gray-50 space-y-6">
+        {renderContent()}
+      </div>
+    )
+  }
+
+  // Otherwise render with full header
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+      <div
+        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={onToggle}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 flex-1">
+            <button
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggle()
+              }}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </button>
+            <ClipboardList className="h-5 w-5 text-blue-600" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">Questionario Strategico</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Domande di validazione per il business plan
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-900">
+                {completionStats.answeredQuestions}/{completionStats.totalQuestions} completate
+              </div>
+              <div className="text-xs text-gray-500">{completionStats.percentage}% completato</div>
+            </div>
+            <div className="w-16 h-16">
+              <svg className="transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="3"
+                />
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="3"
+                  strokeDasharray={`${completionStats.percentage}, 100`}
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-6">
+          {renderContent()}
         </div>
       )}
     </div>

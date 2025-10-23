@@ -1438,7 +1438,7 @@ export default function BusinessPlanPreview({ data, clientName, clientEmail, cli
           // Special handling for Modulo 662 sections
           if (section.type === 'modulo662' && section.data) {
             return (
-              <div key={section.id} className="mb-8">
+              <div key={section.id}>
                 <Modulo662Preview data={section.data} />
               </div>
             )
