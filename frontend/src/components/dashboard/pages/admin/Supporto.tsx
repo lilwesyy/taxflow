@@ -1,5 +1,6 @@
 import { HelpCircle, MessageSquare, Book, Video, Phone, Mail, Search, Send, ExternalLink, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { logger } from '../../../../utils/logger'
 
 export default function Supporto() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -210,7 +211,7 @@ export default function Supporto() {
 
   const handleTicketSubmit = () => {
     // Qui sarebbe implementata la logica per inviare il ticket
-    console.log('Invio ticket:', ticketForm)
+    logger.debug('Invio ticket:', ticketForm)
     setTicketForm({ subject: '', category: 'general', priority: 'medium', description: '' })
   }
 

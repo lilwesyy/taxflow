@@ -22,6 +22,7 @@ import QuestionnaireEditor from './QuestionnaireEditor'
 import Modal from '../../../common/Modal'
 import html2pdf from 'html2pdf.js'
 import api from '../../../../services/api'
+import { logger } from '../../../../utils/logger'
 // logoImage import removed - not needed anymore since we use BusinessPlanPreview component
 import {
   TeamSectionData,
@@ -498,7 +499,7 @@ export default function BusinessPlanEditor({
       await onSave({ ...formData, creationMode: creationMode || undefined })
       setAutoSaveStatus('saved')
     } catch (error) {
-      console.error('Auto-save failed:', error)
+      logger.error('Auto-save failed:', error)
       setAutoSaveStatus('unsaved')
     }
   }
@@ -522,9 +523,9 @@ export default function BusinessPlanEditor({
         throw new Error('Errore nel salvataggio della modalità')
       }
 
-      console.log('Modalità salvata nel database:', mode)
+      logger.debug('Modalità salvata nel database:', mode)
     } catch (error) {
-      console.error('Error saving mode:', error)
+      logger.error('Error saving mode:', error)
       // Non blocchiamo l'utente se il salvataggio fallisce
     }
   }
@@ -872,7 +873,7 @@ export default function BusinessPlanEditor({
       await onSave({ ...templateData, creationMode: 'template' })
       showToast('Template applicato e salvato! Modifica i contenuti personalizzandoli.', 'success')
     } catch (error) {
-      console.error('Error saving template:', error)
+      logger.error('Error saving template:', error)
       showToast('Template applicato (salvataggio automatico potrebbe aver fallito)', 'warning')
     }
   }
@@ -910,11 +911,11 @@ export default function BusinessPlanEditor({
         await onSave({ ...aiGeneratedData, creationMode: 'ai' })
         showToast('Business Plan generato con AI e salvato! Rivedi e personalizza i contenuti.', 'success')
       } catch (saveError) {
-        console.error('Error saving AI-generated data:', saveError)
+        logger.error('Error saving AI-generated data:', saveError)
         showToast('Business Plan generato (salvataggio automatico potrebbe aver fallito)', 'warning')
       }
     } catch (error) {
-      console.error('AI generation error:', error)
+      logger.error('AI generation error:', error)
       showToast('Errore nella generazione AI. Usa il template o inizia da zero.', 'error')
       setCreationMode('template')
       setShowAIQuestionnaire(false)
@@ -1100,7 +1101,7 @@ export default function BusinessPlanEditor({
       root.unmount()
       document.body.removeChild(container)
     } catch (error) {
-      console.error('Error exporting PDF:', error)
+      logger.error('Error exporting PDF:', error)
       setPdfExportStatus('idle')
       showToast('Errore nell\'esportazione del PDF', 'error')
     }
@@ -1156,7 +1157,7 @@ export default function BusinessPlanEditor({
       setShowResetModal(false)
       showToast('Puoi scegliere di nuovo la modalità di creazione', 'info')
     } catch (error) {
-      console.error('Error resetting business plan:', error)
+      logger.error('Error resetting business plan:', error)
       showToast('Errore nel reset del business plan', 'error')
     }
   }
@@ -1185,7 +1186,7 @@ export default function BusinessPlanEditor({
         throw new Error('Nessun suggerimento ricevuto')
       }
     } catch (error) {
-      console.error('Error getting AI suggestion:', error)
+      logger.error('Error getting AI suggestion:', error)
       showToast('Errore nel caricamento dei suggerimenti AI', 'error')
       setShowSuggestionModal(false)
     } finally {

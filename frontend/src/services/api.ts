@@ -1,4 +1,5 @@
 import type { User, UpdateProfileData } from '../types'
+import { logger } from '../utils/logger'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
@@ -672,7 +673,7 @@ class ApiService {
 
       return data
     } catch (error: any) {
-      console.error('Error getting Fattura Elettronica company:', error)
+      logger.error('Error getting Fattura Elettronica company:', error)
       return null
     }
   }

@@ -5,6 +5,7 @@ import WebMasterDashboard from './webmaster/WebMasterDashboard'
 import WebMasterUsers from './webmaster/WebMasterUsers'
 import WebMasterDatabase from './webmaster/WebMasterDatabase'
 import WebMasterSystem from './webmaster/WebMasterSystem'
+import { logger } from '../../../../utils/logger'
 
 interface UserBreakdown {
   businessPendingRegistration: number
@@ -90,7 +91,7 @@ export default function WebMaster() {
         throw new Error('Risposta API non valida')
       }
     } catch (err) {
-      console.error('Error loading server stats:', err)
+      logger.error('Error loading server stats:', err)
       setError('Errore nel caricamento delle statistiche del server')
     } finally {
       setLoading(false)

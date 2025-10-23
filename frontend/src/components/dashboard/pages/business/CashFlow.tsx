@@ -5,6 +5,7 @@ import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
 import jsPDF from 'jspdf'
 import logoImage from '../../../../assets/logo.png'
+import { logger } from '../../../../utils/logger'
 
 interface Transaction {
   id: string
@@ -139,7 +140,7 @@ export default function CashFlow() {
         generateMonthlyData(allTransactions)
       }
     } catch (error) {
-      console.error('Error loading cashflow:', error)
+      logger.error('Error loading cashflow:', error)
     } finally {
       setLoading(false)
     }
@@ -319,7 +320,7 @@ export default function CashFlow() {
       // Ricarica i dati
       loadCashFlowData()
     } catch (error: any) {
-      console.error('Error creating expense:', error)
+      logger.error('Error creating expense:', error)
       showToast(error.message || 'Errore durante il salvataggio della spesa', 'error')
     } finally {
       setSavingExpense(false)

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
+import { logger } from '../../../../utils/logger'
 import {
   SettingsProfile,
   SettingsPassword,
@@ -126,7 +127,7 @@ export default function Impostazioni() {
           }
         }
       } catch (error) {
-        console.error('Error loading profile:', error)
+        logger.error('Error loading profile:', error)
       }
     }
 
@@ -205,7 +206,7 @@ export default function Impostazioni() {
           setTwoFactorEnabled(data.enabled)
         }
       } catch (error) {
-        console.error('Error loading 2FA status:', error)
+        logger.error('Error loading 2FA status:', error)
       }
     }
 
@@ -451,7 +452,7 @@ export default function Impostazioni() {
                 }
               })
             } catch (err) {
-              console.error('Error terminating session:', err)
+              logger.error('Error terminating session:', err)
             }
           }
 
@@ -470,7 +471,7 @@ export default function Impostazioni() {
         }
       }
     } catch (error) {
-      console.error('Error loading sessions:', error)
+      logger.error('Error loading sessions:', error)
     } finally {
       setLoadingSessions(false)
     }
@@ -592,7 +593,7 @@ export default function Impostazioni() {
         setSubscriptionData(data)
       }
     } catch (error) {
-      console.error('Error loading subscription:', error)
+      logger.error('Error loading subscription:', error)
     } finally {
       setLoadingSubscription(false)
     }
@@ -613,7 +614,7 @@ export default function Impostazioni() {
         setInvoices(data.invoices || [])
       }
     } catch (error) {
-      console.error('Error loading invoices:', error)
+      logger.error('Error loading invoices:', error)
     } finally {
       setLoadingInvoices(false)
     }

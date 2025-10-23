@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { logger } from '../utils/logger'
 
 /**
  * Hook that intercepts fetch requests globally and handles 401 errors
@@ -30,7 +31,7 @@ export function useAuthInterceptor() {
 
         // Only trigger logout for API calls (not for external resources)
         if (url.includes('/api/')) {
-          console.log('Token scaduto rilevato, eseguo logout automatico')
+          logger.debug('Token scaduto rilevato, eseguo logout automatico')
 
           // Delay logout slightly to allow the current request to complete
           setTimeout(() => {

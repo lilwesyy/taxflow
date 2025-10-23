@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import PendingRegistrations from './PendingRegistrations'
 import apiService from '../../../../services/api'
 import ClientDetailModal from '../../shared/ClientDetailModal'
+import { logger } from '../../../../utils/logger'
 
 interface GestioneClientiProps {
   onSectionChange?: (section: string) => void
@@ -46,7 +47,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
         }
       }
     } catch (error) {
-      console.error('Error reloading clients:', error)
+      logger.error('Error reloading clients:', error)
     }
   }
 
@@ -71,7 +72,7 @@ export default function GestioneClienti({ onSectionChange }: GestioneClientiProp
           setPendingCount(pendingResponse.users?.length || 0)
         }
       } catch (err) {
-        console.error('Error loading data:', err)
+        logger.error('Error loading data:', err)
         setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati')
       } finally {
         setLoading(false)

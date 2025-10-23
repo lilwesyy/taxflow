@@ -4,6 +4,7 @@ import Modal from '../../../common/Modal'
 import NoteModal from '../../../common/NoteModal'
 import apiService from '../../../../services/api'
 import { useToast } from '../../../../context/ToastContext'
+import { logger } from '../../../../utils/logger'
 
 interface PivaRequest {
   _id: string
@@ -72,7 +73,7 @@ export default function RichiestePivaReal() {
         setRequests(response.requests)
       }
     } catch (error) {
-      console.error('Error fetching P.IVA requests:', error)
+      logger.error('Error fetching P.IVA requests:', error)
     } finally {
       setLoading(false)
     }
@@ -85,7 +86,7 @@ export default function RichiestePivaReal() {
         setTotalClients(response.clients.length)
       }
     } catch (error) {
-      console.error('Error fetching clients count:', error)
+      logger.error('Error fetching clients count:', error)
     }
   }
 
@@ -111,7 +112,7 @@ export default function RichiestePivaReal() {
         showToast('Utente approvato! Il cliente può ora scegliere il piano e completare il pagamento.', 'success')
       }
     } catch (error) {
-      console.error('Error approving request:', error)
+      logger.error('Error approving request:', error)
       showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
     } finally {
       setActionLoading(false)
@@ -135,7 +136,7 @@ export default function RichiestePivaReal() {
         showToast('Utente respinto', 'success')
       }
     } catch (error) {
-      console.error('Error rejecting request:', error)
+      logger.error('Error rejecting request:', error)
       showToast(error instanceof Error ? error.message : 'Errore durante il rifiuto', 'error')
     } finally {
       setActionLoading(false)

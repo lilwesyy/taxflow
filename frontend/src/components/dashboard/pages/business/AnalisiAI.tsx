@@ -2,6 +2,7 @@ import { Brain, Target, ShoppingCart, Clock, CheckCircle, Download, Shield, Aler
 import { useState, useEffect } from 'react'
 import { useToast } from '../../../../context/ToastContext'
 import { useAuth } from '../../../../context/AuthContext'
+import { logger } from '../../../../utils/logger'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -49,7 +50,7 @@ export default function AnalisiAI() {
         }
       }
     } catch (error) {
-      console.error('Error checking purchase status:', error)
+      logger.error('Error checking purchase status:', error)
     } finally {
       setLoading(false)
     }
@@ -76,7 +77,7 @@ export default function AnalisiAI() {
         showToast(data.error || 'Errore durante l\'acquisto', 'error')
       }
     } catch (error) {
-      console.error('Error purchasing service:', error)
+      logger.error('Error purchasing service:', error)
       showToast('Errore durante l\'acquisto', 'error')
     } finally {
       setPurchasing(false)

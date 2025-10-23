@@ -12,6 +12,7 @@ import MessageInput from '../../../chat/shared/MessageInput'
 import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
 import StripePaymentForm from '../../../payment/StripePaymentForm'
 import type { ChatMessage } from '../../../chat/shared/types'
+import { logger } from '../../../../utils/logger'
 
 interface Conversation {
   id: string
@@ -127,7 +128,7 @@ export default function Consulenza() {
           return hasStatusChange ? transformed : prev
         })
       } catch (error) {
-        console.error('Error polling conversations:', error)
+        logger.error('Error polling conversations:', error)
       }
     }, 5000)
 
@@ -143,18 +144,18 @@ export default function Consulenza() {
 
       // Don't auto-select AI anymore - let loadConversations handle it
     } catch (error) {
-      console.error('Error loading AI assistant:', error)
+      logger.error('Error loading AI assistant:', error)
     }
   }
 
   const loadConsultants = async () => {
     try {
-      console.log('📞 Loading consultants...')
+      logger.debug('📞 Loading consultants...')
       const data = await chatService.getConsultants()
-      console.log('✅ Consultants loaded:', data)
+      logger.debug('✅ Consultants loaded:', data)
       setConsulenti(data)
     } catch (error) {
-      console.error('❌ Error loading consultants:', error)
+      logger.error('❌ Error loading consultants:', error)
     }
   }
 
@@ -262,7 +263,7 @@ export default function Consulenza() {
         }
       }
     } catch (error) {
-      console.error('Error loading conversations:', error)
+      logger.error('Error loading conversations:', error)
     } finally {
       setLoading(false)
     }
@@ -285,7 +286,7 @@ export default function Consulenza() {
         )
       )
     } catch (error) {
-      console.error('Error loading messages:', error)
+      logger.error('Error loading messages:', error)
     }
   }
 
@@ -298,7 +299,7 @@ export default function Consulenza() {
         [aiConversationId]: messages
       }))
     } catch (error) {
-      console.error('Error loading AI messages:', error)
+      logger.error('Error loading AI messages:', error)
     }
   }
 
@@ -387,7 +388,7 @@ export default function Consulenza() {
         )
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      logger.error('Error sending message:', error)
       showToast('Errore nell\'invio del messaggio', 'error')
       setAiLoading(false)
     } finally {
@@ -479,7 +480,7 @@ export default function Consulenza() {
 
       showToast('Richiesta di consulenza inviata con successo!', 'success')
     } catch (error) {
-      console.error('Error creating conversation:', error)
+      logger.error('Error creating conversation:', error)
       showToast('Errore nella creazione della conversazione', 'error')
     }
   }
@@ -492,7 +493,7 @@ export default function Consulenza() {
       const { clientSecret } = await stripeService.createPaymentIntent(activeChat)
       setPaymentClientSecret(clientSecret)
     } catch (error) {
-      console.error('Error creating payment intent:', error)
+      logger.error('Error creating payment intent:', error)
       showToast(error instanceof Error ? error.message : 'Errore nell\'inizializzazione del pagamento', 'error')
       setShowPaymentModal(false)
     } finally {
@@ -524,7 +525,7 @@ export default function Consulenza() {
         }
       }
     } catch (error) {
-      console.error('Error after payment:', error)
+      logger.error('Error after payment:', error)
     }
   }
 

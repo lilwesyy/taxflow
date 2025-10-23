@@ -7,6 +7,7 @@ import { useToast } from '../../../context/ToastContext'
 import ATECOAutocomplete from '../../common/ATECOAutocomplete'
 import AddressAutocomplete from '../../common/AddressAutocomplete'
 import type { User as UserType, ActivityLog } from '../../../types'
+import { logger } from '../../../utils/logger'
 
 interface ClientDetailModalProps {
   client: UserType | null
@@ -109,7 +110,7 @@ export default function ClientDetailModal({
         onClientUpdated()
       }
     } catch (error) {
-      console.error('Error updating client:', error)
+      logger.error('Error updating client:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento del cliente'
       showToast(errorMessage, 'error')
     }
@@ -145,7 +146,7 @@ export default function ClientDetailModal({
         onStartConsultation(conversation._id)
       }
     } catch (error) {
-      console.error('Error starting consultation:', error)
+      logger.error('Error starting consultation:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore nell\'avvio della consulenza'
       showToast(errorMessage, 'error')
     } finally {

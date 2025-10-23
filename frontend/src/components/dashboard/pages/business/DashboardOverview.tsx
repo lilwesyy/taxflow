@@ -7,6 +7,7 @@ import type { QuickAction } from '../../shared/QuickActions'
 import { mockBusinessActivities } from '../../../../data/mockData'
 import api from '../../../../services/api'
 import type { Invoice } from '../../../../types/dashboard'
+import { logger } from '../../../../utils/logger'
 
 interface DashboardOverviewProps {
   onSectionChange: (section: string) => void
@@ -81,7 +82,7 @@ export default function DashboardOverview({ onSectionChange }: DashboardOverview
         setInvoices(convertedInvoices)
       }
     } catch (error: any) {
-      console.error('Error loading invoices:', error)
+      logger.error('Error loading invoices:', error)
     } finally {
       setLoading(false)
     }

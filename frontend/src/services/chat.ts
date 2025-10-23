@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api')
 
@@ -252,7 +254,7 @@ class ChatService {
           lastMessageTimestamp = new Date().toISOString()
         }
       } catch (error) {
-        console.error('Error polling for new messages:', error)
+        logger.error('Error polling for new messages:', error)
       }
     }
 

@@ -1,5 +1,6 @@
 import { BarChart3, Users, DollarSign, Download, ArrowUp, ArrowDown, Clock, Target, Activity, PieChart, LineChart } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { logger } from '../../../../utils/logger'
 
 interface Invoice {
   dataEmissione: string
@@ -226,7 +227,7 @@ export default function ReportsAnalytics() {
         setClientsCount(clientsResponse.clients.length)
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      logger.error('Error loading data:', error)
     } finally {
       setLoading(false)
     }

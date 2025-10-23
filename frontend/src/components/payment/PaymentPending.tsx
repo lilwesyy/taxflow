@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { SUBSCRIPTION_PLANS } from '../../config/subscriptionPlans'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../common/Logo'
+import { logger } from '../../utils/logger'
 
 interface PaymentPendingProps {
   onLogout: () => void
@@ -50,10 +51,10 @@ export default function PaymentPending({ onLogout }: PaymentPendingProps) {
         window.location.href = data.checkoutUrl
       } else {
         alert('Errore durante la creazione della sessione di pagamento. Riprova più tardi.')
-        console.error('Checkout error:', data)
+        logger.error('Checkout error:', data)
       }
     } catch (error) {
-      console.error('Error creating checkout:', error)
+      logger.error('Error creating checkout:', error)
       alert('Errore di connessione. Riprova più tardi.')
     } finally {
       setLoading(false)

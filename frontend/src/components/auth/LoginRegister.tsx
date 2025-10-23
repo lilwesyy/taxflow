@@ -4,6 +4,7 @@ import Modal from '../common/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import logoSvg from '../../assets/logo.svg'
+import { logger } from '../../utils/logger'
 
 interface LoginRegisterProps {
   onBack: () => void
@@ -71,8 +72,8 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
 
       // In development, show the reset link
       if (data.resetToken) {
-        console.log('Reset Token:', data.resetToken)
-        console.log('Reset URL:', data.resetUrl)
+        logger.debug('Reset Token:', data.resetToken)
+        logger.debug('Reset URL:', data.resetUrl)
         showToast('Token di reset copiato nella console (development)', 'info')
       }
     } catch (error) {

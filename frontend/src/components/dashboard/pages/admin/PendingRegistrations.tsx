@@ -4,6 +4,7 @@ import Modal from '../../../common/Modal'
 import NoteModal from '../../../common/NoteModal'
 import apiService from '../../../../services/api'
 import { useToast } from '../../../../context/ToastContext'
+import { logger } from '../../../../utils/logger'
 
 interface PendingUser {
   _id: string
@@ -44,7 +45,7 @@ export default function PendingRegistrations({ onCountChange }: PendingRegistrat
         }
       }
     } catch (error) {
-      console.error('Error fetching pending registrations:', error)
+      logger.error('Error fetching pending registrations:', error)
     } finally {
       setLoading(false)
     }
@@ -72,7 +73,7 @@ export default function PendingRegistrations({ onCountChange }: PendingRegistrat
         showToast(response.message, 'success')
       }
     } catch (error) {
-      console.error('Error approving registration:', error)
+      logger.error('Error approving registration:', error)
       showToast(error instanceof Error ? error.message : 'Errore durante l\'approvazione', 'error')
     } finally {
       setActionLoading(false)

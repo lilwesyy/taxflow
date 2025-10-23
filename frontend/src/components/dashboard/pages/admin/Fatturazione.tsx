@@ -9,6 +9,7 @@ import type { StatItem } from '../../shared/StatsCard'
 import type { Invoice } from '../../../../types/dashboard'
 import { calculateInvoiceStats, formatCurrency } from '../../../../utils/invoiceUtils'
 import { useToast } from '../../../../context/ToastContext'
+import { logger } from '../../../../utils/logger'
 
 type TabType = 'invoices' | 'clients'
 
@@ -82,7 +83,7 @@ export default function Fatturazione() {
       const data = await response.json()
       setInvoices(data.invoices || [])
     } catch (error) {
-      console.error('Error loading invoices:', error)
+      logger.error('Error loading invoices:', error)
       showToast('Errore nel caricamento delle fatture', 'error')
     } finally {
       setLoading(false)
@@ -105,7 +106,7 @@ export default function Fatturazione() {
       const data = await response.json()
       setClientsWithPiva(data.clients || [])
     } catch (error) {
-      console.error('Error loading clients with P.IVA:', error)
+      logger.error('Error loading clients with P.IVA:', error)
       showToast('Errore nel caricamento dei clienti', 'error')
     } finally {
       setLoadingClients(false)
@@ -156,7 +157,7 @@ export default function Fatturazione() {
   ]
 
   const handleCreateInvoice = (formData: unknown) => {
-    console.log('Creating admin invoice:', formData)
+    logger.debug('Creating admin invoice:', formData)
     setShowNewInvoiceModal(false)
   }
 
@@ -198,13 +199,13 @@ export default function Fatturazione() {
 
       showToast('PDF scaricato con successo!', 'success')
     } catch (error) {
-      console.error('Error downloading invoice:', error)
+      logger.error('Error downloading invoice:', error)
       showToast('Errore nel download del PDF', 'error')
     }
   }
 
   const handleSendInvoice = (invoice: Invoice) => {
-    console.log('Sending invoice:', invoice.id)
+    logger.debug('Sending invoice:', invoice.id)
   }
 
   const handleEditInvoice = (invoice: Invoice) => {
@@ -250,7 +251,7 @@ export default function Fatturazione() {
       // Reload invoices
       await loadTransactions()
     } catch (error) {
-      console.error('Error updating invoice:', error)
+      logger.error('Error updating invoice:', error)
       showToast(error instanceof Error ? error.message : 'Errore nell\'aggiornamento dell\'importo', 'error')
     } finally {
       setIsUpdating(false)
@@ -258,7 +259,7 @@ export default function Fatturazione() {
   }
 
   const handleMarkAsPaid = (invoice: Invoice) => {
-    console.log('Marking invoice as paid:', invoice.id)
+    logger.debug('Marking invoice as paid:', invoice.id)
   }
 
   const handleViewClientDetails = async (client: ClientWithPiva) => {
@@ -290,7 +291,7 @@ export default function Fatturazione() {
         setClientClients(clientsData.clients || [])
       }
     } catch (error) {
-      console.error('Error loading client details:', error)
+      logger.error('Error loading client details:', error)
       showToast('Errore nel caricamento dei dettagli', 'error')
     } finally {
       setLoadingClientDetails(false)

@@ -4,6 +4,7 @@ import { calculateTotal, calculateIvaAmount } from '../../../utils/invoiceUtils'
 import { Users, Search, X } from 'lucide-react'
 import type { Client } from '../../../types/dashboard'
 import AddressAutocomplete from '../../common/AddressAutocomplete'
+import { logger } from '../../../utils/logger'
 
 interface InvoiceFormData {
   // Dati Cliente (CessionarioCommittente)
@@ -239,7 +240,7 @@ export default function InvoiceCreateModal({
       await onSubmit(formData)
       handleReset()
     } catch (error: any) {
-      console.error('Error submitting invoice:', error)
+      logger.error('Error submitting invoice:', error)
       // Show API error in the banner
       setErrors({ api: error.message || 'Errore nell\'invio della fattura' })
     } finally {

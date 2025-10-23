@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Modal from '../../../common/Modal'
 import apiService from '../../../../services/api'
 import { useToast } from '../../../../context/ToastContext'
+import { logger } from '../../../../utils/logger'
 
 export default function FeedbackConsulente() {
   const { showToast } = useToast()
@@ -51,7 +52,7 @@ export default function FeedbackConsulente() {
           setConsultants(consultantsRes.consultants)
         }
       } catch (err) {
-        console.error('Error loading data:', err)
+        logger.error('Error loading data:', err)
         setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati')
       } finally {
         setLoading(false)
@@ -114,7 +115,7 @@ export default function FeedbackConsulente() {
         showToast('Feedback inviato con successo!', 'success')
       }
     } catch (err) {
-      console.error('Error submitting feedback:', err)
+      logger.error('Error submitting feedback:', err)
       showToast(err instanceof Error ? err.message : 'Errore nell\'invio del feedback', 'error')
     } finally {
       setLoading(false)

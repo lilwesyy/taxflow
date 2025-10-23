@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { MapPin, Loader2 } from 'lucide-react'
+import { logger } from '../../utils/logger'
 
 interface AddressResult {
   formatted: string
@@ -158,7 +159,7 @@ export default function AddressAutocomplete({
         }
       }
     } catch (error) {
-      console.error('Error fetching addresses:', error)
+      logger.error('Error fetching addresses:', error)
       setResults([])
     } finally {
       setIsLoading(false)

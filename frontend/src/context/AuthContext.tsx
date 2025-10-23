@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from '../types'
+import { logger } from '../utils/logger'
 
 interface LoginResponse {
   requires2FA?: boolean
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.status === 401) {
         // Token scaduto o non valido - logout automatico
-        console.log('Token scaduto, eseguo logout automatico')
+        logger.debug('Token scaduto, eseguo logout automatico')
         logout()
         return
       }
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('user', JSON.stringify(freshUser))
       }
     } catch (error) {
-      console.error('Error refreshing user:', error)
+      logger.error('Error refreshing user:', error)
     }
   }
 
@@ -125,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('user', JSON.stringify(data.user))
       }
     } catch (error) {
-      console.error('Error fetching fresh user data:', error)
+      logger.error('Error fetching fresh user data:', error)
       // Fallback to original user data
       setUser(data.user)
       localStorage.setItem('user', JSON.stringify(data.user))

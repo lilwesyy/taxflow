@@ -8,6 +8,7 @@ import type { QuickAction } from '../../shared/QuickActions'
 import apiService from '../../../../services/api'
 import ClientDetailModal from '../../shared/ClientDetailModal'
 import type { User, Invoice } from '../../../../types'
+import { logger } from '../../../../utils/logger'
 
 interface AdminOverviewProps {
   onSectionChange: (section: string) => void
@@ -74,7 +75,7 @@ export default function AdminOverview({ onSectionChange }: AdminOverviewProps) {
         setCompletedConsultations(completedCount)
       }
     } catch (error) {
-      console.error('Error loading stats:', error)
+      logger.error('Error loading stats:', error)
     } finally {
       setLoading(false)
     }

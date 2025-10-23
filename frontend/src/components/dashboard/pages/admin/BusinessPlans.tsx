@@ -16,6 +16,7 @@ import {
   RevenueProjectionsData
 } from '../../../../types/businessPlan'
 import { Modulo662Data } from './Modulo662Form'
+import { logger } from '../../../../utils/logger'
 
 const MAX_OPEN_TABS = 4
 
@@ -192,7 +193,7 @@ export default function BusinessPlans() {
       const data = await response.json()
       setServices(data.services || [])
     } catch (error) {
-      console.error('Error loading services:', error)
+      logger.error('Error loading services:', error)
       showToast('Errore nel caricamento dei business plan', 'error')
     } finally {
       setLoading(false)
@@ -286,7 +287,7 @@ export default function BusinessPlans() {
         showToast('Tab non aperta automaticamente. Limite massimo raggiunto.', 'info')
       }
     } catch (error) {
-      console.error('Error starting work:', error)
+      logger.error('Error starting work:', error)
       showToast(error instanceof Error ? error.message : 'Errore nell\'iniziare la lavorazione', 'error')
     } finally {
       setIsUpdating(false)
@@ -330,7 +331,7 @@ export default function BusinessPlans() {
       await loadServices()
       setActiveTab(serviceId)
     } catch (error) {
-      console.error('Error resuming work:', error)
+      logger.error('Error resuming work:', error)
       showToast(error instanceof Error ? error.message : 'Errore nel riprendere la lavorazione', 'error')
     } finally {
       setIsUpdating(false)
@@ -366,7 +367,7 @@ export default function BusinessPlans() {
 
       await loadServices()
     } catch (error) {
-      console.error('Error suspending work:', error)
+      logger.error('Error suspending work:', error)
       showToast(error instanceof Error ? error.message : 'Errore nella sospensione del lavoro', 'error')
     } finally {
       setIsUpdating(false)
@@ -418,7 +419,7 @@ export default function BusinessPlans() {
         setActiveTab('overview')
       }
     } catch (error) {
-      console.error('Error completing service:', error)
+      logger.error('Error completing service:', error)
       showToast(error instanceof Error ? error.message : 'Errore nel completamento del servizio', 'error')
     } finally {
       setIsUpdating(false)
@@ -576,12 +577,12 @@ export default function BusinessPlans() {
           throw new Error('Errore nel salvataggio')
         }
 
-        console.log('Business plan saved to database')
+        logger.debug('Business plan saved to database')
 
         // DO NOT reload services - it causes empty re-saves!
         // await loadServices()
       } catch (error) {
-        console.error('Error saving business plan:', error)
+        logger.error('Error saving business plan:', error)
         throw error // Re-throw to let the caller handle it
       }
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Users, Building2, Clock, Activity, CheckCircle2, AlertCircle, UserX, Trash2, RefreshCw, Eye, Edit, Mail, Phone, Calendar, X, Save } from 'lucide-react'
+import { logger } from '../../../../../utils/logger'
 
 interface UserData {
   _id: string
@@ -99,7 +100,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         setUsersByType(data.users)
       }
     } catch (err) {
-      console.error('Error loading users by type:', err)
+      logger.error('Error loading users by type:', err)
     } finally {
       setLoadingUsers(false)
     }
@@ -124,7 +125,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         setRejectedUsers(data.users)
       }
     } catch (err) {
-      console.error('Error loading rejected users:', err)
+      logger.error('Error loading rejected users:', err)
     } finally {
       setLoadingRejected(false)
     }
@@ -175,7 +176,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         await Promise.all([loadUsersByType(), onRefreshStats()])
       }
     } catch (err) {
-      console.error('Error updating user:', err)
+      logger.error('Error updating user:', err)
       alert('❌ Errore nell\'aggiornamento dell\'utente')
     }
   }
@@ -204,7 +205,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         await Promise.all([loadUsersByType(), onRefreshStats()])
       }
     } catch (err) {
-      console.error('Error deleting user:', err)
+      logger.error('Error deleting user:', err)
       alert('❌ Errore nell\'eliminazione dell\'utente')
     }
   }
@@ -233,7 +234,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         await Promise.all([loadRejectedUsers(), onRefreshStats()])
       }
     } catch (err) {
-      console.error('Error deleting user:', err)
+      logger.error('Error deleting user:', err)
       alert('❌ Errore nell\'eliminazione dell\'utente')
     }
   }
@@ -270,7 +271,7 @@ export default function WebMasterUsers({ stats, onRefreshStats }: WebMasterUsers
         await Promise.all([loadRejectedUsers(), onRefreshStats(), loadUsersByType()])
       }
     } catch (err) {
-      console.error('Error bulk deleting users:', err)
+      logger.error('Error bulk deleting users:', err)
       alert('❌ Errore nell\'eliminazione degli utenti')
     }
   }

@@ -12,6 +12,7 @@ import DocumentCard from '../../shared/documents/DocumentCard'
 import DocumentFilters from '../../shared/documents/DocumentFilters'
 import { getAvailableYears } from '../../../../utils/documentUtils'
 import type { Document, User } from '../../../../types'
+import { logger } from '../../../../utils/logger'
 
 export default function DocumentiClienti() {
   const { showToast } = useToast()
@@ -63,7 +64,7 @@ export default function DocumentiClienti() {
       const clients = response.clients || []
       setClientsFromApi(clients as User[])
     } catch (error) {
-      console.error('Error loading clients:', error)
+      logger.error('Error loading clients:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei clienti'
       showToast(errorMessage, 'error')
     }
@@ -79,7 +80,7 @@ export default function DocumentiClienti() {
       const response = await api.getDocuments(filters)
       setDocumentsFromApi(response.documents || [])
     } catch (error) {
-      console.error('Error loading documents:', error)
+      logger.error('Error loading documents:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei documenti'
       showToast(errorMessage, 'error')
     } finally {
@@ -178,7 +179,7 @@ export default function DocumentiClienti() {
       // Reload documents
       await loadDocuments()
     } catch (error) {
-      console.error('Error uploading document:', error)
+      logger.error('Error uploading document:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del documento'
       showToast(errorMessage, 'error')
     } finally {
@@ -225,7 +226,7 @@ export default function DocumentiClienti() {
       setDocumentToDelete(null)
       await loadDocuments()
     } catch (error) {
-      console.error('Error deleting document:', error)
+      logger.error('Error deleting document:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione del documento'
       showToast(errorMessage, 'error')
     }
@@ -262,7 +263,7 @@ export default function DocumentiClienti() {
       // Ricarica la lista documenti
       await loadDocuments()
     } catch (error) {
-      console.error('Error updating document status:', error)
+      logger.error('Error updating document status:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento dello status'
       showToast(errorMessage, 'error')
     }

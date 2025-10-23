@@ -11,6 +11,7 @@ import DocumentCard from '../../shared/documents/DocumentCard'
 import DocumentFilters from '../../shared/documents/DocumentFilters'
 import { getAvailableYears } from '../../../../utils/documentUtils'
 import type { Document } from '../../../../types'
+import { logger } from '../../../../utils/logger'
 
 export default function Documenti() {
   const { showToast } = useToast()
@@ -60,7 +61,7 @@ export default function Documenti() {
       const response = await api.getDocuments()
       setDocumentsFromApi(response.documents || [])
     } catch (error) {
-      console.error('Error loading documents:', error)
+      logger.error('Error loading documents:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore nel caricamento dei documenti'
       showToast(errorMessage, 'error')
     } finally {
@@ -130,7 +131,7 @@ export default function Documenti() {
       // Reload documents
       await loadDocuments()
     } catch (error) {
-      console.error('Error uploading document:', error)
+      logger.error('Error uploading document:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del documento'
       showToast(errorMessage, 'error')
     } finally {
@@ -182,7 +183,7 @@ export default function Documenti() {
       setDocumentToDelete(null)
       await loadDocuments()
     } catch (error) {
-      console.error('Error deleting document:', error)
+      logger.error('Error deleting document:', error)
       const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione del documento'
       showToast(errorMessage, 'error')
     }

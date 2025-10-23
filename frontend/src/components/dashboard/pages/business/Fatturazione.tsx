@@ -13,6 +13,7 @@ import { calculateInvoiceStats } from '../../../../utils/invoiceUtils'
 import Modal from '../../../common/Modal'
 import api from '../../../../services/api'
 import { buildFatturaOrdinaria, validateInvoiceData, type InvoiceFormData } from '../../../../utils/fatturaElettronicaBuilder'
+import { logger } from '../../../../utils/logger'
 
 export default function Fatturazione() {
   const { user, updateUser } = useAuth()
@@ -91,7 +92,7 @@ export default function Fatturazione() {
           }
         }
       } catch (error) {
-        console.error('Error loading user data:', error)
+        logger.error('Error loading user data:', error)
       }
 
       // Step 2: Check company configuration
@@ -156,7 +157,7 @@ export default function Fatturazione() {
         setInvoicetronicCompany(response.company)
       }
     } catch (error: any) {
-      console.error('Error checking Fattura Elettronica company:', error)
+      logger.error('Error checking Fattura Elettronica company:', error)
     } finally {
       setLoadingCompany(false)
     }
@@ -225,7 +226,7 @@ export default function Fatturazione() {
         throw new Error(updateResponse.message || 'Errore nella sincronizzazione')
       }
     } catch (error: any) {
-      console.error('Error refreshing company:', error)
+      logger.error('Error refreshing company:', error)
       showToast(error.message || 'Errore nell\'aggiornamento dei dati', 'error')
     } finally {
       setRefreshingCompany(false)
@@ -244,7 +245,7 @@ export default function Fatturazione() {
         setInvoices(allInvoices)
       }
     } catch (error: any) {
-      console.error('Error loading invoices:', error)
+      logger.error('Error loading invoices:', error)
       setInvoiceError(error.message || 'Errore nel caricamento delle fatture')
     } finally {
       setLoadingInvoices(false)
@@ -265,7 +266,7 @@ export default function Fatturazione() {
         setClients(mappedClients)
       }
     } catch (error: any) {
-      console.error('Error loading clients:', error)
+      logger.error('Error loading clients:', error)
       showToast(error.message || 'Errore nel caricamento dei clienti', 'error')
     } finally {
       setLoadingClients(false)
@@ -311,7 +312,7 @@ export default function Fatturazione() {
         throw new Error(response.message || 'Setup fallito')
       }
     } catch (error: any) {
-      console.error('Fattura Elettronica setup error:', error)
+      logger.error('Fattura Elettronica setup error:', error)
       setSetupError(error.message || 'Errore durante la configurazione')
     } finally {
       setSetupLoading(false)
@@ -500,7 +501,7 @@ export default function Fatturazione() {
           showToast('Cliente creato automaticamente!', 'success')
         } catch (clientError: any) {
           // If client creation fails, still try to create invoice but warn user
-          console.warn('Warning: Could not auto-create client:', clientError)
+          logger.warn('Warning: Could not auto-create client:', clientError)
           showToast('Attenzione: impossibile salvare il cliente', 'warning')
         }
       }
@@ -548,7 +549,7 @@ export default function Fatturazione() {
       const validation = validateInvoiceData(invoiceFormData)
       if (!validation.valid) {
         // Log validation errors for debugging - this shouldn't happen if modal validation works
-        console.warn('Invoice validation errors:', validation.errors)
+        logger.warn('Invoice validation errors:', validation.errors)
         return // Stop without showing error banner - modal should handle this
       }
 
@@ -556,8 +557,8 @@ export default function Fatturazione() {
       const fatturaOrdinaria = buildFatturaOrdinaria(invoiceFormData)
 
       // Debug: log P.IVA mittente
-      console.log('📤 Invio fattura con P.IVA mittente:', fatturaOrdinaria.piva_mittente)
-      console.log('📋 Dati azienda configurata:', {
+      logger.debug('📤 Invio fattura con P.IVA mittente:', fatturaOrdinaria.piva_mittente)
+      logger.debug('📋 Dati azienda configurata:', {
         piva: invoicetronicCompany.piva,
         cfis: invoicetronicCompany.cfis,
         ragione_sociale: invoicetronicCompany.ragione_sociale,
@@ -568,7 +569,7 @@ export default function Fatturazione() {
       const response = await api.sendInvoice(fatturaOrdinaria)
 
       if (response.success) {
-        console.log('Invoice sent successfully:', response.invoice)
+        logger.debug('Invoice sent successfully:', response.invoice)
         // Reload invoices
         await loadInvoices()
         setShowNewInvoice(false)
@@ -577,7 +578,7 @@ export default function Fatturazione() {
         throw new Error(response.message || 'Errore nell\'invio della fattura')
       }
     } catch (error: any) {
-      console.error('Error creating invoice:', error)
+      logger.error('Error creating invoice:', error)
       // Throw error to be caught by modal (don't set page-level error)
       throw error
     }
@@ -653,7 +654,7 @@ export default function Fatturazione() {
         await loadClients()
       }
     } catch (error: any) {
-      console.error('Error deleting client:', error)
+      logger.error('Error deleting client:', error)
       showToast(error.message || 'Errore nell\'eliminazione del cliente', 'error')
     }
   }
@@ -669,7 +670,7 @@ export default function Fatturazione() {
         throw new Error('ID fattura non valido')
       }
 
-      console.log('📥 Downloading PDF for invoice:', invoiceId)
+      logger.debug('📥 Downloading PDF for invoice:', invoiceId)
       showToast('Download PDF in corso...', 'info')
 
       const pdfBlob = await api.getInvoicePdf(invoiceId)
@@ -688,17 +689,17 @@ export default function Fatturazione() {
 
       showToast('PDF scaricato con successo!', 'success')
     } catch (error: any) {
-      console.error('Error downloading invoice PDF:', error)
+      logger.error('Error downloading invoice PDF:', error)
       showToast(error.message || 'Errore nel download del PDF', 'error')
     }
   }
 
   const handleSendInvoice = (invoice: Invoice) => {
-    console.log('Sending invoice:', invoice.id)
+    logger.debug('Sending invoice:', invoice.id)
   }
 
   const handleEditInvoice = (invoice: Invoice) => {
-    console.log('Editing invoice:', invoice.id)
+    logger.debug('Editing invoice:', invoice.id)
   }
 
   const handleSyncStatus = async (invoice: Invoice) => {
@@ -709,12 +710,12 @@ export default function Fatturazione() {
       }
 
       setSyncingInvoiceId(invoiceId)
-      console.log('🔄 Sincronizzazione status per fattura:', invoiceId)
+      logger.debug('🔄 Sincronizzazione status per fattura:', invoiceId)
 
       const response = await api.syncInvoiceStatus(invoiceId)
 
       if (response.success) {
-        console.log('✅ Status sincronizzato:', response.invoice)
+        logger.debug('✅ Status sincronizzato:', response.invoice)
         showToast(`Status aggiornato: ${response.invoice.sdiStatoDescrizione || response.invoice.status}`, 'success')
 
         // Reload invoices to show updated status
@@ -723,7 +724,7 @@ export default function Fatturazione() {
         throw new Error(response.message || 'Errore nella sincronizzazione')
       }
     } catch (error: any) {
-      console.error('Error syncing invoice status:', error)
+      logger.error('Error syncing invoice status:', error)
       showToast(error.message || 'Errore nell\'aggiornamento dello status', 'error')
     } finally {
       setSyncingInvoiceId(null)

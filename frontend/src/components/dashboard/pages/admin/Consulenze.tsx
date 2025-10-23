@@ -8,6 +8,7 @@ import MessageList from '../../../chat/shared/MessageList'
 import MessageInput from '../../../chat/shared/MessageInput'
 import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
 import type { ChatMessage } from '../../../chat/shared/types'
+import { logger } from '../../../../utils/logger'
 
 type TransformedMessage = Message & {
   mittente: 'consulente' | 'cliente'
@@ -182,7 +183,7 @@ export default function Consulenze() {
           return hasStatusChange ? transformed : prev
         })
       } catch (error) {
-        console.error('Error polling conversations:', error)
+        logger.error('Error polling conversations:', error)
       }
     }, 5000)
 
@@ -199,7 +200,7 @@ export default function Consulenze() {
       // Set AI as default active chat
       setActiveChat(aiConv.id)
     } catch (error) {
-      console.error('Error loading AI assistant:', error)
+      logger.error('Error loading AI assistant:', error)
     }
   }
 
@@ -237,7 +238,7 @@ export default function Consulenze() {
 
       setMonthlyRevenue(monthlyTotal)
     } catch (error) {
-      console.error('Error loading revenue stats:', error)
+      logger.error('Error loading revenue stats:', error)
     }
   }
 
@@ -354,7 +355,7 @@ export default function Consulenze() {
         }
       }
     } catch (error) {
-      console.error('Error loading conversations:', error)
+      logger.error('Error loading conversations:', error)
     } finally {
       setLoading(false)
     }
@@ -386,7 +387,7 @@ export default function Consulenze() {
         )
       )
     } catch (error) {
-      console.error('Error loading messages:', error)
+      logger.error('Error loading messages:', error)
     }
   }
 
@@ -407,7 +408,7 @@ export default function Consulenze() {
         [aiConversationId]: transformed
       }))
     } catch (error) {
-      console.error('Error loading AI messages:', error)
+      logger.error('Error loading AI messages:', error)
     }
   }
 
@@ -424,7 +425,7 @@ export default function Consulenze() {
 
       showToast('Richiesta accettata con successo', 'success')
     } catch (error) {
-      console.error('Error accepting conversation:', error)
+      logger.error('Error accepting conversation:', error)
       showToast('Errore nell\'accettare la richiesta', 'error')
     }
   }
@@ -439,7 +440,7 @@ export default function Consulenze() {
 
       showToast('Richiesta rifiutata', 'info')
     } catch (error) {
-      console.error('Error rejecting conversation:', error)
+      logger.error('Error rejecting conversation:', error)
       showToast('Errore nel rifiutare la richiesta', 'error')
     }
   }
@@ -468,7 +469,7 @@ export default function Consulenze() {
       // Show success toast
       showToast('Conversazione eliminata con successo', 'success')
     } catch (error) {
-      console.error('Error deleting conversation:', error)
+      logger.error('Error deleting conversation:', error)
       showToast('Errore nell\'eliminazione della conversazione', 'error')
     } finally {
       setDeletingConversation(false)
@@ -521,7 +522,7 @@ export default function Consulenze() {
       // Reload conversations to show updated amount
       await loadConversations()
     } catch (error) {
-      console.error('Error creating invoice:', error)
+      logger.error('Error creating invoice:', error)
       showToast('Errore nella creazione della fattura', 'error')
     } finally {
       setCreatingInvoice(false)
@@ -635,7 +636,7 @@ export default function Consulenze() {
         )
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      logger.error('Error sending message:', error)
       showToast('Errore nell\'invio del messaggio', 'error')
       setAiLoading(false)
     } finally {

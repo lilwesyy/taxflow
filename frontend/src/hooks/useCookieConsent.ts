@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { logger } from '../utils/logger'
 
 export interface CookieConsent {
   necessary: boolean
@@ -22,7 +23,7 @@ export function useCookieConsent() {
         setConsent(parsed)
         setShowBanner(false)
       } catch (error) {
-        console.error('Error parsing cookie consent:', error)
+        logger.error('Error parsing cookie consent:', error)
         setShowBanner(true)
       }
     } else {
@@ -42,7 +43,7 @@ export function useCookieConsent() {
     // Reload page to apply analytics scripts if needed
     if (newConsent.analytics) {
       // Initialize Google Analytics or other tracking here
-      console.log('Analytics consent granted')
+      logger.debug('Analytics consent granted')
     }
   }
 
