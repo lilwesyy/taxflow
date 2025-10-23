@@ -12,6 +12,7 @@ interface IUser extends mongoose.Document {
   password: string
   name: string
   role: 'business' | 'admin'
+  webmaster: boolean
   phone?: string
   professionalRole?: string
   bio?: string
@@ -146,6 +147,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   name: { type: String, required: true },
   role: { type: String, enum: ['business', 'admin'], default: 'business' },
+  webmaster: { type: Boolean, default: false },
   phone: { type: String },
   professionalRole: { type: String },
   bio: { type: String },

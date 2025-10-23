@@ -86,6 +86,7 @@ import arubaRoutes from './routes/aruba'
 import fatturaElettronicaRoutes from './routes/fatturaelettronica'
 import businessPlanRoutes from './routes/business-plan'
 import expensesRoutes from './routes/expenses'
+import webmasterRoutes from './routes/webmaster'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -198,6 +199,7 @@ app.use('/api/aruba', arubaRoutes)
 app.use('/api/fatturaelettronica', fatturaElettronicaRoutes)
 app.use('/api/business-plan', businessPlanRoutes)
 app.use('/api/expenses', expensesRoutes)
+app.use('/api/webmaster', webmasterRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

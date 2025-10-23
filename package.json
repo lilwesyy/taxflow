@@ -13,6 +13,7 @@
     "add-synetich-admin": "tsx scripts/add-synetich-admin.ts",
     "check-user": "tsx scripts/check-user.ts",
     "reset-piva-approval": "tsx scripts/reset-piva-approval.ts",
+    "set-webmaster": "tsx scripts/set-webmaster.ts",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "dependencies": {

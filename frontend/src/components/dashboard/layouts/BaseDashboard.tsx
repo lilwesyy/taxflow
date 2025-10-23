@@ -44,6 +44,15 @@ export default function BaseDashboard({
   const { logout, user } = useAuth()
   const { showToast } = useToast()
 
+  // Filter sidebar items based on user permissions
+  const filteredSidebarItems = sidebarItems.filter(item => {
+    // Only show WebMaster section to users with webmaster permission
+    if (item.id === 'webmaster') {
+      return user?.webmaster === true
+    }
+    return true
+  })
+
   const storageKey = `${role}_active_section`
 
   const [activeSection, setActiveSection] = useState(() => {
@@ -62,7 +71,7 @@ export default function BaseDashboard({
     localStorage.setItem(storageKey, section)
   }
 
-  const headerInfo = getHeaderInfo(activeSection, sidebarItems, userName)
+  const headerInfo = getHeaderInfo(activeSection, filteredSidebarItems, userName)
 
   // Get the page component for the active section
   const PageComponent = pages[activeSection] || pages.dashboard
@@ -90,7 +99,7 @@ export default function BaseDashboard({
       userName={userName}
       userEmail={userEmail}
       {...additionalProps}
-      sidebarItems={sidebarItems}
+      sidebarItems={filteredSidebarItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
       headerTitle={headerInfo.title}

@@ -65,6 +65,7 @@ export interface User {
   email: string
   name: string
   role: 'business' | 'admin' | 'synetich_admin'
+  webmaster?: boolean
   company?: string
   phone?: string
   professionalRole?: string

@@ -1,4 +1,4 @@
-import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star, FolderOpen } from 'lucide-react'
+import { Home, Users, FileText, Brain, TrendingUp, MessageSquare, Settings, HelpCircle, Building2, Target, Receipt, Star, FolderOpen, Server } from 'lucide-react'
 import { DashboardConfig, SidebarItem, HeaderInfo } from '../layouts/BaseDashboard'
 import AdminOverview from '../pages/admin/AdminOverview'
 import GestioneClienti from '../pages/admin/GestioneClienti'
@@ -12,6 +12,7 @@ import ReportsAnalytics from '../pages/admin/ReportsAnalytics'
 import FeedbackClienti from '../pages/admin/FeedbackClienti'
 import Impostazioni from '../pages/admin/Impostazioni'
 import Supporto from '../pages/admin/Supporto'
+import WebMaster from '../pages/admin/WebMaster'
 import PlaceholderPage from '../pages/shared/PlaceholderPage'
 
 export const adminDashboardConfig: Omit<DashboardConfig, 'onLogout' | 'userRole' | 'userName' | 'userEmail'> = {
@@ -37,6 +38,7 @@ export const adminDashboardConfig: Omit<DashboardConfig, 'onLogout' | 'userRole'
     { id: 'feedback-clienti', name: 'Feedback Clienti', icon: Star },
 
     // Sistema e supporto
+    { id: 'webmaster', name: 'Web Master', icon: Server },
     { id: 'supporto', name: 'Supporto', icon: HelpCircle },
     { id: 'impostazioni', name: 'Impostazioni', icon: Settings }
   ],
@@ -52,6 +54,7 @@ export const adminDashboardConfig: Omit<DashboardConfig, 'onLogout' | 'userRole'
     'fatturazione': Fatturazione,
     'reports': ReportsAnalytics,
     'feedback-clienti': FeedbackClienti,
+    'webmaster': WebMaster,
     'impostazioni': Impostazioni,
     'supporto': Supporto,
     'default': (props: any) => {
@@ -78,6 +81,7 @@ export const adminDashboardConfig: Omit<DashboardConfig, 'onLogout' | 'userRole'
       'fatturazione': 'Fatturazione Consulenze',
       'reports': 'Report & Analytics',
       'feedback-clienti': 'Feedback Clienti',
+      'webmaster': 'Web Master',
       'impostazioni': 'Impostazioni',
       'supporto': 'Supporto'
     }
@@ -93,6 +97,7 @@ export const adminDashboardConfig: Omit<DashboardConfig, 'onLogout' | 'userRole'
       'fatturazione': 'Gestione fatturazione delle tue consulenze',
       'reports': 'Report e analytics dettagliati sui tuoi clienti',
       'feedback-clienti': 'Visualizza e rispondi ai feedback ricevuti dai clienti',
+      'webmaster': 'Statistiche e monitoraggio del server in tempo reale',
       'impostazioni': 'Configura il tuo account e le preferenze',
       'supporto': 'Ottieni aiuto e assistenza tecnica'
     }
