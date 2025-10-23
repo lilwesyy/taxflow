@@ -1873,14 +1873,15 @@ export default function BusinessPlanEditor({
                   Scoring
                 </button>
 
-                <button
-                  onClick={() => {
-                    const modulo662Section: CustomSection = {
-                      id: `modulo_662_${Date.now()}`,
-                      title: 'Modulo 662/96 - Domanda di Agevolazione Fondo di Garanzia PMI',
-                      type: 'modulo662',
-                      content: '', // Will be generated from data in preview mode
-                      data: {
+                {!formData.customSections.some(section => section.type === 'modulo662') ? (
+                  <button
+                    onClick={() => {
+                      const modulo662Section: CustomSection = {
+                        id: `modulo_662_${Date.now()}`,
+                        title: 'Modulo 662/96 - Domanda di Agevolazione Fondo di Garanzia PMI',
+                        type: 'modulo662',
+                        content: '', // Will be generated from data in preview mode
+                        data: {
                         // Initialize with user data
                         cognomeNome: service.userId.name,
                         natoA: '',
@@ -2018,6 +2019,11 @@ export default function BusinessPlanEditor({
                 >
                   Modulo 662
                 </button>
+                ) : (
+                  <div className="px-6 py-3 border border-green-300 bg-green-50 text-green-700 rounded-lg">
+                    ✓ Modulo 662 già aggiunto
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-3">
