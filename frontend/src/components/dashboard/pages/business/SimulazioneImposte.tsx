@@ -35,8 +35,30 @@ export default function SimulazioneImposte() {
 
     // Calcoli
     const redditoImponibile = fatturato * coefficiente
-    const aliquotaIrpef = isNeoAttivita ? 0.05 : 0.23 // 5% primi 5 anni, 23% dopo
-    const irpef = redditoImponibile * aliquotaIrpef
+
+    // Calcolo IRPEF progressiva per scaglioni (2025)
+    let aliquotaIrpef: number
+    let irpef: number
+
+    if (isNeoAttivita) {
+      // Aliquota agevolata primi 5 anni: 5% flat
+      aliquotaIrpef = 0.05
+      irpef = redditoImponibile * aliquotaIrpef
+    } else {
+      // IRPEF progressiva per scaglioni 2025
+      if (redditoImponibile <= 28000) {
+        aliquotaIrpef = 0.23
+        irpef = redditoImponibile * 0.23
+      } else if (redditoImponibile <= 50000) {
+        aliquotaIrpef = 0.35
+        // 23% sui primi 28k + 35% sulla parte eccedente
+        irpef = (28000 * 0.23) + ((redditoImponibile - 28000) * 0.35)
+      } else {
+        aliquotaIrpef = 0.43
+        // 23% sui primi 28k + 35% sui successivi 22k + 43% sulla parte eccedente
+        irpef = (28000 * 0.23) + (22000 * 0.35) + ((redditoImponibile - 50000) * 0.43)
+      }
+    }
 
     // INPS (calcolato su fatturato)
     const inpsPercentuale = formData.codiceAteco.startsWith('62') || formData.codiceAteco.startsWith('74') ? 0.2535 : 0.26
@@ -46,9 +68,40 @@ export default function SimulazioneImposte() {
     const nettoFinale = fatturato - totaleImposte
     const percentualeTasse = (totaleImposte / fatturato) * 100
 
-    // Calcolo scenario alternativo (per confronto)
-    const aliquotaAlternativa = isNeoAttivita ? 0.23 : 0.05
-    const irpefAlternativa = redditoImponibile * aliquotaAlternativa
+    // Determina lo scaglione IRPEF applicato (mostra solo aliquota massima)
+    let scaglioneIrpef: string
+    if (isNeoAttivita) {
+      scaglioneIrpef = '5%'
+    } else if (redditoImponibile <= 28000) {
+      scaglioneIrpef = '23%'
+    } else if (redditoImponibile <= 50000) {
+      scaglioneIrpef = '35%'
+    } else {
+      scaglioneIrpef = '43%'
+    }
+
+    // Calcolo scenario alternativo (per confronto con aliquota 5%)
+    let irpefAlternativa: number
+    let aliquotaAlternativaLabel: string
+
+    if (isNeoAttivita) {
+      // Se neo-attività, mostra scenario con aliquota ordinaria
+      if (redditoImponibile <= 28000) {
+        irpefAlternativa = redditoImponibile * 0.23
+        aliquotaAlternativaLabel = '23%'
+      } else if (redditoImponibile <= 50000) {
+        irpefAlternativa = (28000 * 0.23) + ((redditoImponibile - 28000) * 0.35)
+        aliquotaAlternativaLabel = '35%'
+      } else {
+        irpefAlternativa = (28000 * 0.23) + (22000 * 0.35) + ((redditoImponibile - 50000) * 0.43)
+        aliquotaAlternativaLabel = '43%'
+      }
+    } else {
+      // Se aliquota ordinaria, mostra scenario con aliquota agevolata
+      irpefAlternativa = redditoImponibile * 0.05
+      aliquotaAlternativaLabel = '5%'
+    }
+
     const totaleImposteAlternative = irpefAlternativa + inps
     const nettoFinaleAlternativo = fatturato - totaleImposteAlternative
 
@@ -63,11 +116,13 @@ export default function SimulazioneImposte() {
       aliquotaIrpef: aliquotaIrpef * 100,
       coefficiente,
       isNeoAttivita,
+      scaglioneIrpef,
       // Scenario alternativo
       irpefAlternativa,
       totaleImposteAlternative,
       nettoFinaleAlternativo,
-      differenzaRisparmio: isNeoAttivita ? (totaleImposteAlternative - totaleImposte) : 0
+      aliquotaAlternativaLabel,
+      differenzaRisparmio: isNeoAttivita ? (totaleImposteAlternative - totaleImposte) : (totaleImposte - totaleImposteAlternative)
     })
   }
 
@@ -318,7 +373,15 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                   </div>
 
                   <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                    <span className="text-gray-600">IRPEF ({risultato.aliquotaIrpef}%)</span>
+                    <span className="text-gray-600 flex items-center">
+                      IRPEF ({risultato.scaglioneIrpef})
+                      <div className="group relative ml-1">
+                        <HelpCircle className="h-3 w-3 text-gray-400 cursor-help" />
+                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                          Scaglioni IRPEF 2025: 23% fino a €28k, 35% da €28k a €50k, 43% oltre €50k
+                        </div>
+                      </div>
+                    </span>
                     <span className="font-semibold text-red-600">€ {risultato.irpef.toLocaleString()}</span>
                   </div>
 
@@ -351,13 +414,13 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               <div className="p-4 rounded-lg border-2 border-green-300 shadow-sm bg-green-50">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-gray-900 text-sm">
-                    {risultato.isNeoAttivita ? 'Aliquota Agevolata (5%)' : 'Aliquota Standard (23%)'}
+                    {risultato.isNeoAttivita ? `Aliquota Agevolata (${risultato.scaglioneIrpef})` : `Aliquota IRPEF (${risultato.scaglioneIrpef})`}
                   </h4>
                   <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full font-bold">Attuale</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">IRPEF ({risultato.aliquotaIrpef}%)</span>
+                    <span className="text-gray-600">IRPEF ({risultato.scaglioneIrpef})</span>
                     <span className="font-semibold text-gray-900">€ {risultato.irpef.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -379,13 +442,13 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               <div className="p-4 rounded-lg border-2 border-gray-300 bg-white shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-gray-900 text-sm">
-                    {risultato.isNeoAttivita ? 'Aliquota Standard (23%)' : 'Aliquota Agevolata (5%)'}
+                    {risultato.isNeoAttivita ? `Aliquota IRPEF (${risultato.aliquotaAlternativaLabel})` : `Aliquota Agevolata (${risultato.aliquotaAlternativaLabel})`}
                   </h4>
                   <span className="text-xs bg-gray-200 px-2 py-1 rounded-full font-medium text-gray-700">Alternativa</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">IRPEF ({risultato.isNeoAttivita ? '23' : '5'}%)</span>
+                    <span className="text-gray-600">IRPEF ({risultato.aliquotaAlternativaLabel})</span>
                     <span className="font-semibold text-gray-900">€ {risultato.irpefAlternativa.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -404,15 +467,32 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
               </div>
 
               {/* Savings Banner */}
-              {risultato.isNeoAttivita && risultato.differenzaRisparmio > 0 && (
-                <div className="p-4 bg-green-100 border-2 border-green-300 rounded-lg">
-                  <p className="text-xs sm:text-sm text-green-900 flex items-start">
-                    <DollarSign className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
-                      <span className="font-bold">Risparmio annuo:</span> € {risultato.differenzaRisparmio.toLocaleString()}
-                      <span className="text-green-700 ml-1 font-semibold">
-                        ({((risultato.differenzaRisparmio / risultato.totaleImposteAlternative) * 100).toFixed(1)}% in meno)
-                      </span>
+              {risultato.differenzaRisparmio > 0 && (
+                <div className={`p-4 border-2 rounded-lg ${
+                  risultato.isNeoAttivita
+                    ? 'bg-green-100 border-green-300'
+                    : 'bg-red-100 border-red-300'
+                }`}>
+                  <p className="text-xs sm:text-sm flex items-start">
+                    <DollarSign className={`h-4 w-4 mr-2 mt-0.5 flex-shrink-0 ${
+                      risultato.isNeoAttivita ? 'text-green-600' : 'text-red-600'
+                    }`} />
+                    <span className={risultato.isNeoAttivita ? 'text-green-900' : 'text-red-900'}>
+                      {risultato.isNeoAttivita ? (
+                        <>
+                          <span className="font-bold">Risparmio annuo con agevolazione:</span> € {risultato.differenzaRisparmio.toLocaleString()}
+                          <span className="ml-1 font-semibold">
+                            ({((risultato.differenzaRisparmio / risultato.totaleImposteAlternative) * 100).toFixed(1)}% in meno)
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-bold">Maggior costo senza agevolazione:</span> € {risultato.differenzaRisparmio.toLocaleString()}
+                          <span className="ml-1 font-semibold">
+                            ({((risultato.differenzaRisparmio / risultato.totaleImposte) * 100).toFixed(1)}% in più)
+                          </span>
+                        </>
+                      )}
                     </span>
                   </p>
                 </div>
@@ -483,7 +563,7 @@ ${risultato.isNeoAttivita ? '\nAgevolazione neo-attività attiva (5% per primi 5
                   <h4 className="text-sm sm:text-base font-semibold text-green-900 mb-2">Agevolazione Neo-attività</h4>
                   <p className="text-xs sm:text-sm text-green-800 mb-2">
                     Stai usufruendo dell'aliquota agevolata del 5% per i primi 5 anni di attività!
-                    Dal 6° anno l'aliquota diventerà del 23%.
+                    Dal 6° anno si applicheranno gli scaglioni IRPEF ordinari (23%, 35% o 43% a seconda del reddito).
                   </p>
                   {risultato.differenzaRisparmio > 0 && (
                     <p className="text-xs sm:text-sm font-semibold text-green-900">
