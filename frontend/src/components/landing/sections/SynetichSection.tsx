@@ -1,4 +1,4 @@
-import { CheckCircle, ArrowRight, GraduationCap, Award, Users, TrendingUp, Building, Shield, Target, MapPin, Phone, Mail } from 'lucide-react'
+import { CheckCircle, ArrowRight, GraduationCap, Award, Users, TrendingUp, Building, Shield, MapPin, Phone, Mail } from 'lucide-react'
 
 interface SynetichSectionProps {
   setSectionRef: (id: string) => (el: Element | null) => void
@@ -25,7 +25,7 @@ export default function SynetichSection({ setSectionRef, onShowLogin }: Synetich
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 max-w-5xl mx-auto">
           {[
-            { number: '19', label: 'Corsi', icon: GraduationCap },
+            { number: '150+', label: 'Corsi', icon: GraduationCap },
             { number: '100%', label: 'Certificati', icon: Award },
             { number: '1000+', label: 'Studenti', icon: Users },
             { number: '15+', label: 'Anni', icon: TrendingUp }
@@ -46,10 +46,10 @@ export default function SynetichSection({ setSectionRef, onShowLogin }: Synetich
         {/* Categories Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {[
-            { title: 'Attrezzature', icon: Building, count: 10, description: 'Gru, piattaforme, movimento terra' },
-            { title: 'Sicurezza', icon: Shield, count: 5, description: 'DPI, primo soccorso, antincendio' },
-            { title: 'Management', icon: Users, count: 4, description: 'RSPP, RLS, dirigenti, preposti' },
-            { title: 'Specializzato', icon: Target, count: 3, description: 'Segnaletica, perforazioni' }
+            { title: 'Attrezzature', icon: Building, count: 11, description: 'Gru, piattaforme, movimento terra' },
+            { title: 'Sicurezza', icon: Shield, count: 13, description: 'DPI, primo soccorso, antincendio' },
+            { title: 'Dirigenti', icon: Users, count: 3, description: 'Dirigenti, datore di lavoro, RSPP' },
+            { title: 'E-Learning', icon: GraduationCap, count: 140, description: 'Formazione online certificata' }
           ].map((category, index) => {
             const Icon = category.icon
             return (
@@ -78,8 +78,8 @@ export default function SynetichSection({ setSectionRef, onShowLogin }: Synetich
                 {[
                   'Formazione certificata',
                   'Docenti qualificati',
-                  'Conformi alle normative',
-                  'Riconosciute a livello nazionale',
+                  'Conforme al D.lgs. 81/2008',
+                  'Attestati riconosciuti a livello nazionale',
                   'Sedi a Torino e Aosta',
                   'Supporto completo'
                 ].map((benefit, index) => (
