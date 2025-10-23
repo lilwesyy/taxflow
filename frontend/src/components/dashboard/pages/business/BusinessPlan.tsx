@@ -3,9 +3,7 @@ import { useState, useEffect } from 'react'
 import { useToast } from '../../../../context/ToastContext'
 import { useAuth } from '../../../../context/AuthContext'
 import { logger } from '../../../../utils/logger'
-
-const API_URL = import.meta.env.VITE_API_URL || '/api'
-
+import { getApiUrl } from '../../../../config/api'
 interface PurchasedService {
   _id: string
   serviceType: 'business_plan' | 'analisi_swot'
@@ -37,7 +35,7 @@ export default function BusinessPlan() {
 
   const checkPurchaseStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/services/get-services?serviceType=business_plan`, {
+      const response = await fetch(getApiUrl('/services/get-services?serviceType=business_plan'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -59,7 +57,7 @@ export default function BusinessPlan() {
   const handlePurchase = async () => {
     setPurchasing(true)
     try {
-      const response = await fetch(`${API_URL}/services/purchase-service`, {
+      const response = await fetch(getApiUrl('/services/purchase-service'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

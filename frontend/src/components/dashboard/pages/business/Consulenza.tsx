@@ -13,6 +13,7 @@ import FilePreviewModal from '../../../chat/shared/FilePreviewModal'
 import StripePaymentForm from '../../../payment/StripePaymentForm'
 import type { ChatMessage } from '../../../chat/shared/types'
 import { logger } from '../../../../utils/logger'
+import { getBaseUrl } from '../../../../config/api'
 
 interface Conversation {
   id: string
@@ -402,8 +403,7 @@ export default function Consulenza() {
   }
 
   const handleDownloadFile = (url: string, filename: string) => {
-    const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'
-    const downloadUrl = `${apiBaseUrl}${url}`
+        const downloadUrl = `${getBaseUrl()}${url}`
     const link = document.createElement('a')
     link.href = downloadUrl
     link.download = filename

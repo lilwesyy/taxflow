@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import logoSvg from '../../assets/logo.svg'
 import { logger } from '../../utils/logger'
+import { getApiUrl } from '../../config/api'
 
 interface LoginRegisterProps {
   onBack: () => void
@@ -52,8 +53,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
     }
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      const response = await fetch(getApiUrl('/auth/forgot-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,9 +90,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
       return
     }
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/auth/login/verify-2fa`, {
+    try {      const response = await fetch(getApiUrl('/auth/login/verify-2fa'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,10 +145,7 @@ export default function LoginRegister({ onBack, onRegistrationSuccess, initialMo
         if (formData.password !== formData.confirmPassword) {
           showToast('Le password non coincidono', 'error')
           return
-        }
-
-        const API_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_URL}/auth/register`, {
+        }        const response = await fetch(getApiUrl('/auth/register'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

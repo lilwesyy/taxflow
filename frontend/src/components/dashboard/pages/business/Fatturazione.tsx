@@ -14,6 +14,7 @@ import Modal from '../../../common/Modal'
 import api from '../../../../services/api'
 import { buildFatturaOrdinaria, validateInvoiceData, type InvoiceFormData } from '../../../../utils/fatturaElettronicaBuilder'
 import { logger } from '../../../../utils/logger'
+import { getApiUrl } from '../../../../config/api'
 
 export default function Fatturazione() {
   const { user, updateUser } = useAuth()
@@ -63,11 +64,9 @@ export default function Fatturazione() {
   useEffect(() => {
     const loadInitialData = async () => {
       // Step 1: Load fresh user data from API
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '/api'
-        const token = localStorage.getItem('token')
+      try {        const token = localStorage.getItem('token')
 
-        const profileResponse = await fetch(`${API_URL}/user/me`, {
+        const profileResponse = await fetch(getApiUrl('/user/me'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -168,10 +167,9 @@ export default function Fatturazione() {
       setRefreshingCompany(true)
 
       // Step 1: Reload user profile to get updated data from Impostazioni
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
       const token = localStorage.getItem('token')
 
-      const profileResponse = await fetch(`${API_URL}/user/me`, {
+      const profileResponse = await fetch(getApiUrl('/user/me'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

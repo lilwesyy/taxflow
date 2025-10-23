@@ -4,6 +4,7 @@ import { SUBSCRIPTION_PLANS } from '../../config/subscriptionPlans'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../common/Logo'
 import { logger } from '../../utils/logger'
+import { getApiUrl } from '../../config/api'
 
 interface PaymentPendingProps {
   onLogout: () => void
@@ -33,7 +34,7 @@ export default function PaymentPending({ onLogout }: PaymentPendingProps) {
 
     try {
       // Call API to create Stripe Checkout Session
-      const response = await fetch('http://localhost:3000/api/stripe/create-checkout', {
+      const response = await fetch(getApiUrl('/stripe/create-checkout'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

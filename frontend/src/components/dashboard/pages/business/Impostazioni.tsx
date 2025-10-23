@@ -4,6 +4,7 @@ import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
 import { logger } from '../../../../utils/logger'
+import { getApiUrl } from '../../../../config/api'
 import {
   SettingsProfile,
   SettingsPassword,
@@ -79,9 +80,7 @@ export default function Impostazioni() {
     const loadUserProfile = async () => {
       if (!user || !token) return
 
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_URL}/user/me`, {
+      try {        const response = await fetch(getApiUrl('/user/me'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -193,9 +192,7 @@ export default function Impostazioni() {
     const load2FAStatus = async () => {
       if (!token) return
 
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_URL}/security/2fa/status`, {
+      try {        const response = await fetch(getApiUrl('/security/2fa/status'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -224,9 +221,7 @@ export default function Impostazioni() {
   const handle2FAEnable = async () => {
     setLoading(true)
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/2fa/enable`, {
+    try {      const response = await fetch(getApiUrl('/security/2fa/enable'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -256,9 +251,7 @@ export default function Impostazioni() {
 
     setLoading(true)
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/2fa/verify`, {
+    try {      const response = await fetch(getApiUrl('/security/2fa/verify'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,9 +285,7 @@ export default function Impostazioni() {
 
     setLoading(true)
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/2fa/disable`, {
+    try {      const response = await fetch(getApiUrl('/security/2fa/disable'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,9 +312,7 @@ export default function Impostazioni() {
   // Profile update handler
   const handleProfileUpdate = async (data: ProfileData) => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/user/update`, {
+    try {      const response = await fetch(getApiUrl('/user/update'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -392,9 +381,7 @@ export default function Impostazioni() {
   // Password update handler
   const handlePasswordUpdate = async (data: PasswordData) => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/user/update`, {
+    try {      const response = await fetch(getApiUrl('/user/update'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -423,9 +410,7 @@ export default function Impostazioni() {
   // Sessions handlers
   const loadSessions = async () => {
     setLoadingSessions(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions`, {
+    try {      const response = await fetch(getApiUrl('/security/sessions'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -445,7 +430,7 @@ export default function Impostazioni() {
 
           for (const session of sessionsToTerminate) {
             try {
-              await fetch(`${API_URL}/security/sessions/${session.id}`, {
+              await fetch(getApiUrl(`/security/sessions/${session.id}`), {
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`
@@ -456,7 +441,7 @@ export default function Impostazioni() {
             }
           }
 
-          const updatedResponse = await fetch(`${API_URL}/security/sessions`, {
+          const updatedResponse = await fetch(getApiUrl('/security/sessions'), {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -479,9 +464,7 @@ export default function Impostazioni() {
 
   const handleUpdateTimeout = async (minutes: number) => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+    try {      const response = await fetch(getApiUrl('/security/settings/session-timeout'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -506,8 +489,7 @@ export default function Impostazioni() {
 
   const handleTerminateSession = async (sessionId: string) => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions/${sessionId}`, {
+      const response = await fetch(getApiUrl(`/security/sessions/${sessionId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -528,9 +510,7 @@ export default function Impostazioni() {
 
   const handleTerminateAllSessions = async () => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions`, {
+    try {      const response = await fetch(getApiUrl('/security/sessions'), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -553,9 +533,7 @@ export default function Impostazioni() {
 
   const handleCleanupSessions = async () => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions/cleanup`, {
+    try {      const response = await fetch(getApiUrl('/security/sessions/cleanup'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -580,9 +558,7 @@ export default function Impostazioni() {
   // Subscription handlers
   const loadSubscription = async () => {
     setLoadingSubscription(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/status`, {
+    try {      const response = await fetch(getApiUrl('/subscription/status'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -601,9 +577,7 @@ export default function Impostazioni() {
 
   const loadInvoices = async () => {
     setLoadingInvoices(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/invoices`, {
+    try {      const response = await fetch(getApiUrl('/subscription/invoices'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -622,9 +596,7 @@ export default function Impostazioni() {
 
   const handleToggleAutoRenew = async (enabled: boolean) => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/auto-renew`, {
+    try {      const response = await fetch(getApiUrl('/subscription/auto-renew'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -654,9 +626,7 @@ export default function Impostazioni() {
 
   const confirmCancelSubscription = async () => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/cancel`, {
+    try {      const response = await fetch(getApiUrl('/subscription/cancel'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -680,9 +650,7 @@ export default function Impostazioni() {
 
   const handleReactivateSubscription = async () => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/reactivate`, {
+    try {      const response = await fetch(getApiUrl('/subscription/reactivate'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -705,8 +673,7 @@ export default function Impostazioni() {
 
   const handleDownloadInvoice = async (invoiceId: string, numero: string) => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/subscription/invoices/${invoiceId}/download`, {
+      const response = await fetch(getApiUrl(`/subscription/invoices/${invoiceId}/download`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -731,9 +698,7 @@ export default function Impostazioni() {
 
   const handleSaveNotifications = async () => {
     setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/user/update`, {
+    try {      const response = await fetch(getApiUrl('/user/update'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

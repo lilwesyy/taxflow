@@ -1,8 +1,8 @@
 import type { User, UpdateProfileData } from '../types'
 import { logger } from '../utils/logger'
+import { API_CONFIG } from '../config/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
+const API_BASE_URL = API_CONFIG.baseURL
 
 export interface LoginRequest {
   email: string

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from '../types'
 import { logger } from '../utils/logger'
+import { getApiUrl } from '../config/api'
 
 interface LoginResponse {
   requires2FA?: boolean
@@ -31,8 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!savedToken) return
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-      const response = await fetch(`${API_URL}/user/me`, {
+      const response = await fetch(getApiUrl('/user/me'), {
         headers: {
           'Authorization': `Bearer ${savedToken}`
         }
@@ -72,9 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string): Promise<LoginResponse | void> => {
-    const API_URL = import.meta.env.VITE_API_URL || '/api'
-
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(getApiUrl('/auth/login'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,8 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Get fresh user data with subscription status
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-      const response = await fetch(`${API_URL}/user/me`, {
+      const response = await fetch(getApiUrl('/user/me'), {
         headers: {
           'Authorization': `Bearer ${data.token}`
         }

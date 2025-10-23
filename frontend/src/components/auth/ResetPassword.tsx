@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Logo from '../common/Logo'
 import { useToast } from '../../context/ToastContext'
+import { getApiUrl } from '../../config/api'
 
 interface ResetPasswordProps {
   onBack: () => void
@@ -78,8 +79,7 @@ export default function ResetPassword({ onBack, onSuccess }: ResetPasswordProps)
     setIsLoading(true)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
+      const response = await fetch(getApiUrl('/auth/reset-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

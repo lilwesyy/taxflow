@@ -5,6 +5,7 @@ import Modal from '../common/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import PivaRequestForm, { type PivaRequestData } from '../forms/PivaRequestForm'
+import { getApiUrl } from '../../config/api'
 
 interface RegistrationFlowProps {
   onBack: () => void
@@ -48,9 +49,7 @@ export default function RegistrationFlow({ onBack, onComplete }: RegistrationFlo
       return
     }
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/auth/register`, {
+    try {      const response = await fetch(getApiUrl('/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

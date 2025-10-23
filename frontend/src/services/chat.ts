@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger'
+import { API_CONFIG } from '../config/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api')
+const API_BASE_URL = API_CONFIG.baseURL
 
 const getHeaders = (): HeadersInit => {
   const headers: HeadersInit = {
