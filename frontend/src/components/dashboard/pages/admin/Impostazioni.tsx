@@ -1,29 +1,41 @@
-import { User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, Clock, Trash2, FileText, CheckCircle, XCircle } from 'lucide-react'
+import { User, Bell, Shield, Database, Mail, CreditCard, Save, Eye, EyeOff, FileText, CheckCircle, XCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import Modal from '../../../common/Modal'
-import AddressAutocomplete from '../../../common/AddressAutocomplete'
+import {
+  SettingsProfile,
+  SettingsPassword,
+  SettingsSecurity,
+  type Session
+} from '../../shared/settings'
 
-interface Session {
-  id: string
-  browser: string
-  os: string
-  location: string
-  ip: string
-  isCurrent: boolean
-  lastActivity: string
+interface ProfileData {
+  nome: string
+  cognome: string
+  email: string
+  telefono?: string
+  ruolo?: string
+  bio?: string
+  indirizzo?: string
+  codiceFiscale?: string
+  ordineIscrizione?: string
+}
+
+interface PasswordData {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
 }
 
 export default function Impostazioni() {
   const { user, token, updateUser } = useAuth()
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
-  const [showPassword, setShowPassword] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<ProfileData>({
     nome: '',
     cognome: '',
     email: '',
@@ -70,10 +82,7 @@ export default function Impostazioni() {
           })
 
           if (userData.notificationSettings) {
-            console.log('Loaded notification settings:', userData.notificationSettings)
             setNotificationSettings(userData.notificationSettings)
-          } else {
-            console.log('No notification settings found in user data')
           }
         }
       } catch (error) {
@@ -83,234 +92,6 @@ export default function Impostazioni() {
 
     loadUserProfile()
   }, [user, token])
-
-  // Load 2FA status
-  useEffect(() => {
-    const load2FAStatus = async () => {
-      if (!token) return
-
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '/api'
-        const response = await fetch(`${API_URL}/security/2fa/status`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          setTwoFactorEnabled(data.enabled)
-        }
-      } catch (error) {
-        console.error('Error loading 2FA status:', error)
-      }
-    }
-
-    load2FAStatus()
-  }, [token])
-
-  // Load sessions when security tab is active
-  useEffect(() => {
-    if (activeTab === 'security' && token) {
-      loadSessions()
-      loadSessionTimeout()
-    }
-  }, [activeTab, token])
-
-  const loadSessions = async () => {
-    setLoadingSessions(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const sessions = data.sessions
-
-        // Auto-terminate sessions if more than 3
-        if (sessions.length > 3) {
-          // Sort by lastActivity (oldest first)
-          const sortedSessions = [...sessions].sort((a, b) =>
-            new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime()
-          )
-
-          // Get sessions to terminate (all except the 3 most recent)
-          const sessionsToTerminate = sortedSessions.slice(0, sessions.length - 3)
-
-          // Terminate old sessions
-          for (const session of sessionsToTerminate) {
-            try {
-              await fetch(`${API_URL}/security/sessions/${session.id}`, {
-                method: 'DELETE',
-                headers: {
-                  'Authorization': `Bearer ${token}`
-                }
-              })
-            } catch (err) {
-              console.error('Error terminating session:', err)
-            }
-          }
-
-          // Reload sessions after cleanup
-          const updatedResponse = await fetch(`${API_URL}/security/sessions`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
-
-          if (updatedResponse.ok) {
-            const updatedData = await updatedResponse.json()
-            setSessions(updatedData.sessions)
-          }
-        } else {
-          setSessions(sessions)
-        }
-      }
-    } catch (error) {
-      console.error('Error loading sessions:', error)
-    } finally {
-      setLoadingSessions(false)
-    }
-  }
-
-  const loadSessionTimeout = async () => {
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSessionTimeout(data.sessionTimeout)
-      }
-    } catch (error) {
-      console.error('Error loading session timeout:', error)
-    }
-  }
-
-  const handleSaveSessionTimeout = async () => {
-    setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ sessionTimeout })
-      })
-
-      if (response.ok) {
-        showToast('Timeout sessione aggiornato con successo', 'success')
-      } else {
-        const error = await response.json()
-        throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
-      }
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCleanupSessions = async () => {
-    if (!confirm('Eliminare manualmente tutte le sessioni inattive?')) return
-
-    setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions/cleanup`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        showToast(data.message, 'success')
-        loadSessions()
-      } else {
-        const error = await response.json()
-        throw new Error(error.error || 'Errore nella pulizia delle sessioni')
-      }
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleTerminateAllSessions = async () => {
-    if (!confirm('Sei sicuro di voler terminare tutte le altre sessioni?')) return
-
-    setLoading(true)
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        showToast('Tutte le altre sessioni sono state terminate', 'success')
-        loadSessions()
-      } else {
-        const error = await response.json()
-        throw new Error(error.error || 'Errore nella terminazione delle sessioni')
-      }
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getTimeoutLabel = (minutes: number) => {
-    if (minutes < 60) return `${minutes} minuti`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours} or${hours === 1 ? 'a' : 'e'}`
-    const days = Math.floor(hours / 24)
-    return `${days} giorn${days === 1 ? 'o' : 'i'}`
-  }
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  })
-
-  const [passwordStrength, setPasswordStrength] = useState({
-    hasMinLength: false,
-    hasUpperCase: false,
-    hasLowerCase: false,
-    hasNumber: false
-  })
-
-  // Validate password strength
-  const validatePassword = (password: string) => {
-    setPasswordStrength({
-      hasMinLength: password.length >= 8,
-      hasUpperCase: /[A-Z]/.test(password),
-      hasLowerCase: /[a-z]/.test(password),
-      hasNumber: /[0-9]/.test(password)
-    })
-  }
-
-  const isPasswordValid = passwordStrength.hasMinLength &&
-    passwordStrength.hasUpperCase &&
-    passwordStrength.hasLowerCase &&
-    passwordStrength.hasNumber
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailNewClient: true,
@@ -331,8 +112,6 @@ export default function Impostazioni() {
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
   const [show2FAModal, setShow2FAModal] = useState(false)
-  const [showTerminateSessionModal, setShowTerminateSessionModal] = useState(false)
-  const [sessionToTerminate, setSessionToTerminate] = useState<string | null>(null)
   const [qrCode, setQrCode] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [disable2FAPassword, setDisable2FAPassword] = useState('')
@@ -377,6 +156,31 @@ export default function Impostazioni() {
       description: 'API e servizi esterni'
     }
   ]
+
+  // Load 2FA status
+  useEffect(() => {
+    const load2FAStatus = async () => {
+      if (!token) return
+
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api'
+        const response = await fetch(`${API_URL}/security/2fa/status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setTwoFactorEnabled(data.enabled)
+        }
+      } catch (error) {
+        console.error('Error loading 2FA status:', error)
+      }
+    }
+
+    load2FAStatus()
+  }, [token])
 
   const handle2FAEnable = async () => {
     setLoading(true)
@@ -475,37 +279,6 @@ export default function Impostazioni() {
     }
   }
 
-  const handleTerminateSession = (sessionId: string) => {
-    setSessionToTerminate(sessionId)
-    setShowTerminateSessionModal(true)
-  }
-
-  const confirmTerminateSession = async () => {
-    if (!sessionToTerminate) return
-
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const response = await fetch(`${API_URL}/security/sessions/${sessionToTerminate}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Errore durante la terminazione della sessione')
-      }
-
-      showToast('Sessione terminata con successo', 'success')
-      setShowTerminateSessionModal(false)
-      setSessionToTerminate(null)
-      loadSessions()
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
-    }
-  }
-
   const handleTestInvoicetronicStatus = async () => {
     setTestingInvoicetronic(true)
     setInvoicetronicStatus('testing')
@@ -547,272 +320,286 @@ export default function Impostazioni() {
     }
   }
 
-  const handleSave = async (section: string) => {
+  // Profile update handler
+  const handleProfileUpdate = async (data: ProfileData) => {
     setLoading(true)
-
     try {
       const API_URL = import.meta.env.VITE_API_URL || '/api'
-
-      if (section === 'profile') {
-        const response = await fetch(`${API_URL}/user/update`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            name: `${profileData.nome} ${profileData.cognome}`.trim(),
-            email: profileData.email,
-            phone: profileData.telefono,
-            professionalRole: profileData.ruolo,
-            bio: profileData.bio,
-            address: profileData.indirizzo,
-            fiscalCode: profileData.codiceFiscale,
-            registrationNumber: profileData.ordineIscrizione
-          })
+      const response = await fetch(`${API_URL}/user/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: `${data.nome} ${data.cognome}`.trim(),
+          email: data.email,
+          phone: data.telefono,
+          professionalRole: data.ruolo,
+          bio: data.bio,
+          address: data.indirizzo,
+          fiscalCode: data.codiceFiscale,
+          registrationNumber: data.ordineIscrizione
         })
+      })
 
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error || 'Failed to update profile')
-        }
-
-        const data = await response.json()
-        updateUser(data.user)
-
-        // Split name into first and last name
-        const fullName = data.user.name || ''
-        const nameParts = fullName.trim().split(' ')
-        const firstName = nameParts[0] || ''
-        const lastName = nameParts.slice(1).join(' ') || ''
-
-        // Aggiorna anche i campi del form con i nuovi dati
-        setProfileData({
-          nome: firstName,
-          cognome: lastName,
-          email: data.user.email || '',
-          telefono: data.user.phone || '',
-          ruolo: data.user.professionalRole || '',
-          bio: data.user.bio || '',
-          indirizzo: data.user.address || '',
-          codiceFiscale: data.user.fiscalCode || '',
-          ordineIscrizione: data.user.registrationNumber || ''
-        })
-
-        showToast('Profilo aggiornato con successo!', 'success')
-      } else if (section === 'password') {
-        const response = await fetch(`${API_URL}/user/update`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            currentPassword: passwordData.currentPassword,
-            newPassword: passwordData.newPassword
-          })
-        })
-
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error || 'Failed to update password')
-        }
-
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-        showToast('Password aggiornata con successo!', 'success')
-      } else if (section === 'notifications') {
-        console.log('Saving notification settings:', notificationSettings)
-        const response = await fetch(`${API_URL}/user/update`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            notificationSettings
-          })
-        })
-
-        if (!response.ok) {
-          const error = await response.json()
-          console.error('Error response:', error)
-          throw new Error(error.error || 'Failed to update notifications')
-        }
-
-        const data = await response.json()
-        console.log('Save response:', data)
-
-        // Aggiorna lo stato locale con i dati salvati
-        if (data.user?.notificationSettings) {
-          setNotificationSettings(data.user.notificationSettings)
-        }
-
-        showToast('Preferenze notifiche aggiornate con successo!', 'success')
-      } else {
-        // Per ora le altre sezioni non sono implementate
-        showToast(`Impostazioni ${section} salvate!`, 'success')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update profile')
       }
+
+      const responseData = await response.json()
+      updateUser(responseData.user)
+
+      // Split name into first and last name
+      const fullName = responseData.user.name || ''
+      const nameParts = fullName.trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      // Update local state
+      setProfileData({
+        nome: firstName,
+        cognome: lastName,
+        email: responseData.user.email || '',
+        telefono: responseData.user.phone || '',
+        ruolo: responseData.user.professionalRole || '',
+        bio: responseData.user.bio || '',
+        indirizzo: responseData.user.address || '',
+        codiceFiscale: responseData.user.fiscalCode || '',
+        ordineIscrizione: responseData.user.registrationNumber || ''
+      })
+
+      showToast('Profilo aggiornato con successo!', 'success')
     } catch (error) {
-      console.error(`Error saving ${section}:`, error)
       showToast(error instanceof Error ? error.message : 'Errore durante il salvataggio', 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  const renderProfileTab = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Informazioni Personali</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome *
-            </label>
-            <input
-              type="text"
-              value={profileData.nome}
-              onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">Il tuo nome</p>
-          </div>
+  // Password update handler
+  const handlePasswordUpdate = async (data: PasswordData) => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/user/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword
+        })
+      })
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cognome *
-            </label>
-            <input
-              type="text"
-              value={profileData.cognome}
-              onChange={(e) => setProfileData(prev => ({ ...prev, cognome: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">Il tuo cognome</p>
-          </div>
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update password')
+      }
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
-            </label>
-            <input
-              type="email"
-              value={profileData.email}
-              onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">Email per accedere alla piattaforma</p>
-          </div>
+      showToast('Password aggiornata con successo!', 'success')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore durante il salvataggio', 'error')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telefono
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 font-medium">+39</span>
-              <input
-                type="tel"
-                value={profileData.telefono?.replace('+39', '').replace(/^\s+/, '') || ''}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^\d\s]/g, '')
-                  setProfileData(prev => ({ ...prev, telefono: `+39 ${value}` }))
-                }}
-                placeholder="XXX XXX XXXX"
-                className="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Numero di telefono italiano (10 cifre)</p>
-          </div>
+  // Sessions handlers
+  const loadSessions = async () => {
+    setLoadingSessions(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ruolo Professionale
-            </label>
-            <input
-              type="text"
-              value={profileData.ruolo}
-              onChange={(e) => setProfileData(prev => ({ ...prev, ruolo: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="es. Commercialista, Consulente Fiscale"
-            />
-            <p className="text-xs text-gray-500 mt-1">Il tuo ruolo o specializzazione professionale</p>
-          </div>
+      if (response.ok) {
+        const data = await response.json()
+        const sessions = data.sessions
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ordine di Iscrizione
-            </label>
-            <input
-              type="text"
-              value={profileData.ordineIscrizione}
-              onChange={(e) => setProfileData(prev => ({ ...prev, ordineIscrizione: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Numero iscrizione albo"
-            />
-            <p className="text-xs text-gray-500 mt-1">Numero di iscrizione all'albo professionale</p>
-          </div>
+        // Auto-terminate sessions if more than 3
+        if (sessions.length > 3) {
+          const sortedSessions = [...sessions].sort((a: Session, b: Session) =>
+            new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime()
+          )
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Codice Fiscale
-            </label>
-            <input
-              type="text"
-              value={profileData.codiceFiscale}
-              onChange={(e) => setProfileData(prev => ({ ...prev, codiceFiscale: e.target.value.toUpperCase() }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="RSSMRA85M01H501Z"
-              maxLength={16}
-            />
-            <p className="text-xs text-gray-500 mt-1">Codice fiscale italiano di 16 caratteri</p>
-          </div>
-        </div>
+          const sessionsToTerminate = sortedSessions.slice(0, sessions.length - 3)
 
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Indirizzo Studio
-          </label>
-          <AddressAutocomplete
-            value={profileData.indirizzo}
-            onChange={(value) => setProfileData(prev => ({ ...prev, indirizzo: value }))}
-            onAddressSelect={(address) => {
-              setProfileData(prev => ({
-                ...prev,
-                indirizzo: address.full
-              }))
-            }}
-            placeholder="Inizia a digitare l'indirizzo dello studio..."
-          />
-          <p className="text-xs text-gray-500 mt-1">L'indirizzo completo include via, CAP, città, provincia e paese</p>
-        </div>
+          for (const session of sessionsToTerminate) {
+            try {
+              await fetch(`${API_URL}/security/sessions/${session.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+            } catch (err) {
+              console.error('Error terminating session:', err)
+            }
+          }
 
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Biografia Professionale
-          </label>
-          <textarea
-            value={profileData.bio}
-            onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            placeholder="Descrivi la tua esperienza e specializzazioni..."
-          />
-          <p className="text-xs text-gray-500 mt-1">Una breve descrizione della tua esperienza professionale e competenze</p>
-        </div>
+          const updatedResponse = await fetch(`${API_URL}/security/sessions`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => handleSave('profile')}
-            disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Salvataggio...' : 'Salva Modifiche'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json()
+            setSessions(updatedData.sessions)
+          }
+        } else {
+          setSessions(sessions)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading sessions:', error)
+    } finally {
+      setLoadingSessions(false)
+    }
+  }
+
+
+  const handleUpdateTimeout = async (minutes: number) => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/settings/session-timeout`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ sessionTimeout: minutes })
+      })
+
+      if (response.ok) {
+        setSessionTimeout(minutes)
+        showToast('Timeout sessione aggiornato con successo', 'success')
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nell\'aggiornamento del timeout')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTerminateSession = async (sessionId: string) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore durante la terminazione della sessione')
+      }
+
+      showToast('Sessione terminata con successo', 'success')
+      loadSessions()
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    }
+  }
+
+  const handleTerminateAllSessions = async () => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        showToast('Tutte le altre sessioni sono state terminate', 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella terminazione delle sessioni')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCleanupSessions = async () => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/security/sessions/cleanup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        showToast(data.message, 'success')
+        loadSessions()
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Errore nella pulizia delle sessioni')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore sconosciuto', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    setLoading(true)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/user/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          notificationSettings
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update notifications')
+      }
+
+      const data = await response.json()
+
+      if (data.user?.notificationSettings) {
+        setNotificationSettings(data.user.notificationSettings)
+      }
+
+      showToast('Preferenze notifiche aggiornate con successo!', 'success')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Errore durante il salvataggio', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const renderNotificationsTab = () => (
     <div className="space-y-6">
@@ -949,7 +736,7 @@ export default function Impostazioni() {
       {/* Save Button */}
       <div className="flex justify-end">
         <button
-          onClick={() => handleSave('notifications')}
+          onClick={handleSaveNotifications}
           disabled={loading}
           className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -962,301 +749,69 @@ export default function Impostazioni() {
 
   const renderSecurityTab = () => (
     <div className="space-y-6">
-      {/* Security Status Banner */}
-      <div className="bg-green-600 rounded-xl shadow-lg p-6 text-white">
-        <div className="flex items-center">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mr-4">
-            <Shield className="h-6 w-6 text-white" />
+      {/* Password Section */}
+      <SettingsPassword onUpdate={handlePasswordUpdate} loading={loading} />
+
+      {/* 2FA Card */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex items-center mb-4">
+          <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
+            <Shield className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold">Account Sicuro</h3>
-            <p className="text-green-100 text-sm">Il tuo account è protetto con le migliori misure di sicurezza</p>
+          <h4 className="font-semibold text-gray-900">Autenticazione a Due Fattori</h4>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div>
+              <p className="font-medium text-gray-900">Stato 2FA</p>
+              <p className="text-sm text-gray-600">Proteggi il tuo account con un livello aggiuntivo di sicurezza</p>
+            </div>
+            <span className={`text-sm font-medium px-3 py-1 rounded-full ${twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+              {twoFactorEnabled ? 'Attiva' : 'Non attiva'}
+            </span>
           </div>
+
+          {!twoFactorEnabled ? (
+            <button
+              onClick={handle2FAEnable}
+              disabled={loading}
+              className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm disabled:opacity-50"
+            >
+              Attiva 2FA
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <input
+                type="password"
+                placeholder="Inserisci password per disattivare"
+                value={disable2FAPassword}
+                onChange={(e) => setDisable2FAPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+              />
+              <button
+                onClick={handle2FADisable}
+                disabled={loading || !disable2FAPassword}
+                className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+              >
+                Disattiva 2FA
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Grid Layout per le card */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card: Cambia Password */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Cambia Password</h4>
-          </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password Attuale *
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nuova Password *
-                </label>
-                <input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => {
-                    setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))
-                    validatePassword(e.target.value)
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                {passwordData.newPassword && (
-                  <div className="mt-2 space-y-1 text-sm">
-                    <div className={`flex items-center ${passwordStrength.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span className="mr-2">{passwordStrength.hasMinLength ? '✓' : '○'}</span>
-                      Almeno 8 caratteri
-                    </div>
-                    <div className={`flex items-center ${passwordStrength.hasUpperCase ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span className="mr-2">{passwordStrength.hasUpperCase ? '✓' : '○'}</span>
-                      Una lettera maiuscola
-                    </div>
-                    <div className={`flex items-center ${passwordStrength.hasLowerCase ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span className="mr-2">{passwordStrength.hasLowerCase ? '✓' : '○'}</span>
-                      Una lettera minuscola
-                    </div>
-                    <div className={`flex items-center ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span className="mr-2">{passwordStrength.hasNumber ? '✓' : '○'}</span>
-                      Un numero
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Conferma Nuova Password *
-                </label>
-                <input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-                <p className="text-sm text-red-600 mt-2">Le password non corrispondono</p>
-              )}
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleSave('password')}
-                  disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || !isPasswordValid}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-        {/* Card: Autenticazione 2FA */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Autenticazione a Due Fattori</h4>
-          </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <div>
-                  <p className="font-medium text-gray-900">Stato 2FA</p>
-                  <p className="text-sm text-gray-600">Proteggi il tuo account con un livello aggiuntivo di sicurezza</p>
-                </div>
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                  {twoFactorEnabled ? 'Attiva' : 'Non attiva'}
-                </span>
-              </div>
-
-              {!twoFactorEnabled ? (
-                <button
-                  onClick={handle2FAEnable}
-                  disabled={loading}
-                  className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm disabled:opacity-50"
-                >
-                  Attiva 2FA
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    placeholder="Inserisci password per disattivare"
-                    value={disable2FAPassword}
-                    onChange={(e) => setDisable2FAPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  />
-                  <button
-                    onClick={handle2FADisable}
-                    disabled={loading || !disable2FAPassword}
-                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
-                  >
-                    Disattiva 2FA
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-        {/* Card: Timeout Sessione */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
-              <Clock className="h-5 w-5 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Timeout Sessione</h4>
-          </div>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-3">
-                  Le sessioni inattive verranno eliminate automaticamente dopo il periodo impostato
-                </p>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Durata timeout
-                </label>
-                <select
-                  value={sessionTimeout}
-                  onChange={(e) => setSessionTimeout(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                >
-                  <option value={30}>30 minuti</option>
-                  <option value={60}>1 ora</option>
-                  <option value={360}>6 ore</option>
-                  <option value={720}>12 ore</option>
-                  <option value={1440}>1 giorno</option>
-                  <option value={10080}>7 giorni</option>
-                  <option value={43200}>30 giorni</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-2">
-                  Timeout corrente: {getTimeoutLabel(sessionTimeout)}
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSaveSessionTimeout}
-                  disabled={loading}
-                  className="bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 transition-colors flex items-center disabled:opacity-50"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Salva Timeout
-                </button>
-              </div>
-            </div>
-          </div>
-      </div>
-
-      {/* Sessioni Attive - Full width */}
-      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Sessioni Attive</h4>
-          </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleCleanupSessions}
-                  disabled={loading}
-                  className="text-orange-600 hover:text-orange-700 transition-colors text-sm font-medium flex items-center disabled:opacity-50"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Pulisci Inattive
-                </button>
-                {sessions.filter(s => !s.isCurrent).length > 0 && (
-                  <button
-                    onClick={handleTerminateAllSessions}
-                    disabled={loading}
-                    className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium disabled:opacity-50"
-                  >
-                    Termina Tutte
-                  </button>
-                )}
-            </div>
-          </div>
-
-          {loadingSessions ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
-              <p className="text-gray-600">Caricamento sessioni...</p>
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
-              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">Nessuna sessione attiva</p>
-              <p className="text-sm text-gray-500 mt-2">Le tue sessioni appariranno qui</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sessions.map((session) => {
-                const lastActivity = new Date(session.lastActivity)
-                const now = new Date()
-                const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / 60000)
-                const timeAgo = diffMinutes < 1 ? 'adesso' :
-                                diffMinutes < 60 ? `${diffMinutes} minuti fa` :
-                                diffMinutes < 1440 ? `${Math.floor(diffMinutes / 60)} ore fa` :
-                                `${Math.floor(diffMinutes / 1440)} giorni fa`
-
-                return (
-                  <div
-                    key={session.id}
-                    className={`group flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow duration-200 ${
-                      session.isCurrent ? 'border-green-300 bg-green-50' : 'border-gray-200'
-                    }`}
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {session.browser} su {session.os}
-                        {session.isCurrent && (
-                          <span className="ml-2 text-xs text-green-600 font-medium">Corrente</span>
-                        )}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {session.location} • {session.ip}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Ultima attività: {timeAgo}
-                      </p>
-                    </div>
-                    {!session.isCurrent && (
-                      <button
-                        onClick={() => handleTerminateSession(session.id)}
-                        className="text-red-600 hover:text-red-700 transition-colors text-sm font-medium"
-                      >
-                        Termina Sessione
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-      </div>
+      {/* Sessions Section */}
+      <SettingsSecurity
+        sessions={sessions}
+        sessionTimeout={sessionTimeout}
+        onTerminateSession={handleTerminateSession}
+        onTerminateAllSessions={handleTerminateAllSessions}
+        onCleanupSessions={handleCleanupSessions}
+        onUpdateTimeout={handleUpdateTimeout}
+        onLoadSessions={loadSessions}
+        loading={loading}
+        loadingSessions={loadingSessions}
+      />
     </div>
   )
 
@@ -1473,7 +1028,7 @@ export default function Impostazioni() {
 
         <div className="mt-6 flex justify-end">
           <button
-            onClick={() => handleSave('integrations')}
+            onClick={() => showToast('Integrazioni salvate!', 'success')}
             className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
           >
             <Save className="h-4 w-4 mr-2" />
@@ -1487,7 +1042,7 @@ export default function Impostazioni() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
-        return renderProfileTab()
+        return <SettingsProfile profileData={profileData} onUpdate={handleProfileUpdate} loading={loading} showProfessionalFields={true} />
       case 'notifications':
         return renderNotificationsTab()
       case 'security':
@@ -1495,7 +1050,7 @@ export default function Impostazioni() {
       case 'integrations':
         return renderIntegrationsTab()
       default:
-        return renderProfileTab()
+        return <SettingsProfile profileData={profileData} onUpdate={handleProfileUpdate} loading={loading} showProfessionalFields={true} />
     }
   }
 
@@ -1560,43 +1115,6 @@ export default function Impostazioni() {
           </div>
         </div>
       </Modal>
-
-      {/* Terminate Session Confirmation Modal */}
-      <Modal
-        isOpen={showTerminateSessionModal}
-        onClose={() => {
-          setShowTerminateSessionModal(false)
-          setSessionToTerminate(null)
-        }}
-        title="Conferma Terminazione Sessione"
-        maxWidth="lg"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Sei sicuro di voler terminare questa sessione? L'utente verrà disconnesso immediatamente.
-          </p>
-
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              onClick={() => {
-                setShowTerminateSessionModal(false)
-                setSessionToTerminate(null)
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Annulla
-            </button>
-            <button
-              onClick={confirmTerminateSession}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Termina Sessione
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Message feedback */}
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">

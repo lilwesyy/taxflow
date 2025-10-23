@@ -216,59 +216,7 @@ Legenda:
 
 ---
 
-### Dettaglio Componenti da Refactorare
 
-#### 🔴 PRIORITÀ ALTA
-
-##### 1. Impostazioni (Admin + Business)
-**File:**
-- `frontend/src/components/dashboard/pages/admin/Impostazioni.tsx` (1,631 righe)
-- `frontend/src/components/dashboard/pages/business/Impostazioni.tsx` (2,026 righe)
-
-**Duplicazione:** ~80% del codice è identico
-
-**Funzionalità duplicate:**
-```typescript
-// Profile Management
-- Name, Email, Phone fields
-- Company info (PIVA, Fiscal Code, Address)
-- Form validation (stesse funzioni)
-
-// Password Management
-- Password strength validation
-- Password change flow
-- Session invalidation
-
-// Security
-- Session management
-- 2FA status (admin only)
-- Active sessions list
-
-// Validation Functions (IDENTICHE!)
-- validateEmail()
-- validatePhone()
-- validateFiscalCode()
-- validatePIVA()
-- validateCAP()
-```
-
-**Soluzione:**
-```typescript
-// frontend/src/components/dashboard/shared/settings/
-├── SettingsProfile.tsx          // Profile form
-├── SettingsPassword.tsx         // Password management
-├── SettingsSecurity.tsx         // Sessions & 2FA
-├── SettingsSubscription.tsx     // Billing (business only)
-└── hooks/
-    └── useFormValidation.ts     // Shared validation logic
-
-// Usage in both Admin & Business:
-import { SettingsProfile, SettingsPassword, SettingsSecurity } from '@/components/dashboard/shared/settings'
-```
-
-**Risparmio stimato:** ~1,800 righe
-
----
 
 ##### 3. Modulo662Form.tsx (2,197 righe)
 **Problema:** Form monolitico con 15+ sezioni
