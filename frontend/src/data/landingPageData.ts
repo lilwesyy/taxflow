@@ -105,7 +105,7 @@ export const benefits = [
   },
   {
     icon: FileCheck,
-    title: "D.Lgs. 14/2019 Ready",
+    title: "D.Lgs. 14/2019",
     description: "Piena conformità al Codice della Crisi d'Impresa con monitoraggio predittivo",
     learnMoreUrl: "https://www.gazzettaufficiale.it/eli/id/2019/02/14/19G00007/sg",
     learnMoreText: "Codice della Crisi d'Impresa"
