@@ -87,6 +87,7 @@ import fatturaElettronicaRoutes from './routes/fatturaelettronica'
 import businessPlanRoutes from './routes/business-plan'
 import expensesRoutes from './routes/expenses'
 import webmasterRoutes from './routes/webmaster'
+import newsletterRoutes from './routes/newsletter'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -192,6 +193,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/business-clients', businessClientsRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/stripe', stripeRoutes)
+app.use('/api/newsletter', newsletterRoutes)
 app.use('/api/documents', documentsRoutes)
 app.use('/api/services', servicesRoutes)
 app.use('/api/invoices', invoicesRoutes)

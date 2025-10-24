@@ -1358,3 +1358,66 @@ export const sendNewFeedbackNotificationToAdmin = async (
     html,
   })
 }
+
+// ============================================
+// NEWSLETTER EMAILS
+// ============================================
+
+export const sendNewsletterLaunchEmail = async (email: string): Promise<void> => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>${getBaseStyles()}</style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+          <div class="logo-text" style="color: #ffffff;">TaxFlow</div>
+          <h2 style="color: #ffffff;">🎉 TaxFlow è Live!</h2>
+        </div>
+
+        <div class="content">
+          <p><strong>Ciao!</strong></p>
+          <p>La piattaforma <strong>TaxFlow</strong> è finalmente disponibile! 🚀</p>
+
+          <p>Gestisci la tua partita IVA in modo semplice e professionale con:</p>
+
+          <div class="success-box">
+            <p><strong>✓</strong> Consulente dedicato</p>
+            <p><strong>✓</strong> Dashboard intelligente</p>
+            <p><strong>✓</strong> AI integrata per business planning</p>
+            <p><strong>✓</strong> Fatturazione elettronica semplificata</p>
+          </div>
+
+          <div style="text-align: center;">
+            <a href="${process.env.FRONTEND_URL || 'https://taxflow.it'}" class="button button-success">Accedi a TaxFlow</a>
+          </div>
+
+          <p style="margin-top: 30px;">Grazie per il tuo interesse in TaxFlow!</p>
+          <p><strong>Il Team TaxFlow</strong></p>
+
+          <p style="margin-top: 20px; color: #6b7280 !important; font-size: 14px;">
+            Per qualsiasi domanda, contattaci a <a href="mailto:support@taxflow.it" style="color: #2563eb !important;">support@taxflow.it</a>
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} TaxFlow. Tutti i diritti riservati.</p>
+          <p style="font-size: 12px; margin-top: 10px;">
+            Hai ricevuto questa email perché ti sei iscritto alle notifiche di lancio su taxflow.it
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  await sendEmail({
+    to: email,
+    subject: '🎉 TaxFlow è Live! La tua piattaforma per la gestione della P.IVA',
+    html,
+  })
+}
