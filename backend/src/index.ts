@@ -88,6 +88,8 @@ import businessPlanRoutes from './routes/business-plan'
 import expensesRoutes from './routes/expenses'
 import webmasterRoutes from './routes/webmaster'
 import newsletterRoutes from './routes/newsletter'
+import configRoutes from './routes/config'
+import jobsRoutes from './routes/jobs'
 import { startSessionCleanupJob } from './jobs/sessionCleanup'
 
 const app = express()
@@ -202,6 +204,8 @@ app.use('/api/fatturaelettronica', fatturaElettronicaRoutes)
 app.use('/api/business-plan', businessPlanRoutes)
 app.use('/api/expenses', expensesRoutes)
 app.use('/api/webmaster', webmasterRoutes)
+app.use('/api/config', configRoutes)
+app.use('/api/jobs', jobsRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

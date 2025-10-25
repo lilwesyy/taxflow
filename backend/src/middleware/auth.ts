@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import Session from '../models/Session'
+import User from '../models/User'
 
 export interface AuthRequest extends Request {
   userId?: string
@@ -54,3 +55,17 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 }
 
 export const authenticateToken = authMiddleware
+
+// Middleware to check if user is admin
+export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Accesso negato. Solo gli admin possono accedere a questa risorsa.' })
+    }
+    next()
+  } catch (error) {
+    console.error('Admin middleware error:', error)
+    res.status(500).json({ error: 'Errore interno del server' })
+  }
+}

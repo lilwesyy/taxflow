@@ -5,12 +5,13 @@ import logoSvg from '../../../assets/logo.svg'
 interface NavbarProps {
   onShowLogin: () => void
   onShowRegister: () => void
+  onShowCareers: () => void
   onScrollToSection: (section: string) => void
   onScrollToTop: () => void
   showNavbar: boolean
 }
 
-export default function Navbar({ onShowLogin, onShowRegister, onScrollToSection, onScrollToTop, showNavbar }: NavbarProps) {
+export default function Navbar({ onShowLogin, onShowRegister, onShowCareers, onScrollToSection, onScrollToTop, showNavbar }: NavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   return (
@@ -53,6 +54,12 @@ export default function Navbar({ onShowLogin, onShowRegister, onScrollToSection,
               className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
             >
               Formazione
+            </button>
+            <button
+              onClick={onShowCareers}
+              className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium text-sm"
+            >
+              Lavora con noi
             </button>
             <button
               onClick={() => onScrollToSection('footer')}
@@ -115,6 +122,12 @@ export default function Navbar({ onShowLogin, onShowRegister, onScrollToSection,
               className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
             >
               Formazione
+            </button>
+            <button
+              onClick={() => { onShowCareers(); setShowMobileMenu(false); }}
+              className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium"
+            >
+              Lavora con noi
             </button>
             <button
               onClick={() => { onScrollToSection('footer'); setShowMobileMenu(false); }}

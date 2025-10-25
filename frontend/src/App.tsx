@@ -5,6 +5,8 @@ import RegistrationSuccess from './components/auth/RegistrationSuccess'
 import Dashboard from './components/dashboard/Dashboard'
 import PaymentPending from './components/payment/PaymentPending'
 import ResetPassword from './components/auth/ResetPassword'
+import CountdownPage from './components/CountdownPage'
+import CareersPage from './components/careers/CareersPage'
 import CookieBanner from './components/common/CookieBanner'
 import { useAuth } from './context/AuthContext'
 import { useAuthInterceptor } from './hooks/useAuthInterceptor'
@@ -19,6 +21,33 @@ function App() {
   const [showLoading, setShowLoading] = useState(true)
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [showCookiePolicy, setShowCookiePolicy] = useState(false)
+  const [countdownMode, setCountdownMode] = useState(false)
+  const [launchDate, setLaunchDate] = useState('')
+  const [configLoaded, setConfigLoaded] = useState(false)
+
+  // Check countdown mode configuration on app load
+  useEffect(() => {
+    const checkCountdownMode = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api'
+        const response = await fetch(`${API_URL}/config`)
+        const data = await response.json()
+
+        if (data.success) {
+          setCountdownMode(data.countdownMode)
+          setLaunchDate(data.launchDate)
+        }
+      } catch (error) {
+        console.error('Failed to fetch config:', error)
+        // If config fetch fails, assume countdown mode is off
+        setCountdownMode(false)
+      } finally {
+        setConfigLoaded(true)
+      }
+    }
+
+    checkCountdownMode()
+  }, [])
 
   // Check for reset password token in URL and set initial page
   useEffect(() => {
@@ -92,16 +121,20 @@ function App() {
     setCurrentPage('landing')
   }
 
+  const showCareersPage = () => {
+    setCurrentPage('careers')
+  }
+
   const handleLogin = () => {
     // Don't set currentPage here - let the useEffect handle it based on user state
     // This prevents briefly showing the dashboard before redirecting to payment
   }
 
-  if (showLoading) {
+  if (showLoading || !configLoaded) {
     return (
       <div
         className={`min-h-screen bg-gray-50 flex items-center justify-center transition-opacity duration-300 ${
-          isLoading ? 'opacity-100' : 'opacity-0'
+          (isLoading || !configLoaded) ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="text-center">
@@ -110,6 +143,11 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  // Show countdown page if countdown mode is enabled
+  if (countdownMode) {
+    return <CountdownPage launchDate={launchDate} />
   }
 
   if (currentPage === 'payment-pending' && user) {
@@ -139,11 +177,16 @@ function App() {
     return <RegistrationSuccess userEmail={registeredEmail} onBackToLogin={showLoginPage} />
   }
 
+  if (currentPage === 'careers') {
+    return <CareersPage onBack={showLandingPage} />
+  }
+
   return (
     <>
       <LandingPage
         onShowLogin={showLoginPage}
         onShowRegister={showRegisterPage}
+        onShowCareers={showCareersPage}
         showCookieModal={showCookiePolicy}
         setShowCookieModal={setShowCookiePolicy}
       />

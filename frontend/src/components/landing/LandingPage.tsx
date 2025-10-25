@@ -16,11 +16,12 @@ import Footer from './sections/Footer'
 interface LandingPageProps {
   onShowLogin: () => void
   onShowRegister: () => void
+  onShowCareers: () => void
   showCookieModal?: boolean
   setShowCookieModal?: (show: boolean) => void
 }
 
-export default function LandingPage({ onShowLogin, onShowRegister, showCookieModal = false, setShowCookieModal }: LandingPageProps) {
+export default function LandingPage({ onShowLogin, onShowRegister, onShowCareers, showCookieModal = false, setShowCookieModal }: LandingPageProps) {
   useCookieConsent() // Keep hook call for side effects
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
@@ -160,6 +161,7 @@ export default function LandingPage({ onShowLogin, onShowRegister, showCookieMod
       <Navbar
         onShowLogin={onShowLogin}
         onShowRegister={onShowRegister}
+        onShowCareers={onShowCareers}
         onScrollToSection={scrollToSection}
         onScrollToTop={scrollToTop}
         showNavbar={showNavbar}
